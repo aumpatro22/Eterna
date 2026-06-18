@@ -1,0 +1,112 @@
+import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+
+export default function Navbar({ sketchMode, setSketchMode }) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
+
+  return (
+    <header className="sticky top-0 z-50 bg-paper/90 backdrop-blur-sm border-b-[3px] border-ink shadow-hard">
+      <nav className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+        
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="w-10 h-10 border-[3px] border-ink bg-postit flex items-center justify-center rounded-full shadow-hard transition-transform duration-100 group-hover:rotate-12 group-active:shadow-none group-active:translate-y-1 group-active:translate-x-1">
+            <span className="font-kalam text-2xl mt-1">E</span>
+          </div>
+          <span className="font-kalam text-3xl font-bold text-ink">Eterna</span>
+        </Link>
+
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-6">
+          <Link to="/" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Home</Link>
+          <Link to="/memorials" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Memorials</Link>
+          <Link to="/communities" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Communities</Link>
+          <Link to="/tales" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Tales</Link>
+
+          {/* Sketch Mode Toggler */}
+          <button
+            onClick={() => setSketchMode(!sketchMode)}
+            className={`wobbly-sm border-[3px] border-ink px-3 py-1 font-patrick font-bold text-lg transition-all select-none ${
+              sketchMode 
+                ? 'bg-marker text-white rotate-2 animate-pulse shadow-none translate-y-0.5' 
+                : 'bg-postit text-ink hover:-rotate-2 hover:bg-postit/80 shadow-hard-hover'
+            }`}
+          >
+            {sketchMode ? 'Drawing Active ✏️' : 'Sketch Mode ✏️'}
+          </button>
+
+          {user ? (
+            <div className="flex items-center gap-4 ml-4 pl-4 border-l-[3px] border-ink border-dashed">
+              <Link to="/memorials/create" className="btn btn-primary px-4 py-2 text-base">
+                Create Memorial
+              </Link>
+              <div className="flex items-center gap-2">
+                <Link to={`/profile/${user.username}`} className="wobbly-sm bg-erased border-[3px] border-ink px-3 py-1 font-patrick font-bold hover:bg-postit hover:-rotate-2 transition-transform">
+                  {user.username}
+                </Link>
+                <button onClick={handleLogout} className="wobbly-sm bg-white border-[3px] border-ink px-3 py-1 font-patrick font-bold hover:bg-marker hover:text-white transition-colors">
+                  Out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4 ml-4 pl-4 border-l-[3px] border-ink border-dashed">
+              <Link to="/login" className="font-patrick text-xl font-bold hover:text-pen hover:underline decoration-wavy">Login</Link>
+              <Link to="/register" className="btn btn-primary px-4 py-2 text-base">Sign Up</Link>
+            </div>
+          )}
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button 
+          className="md:hidden border-[3px] border-ink bg-white p-2 wobbly-sm shadow-hard active:shadow-none active:translate-y-1 active:translate-x-1"
+          onClick={() => setMobileOpen(!mobileOpen)}
+        >
+          <span className="font-kalam font-bold text-xl">{mobileOpen ? 'X' : 'Menu'}</span>
+        </button>
+      </nav>
+
+      {/* Mobile Menu */}
+      {mobileOpen && (
+        <div className="md:hidden border-t-[3px] border-ink bg-white p-6 flex flex-col gap-4 font-kalam text-xl">
+          <Link to="/" onClick={() => setMobileOpen(false)} className="hover:text-marker">Home</Link>
+          <Link to="/memorials" onClick={() => setMobileOpen(false)} className="hover:text-marker">Memorials</Link>
+          <Link to="/communities" onClick={() => setMobileOpen(false)} className="hover:text-marker">Communities</Link>
+          <Link to="/tales" onClick={() => setMobileOpen(false)} className="hover:text-marker">Tales</Link>
+          
+          <button
+            onClick={() => { setSketchMode(!sketchMode); setMobileOpen(false); }}
+            className={`w-full py-2 border-[3px] border-ink font-patrick font-bold wobbly-sm text-center ${
+              sketchMode ? 'bg-marker text-white' : 'bg-postit text-ink'
+            }`}
+          >
+            {sketchMode ? 'Disable Sketch Mode ✏️' : 'Enable Sketch Mode ✏️'}
+          </button>
+
+          <div className="border-t-[3px] border-dashed border-ink pt-4 flex flex-col gap-4">
+            {user ? (
+              <>
+                <Link to="/memorials/create" onClick={() => setMobileOpen(false)} className="btn btn-primary">Create Memorial</Link>
+                <Link to={`/profile/${user.username}`} onClick={() => setMobileOpen(false)} className="hover:text-pen">My Profile</Link>
+                <button onClick={() => { handleLogout(); setMobileOpen(false); }} className="text-left hover:text-marker">Sign Out</button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setMobileOpen(false)} className="hover:text-pen">Login</Link>
+                <Link to="/register" onClick={() => setMobileOpen(false)} className="btn btn-primary">Sign Up</Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}

@@ -1,0 +1,18 @@
+# node_modules/
+node_modules/
+
+# Frontend build artifacts (generated, not for version control)
+frontend/dist/
+frontend/.vite/
+
+# Dependency lock (keep package-lock.json, ignore others)
+# frontend/package-lock.json
+
+# OS/IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# SQLite local database
+db.sqlite3

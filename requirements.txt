@@ -8,7 +8,7 @@ requests==2.31.0
 # For deployment
 dj-database-url==2.2.0
 gunicorn==21.2.0
-psycopg2-binary==2.9.9  # For PostgreSQL in production
+# psycopg2-binary==2.9.9  # For PostgreSQL in production (commented out for local development)
 whitenoise==6.6.0  # For serving static files
 
 # Development tools

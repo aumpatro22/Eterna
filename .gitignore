@@ -41,3 +41,9 @@ Thumbs.db
 dist/
 build/
 *.egg-info/
+
+# Database (don't commit local SQLite db)
+db.sqlite3
+
+# Node
+node_modules/
