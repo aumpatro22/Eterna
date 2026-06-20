@@ -17,11 +17,12 @@ export default function Navbar({ sketchMode, setSketchMode }) {
       <nav className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
         
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 border-[3px] border-ink bg-postit flex items-center justify-center rounded-full shadow-hard transition-transform duration-100 group-hover:rotate-12 group-active:shadow-none group-active:translate-y-1 group-active:translate-x-1">
-            <span className="font-kalam text-2xl mt-1">E</span>
-          </div>
-          <span className="font-kalam text-3xl font-bold text-ink">Eterna</span>
+        <Link to="/" className="flex items-center group">
+          <img
+            src="/static/eterna-logo.png"
+            alt="Eterna – Preserve Memories. Share Stories."
+            className="h-14 w-auto transition-transform duration-200 group-hover:scale-105 group-active:scale-95"
+          />
         </Link>
 
         {/* Desktop Nav */}
