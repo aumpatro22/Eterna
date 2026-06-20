@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     # Third-party
     'rest_framework',
     'corsheaders',
+    'django_bleach',
     
     # Local apps
     'memorials',
@@ -190,6 +191,17 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 12,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/minute',
+        'user': '1000/day',
+        'auth': '5/minute',
+        'messages': '30/minute',
+        'reports': '10/minute',
+    }
 }
 
 # CORS settings (for Vite dev server)
@@ -202,3 +214,6 @@ CSRF_TRUSTED_ORIGINS += [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
 ]
+
+# Eterna Support Circle Co-Admin Limits
+MAX_COMMUNITY_COADMINS = 3

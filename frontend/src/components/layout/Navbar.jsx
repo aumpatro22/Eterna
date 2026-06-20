@@ -13,7 +13,7 @@ export default function Navbar({ sketchMode, setSketchMode }) {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-paper/90 backdrop-blur-sm border-b-[3px] border-ink shadow-hard">
+    <header className={`sticky top-0 bg-paper/90 backdrop-blur-sm border-b-[3px] border-ink shadow-hard ${sketchMode ? 'z-[10000]' : 'z-50'}`}>
       <nav className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
         
         {/* Logo */}
@@ -31,6 +31,10 @@ export default function Navbar({ sketchMode, setSketchMode }) {
           <Link to="/memorials" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Memorials</Link>
           <Link to="/communities" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Communities</Link>
           <Link to="/tales" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Tales</Link>
+          <Link to="/about" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">About</Link>
+          {user && (
+            <Link to="/messages" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Messages</Link>
+          )}
 
           {/* Sketch Mode Toggler */}
           <button
@@ -82,6 +86,10 @@ export default function Navbar({ sketchMode, setSketchMode }) {
           <Link to="/memorials" onClick={() => setMobileOpen(false)} className="hover:text-marker">Memorials</Link>
           <Link to="/communities" onClick={() => setMobileOpen(false)} className="hover:text-marker">Communities</Link>
           <Link to="/tales" onClick={() => setMobileOpen(false)} className="hover:text-marker">Tales</Link>
+          <Link to="/about" onClick={() => setMobileOpen(false)} className="hover:text-marker">About</Link>
+          {user && (
+            <Link to="/messages" onClick={() => setMobileOpen(false)} className="hover:text-marker">Messages</Link>
+          )}
           
           <button
             onClick={() => { setSketchMode(!sketchMode); setMobileOpen(false); }}

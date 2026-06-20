@@ -28,6 +28,7 @@ export default function ExitIntentHook() {
         setQuote(MEMORY_QUOTES[Math.floor(Math.random() * MEMORY_QUOTES.length)]);
         setShow(true);
         sessionStorage.setItem('eterna_seen_exit', 'true');
+        document.removeEventListener('mouseleave', handleMouseLeave);
       }
     };
 

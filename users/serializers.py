@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Profile, Reaction, DirectMessage
+from .models import Profile, Reaction, DirectMessage, Conversation, CircleConnection, ProfileTimelineEvent
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -10,14 +10,41 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
+class UserPublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name']
+        read_only_fields = ['id']
+
+
+class ProfileTimelineEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfileTimelineEvent
+        fields = ['id', 'title', 'event_date', 'description', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+
+class CircleConnectionSerializer(serializers.ModelSerializer):
+    sender_username = serializers.CharField(source='sender.username', read_only=True)
+    receiver_username = serializers.CharField(source='receiver.username', read_only=True)
+
+    class Meta:
+        model = CircleConnection
+        fields = ['id', 'sender_username', 'receiver_username', 'status', 'connection_type', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+
 class ProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user = UserPublicSerializer(read_only=True)
     avatar_url = serializers.SerializerMethodField()
     tags_list = serializers.SerializerMethodField()
+    timeline_events = ProfileTimelineEventSerializer(many=True, read_only=True)
+    joined_communities = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ['user', 'display_name', 'bio', 'avatar_url', 'public_search', 'tags', 'tags_list']
+        fields = ['user', 'display_name', 'bio', 'avatar_url', 'public_search', 'tags', 'tags_list', 
+                  'privacy_setting', 'timeline_events', 'joined_communities']
 
     def get_avatar_url(self, obj):
         if obj.profile_image:
@@ -29,6 +56,13 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_tags_list(self, obj):
         return obj.tags_list()
+
+    def get_joined_communities(self, obj):
+        from communities.serializers import CommunityListSerializer
+        # Get all communities where the user is a member
+        mems = obj.user.community_memberships.select_related('community')
+        comms = [m.community for m in mems]
+        return CommunityListSerializer(comms, many=True).data
 
 
 class RegisterSerializer(serializers.Serializer):
@@ -73,12 +107,32 @@ class LoginSerializer(serializers.Serializer):
 
 class DirectMessageSerializer(serializers.ModelSerializer):
     sender_username = serializers.CharField(source='sender.username', read_only=True)
-    receiver_username = serializers.CharField(source='receiver.username', read_only=True)
 
     class Meta:
         model = DirectMessage
-        fields = ['id', 'sender_username', 'receiver_username', 'content', 'created_at', 'is_read']
-        read_only_fields = ['id', 'created_at', 'is_read']
+        fields = ['id', 'conversation', 'sender_username', 'content', 'image', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+
+class ConversationSerializer(serializers.ModelSerializer):
+    participants = UserPublicSerializer(many=True, read_only=True)
+    last_message = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Conversation
+        fields = ['id', 'participants', 'created_at', 'is_blocked', 'blocked_by', 'last_message']
+        read_only_fields = ['id', 'created_at']
+
+    def get_last_message(self, obj):
+        last_msg = obj.messages.order_by('-created_at').first()
+        if last_msg:
+            return {
+                'content': last_msg.content,
+                'sender': last_msg.sender.username,
+                'created_at': last_msg.created_at
+            }
+        return None
+
 
 
 class ReactionSerializer(serializers.ModelSerializer):

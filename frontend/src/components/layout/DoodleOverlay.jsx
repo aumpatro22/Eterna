@@ -67,8 +67,12 @@ export default function DoodleOverlay({ active }) {
 
   const startDrawing = (e) => {
     if (!active) return;
-    const x = e.clientX;
-    const y = e.clientY;
+    
+    // Support touch events
+    const isTouch = e.touches && e.touches.length > 0;
+    const x = isTouch ? e.touches[0].clientX : e.clientX;
+    const y = isTouch ? e.touches[0].clientY : e.clientY;
+    
     setIsDrawing(true);
 
     pathsRef.current.push({
@@ -82,8 +86,15 @@ export default function DoodleOverlay({ active }) {
 
   const drawMove = (e) => {
     if (!isDrawing || !active) return;
-    const x = e.clientX;
-    const y = e.clientY;
+    
+    // Prevent scrolling on mobile while drawing
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+    
+    const isTouch = e.touches && e.touches.length > 0;
+    const x = isTouch ? e.touches[0].clientX : e.clientX;
+    const y = isTouch ? e.touches[0].clientY : e.clientY;
 
     const currentPath = pathsRef.current[pathsRef.current.length - 1];
     if (currentPath) {
@@ -108,6 +119,9 @@ export default function DoodleOverlay({ active }) {
         onMouseMove={drawMove}
         onMouseUp={stopDrawing}
         onMouseLeave={stopDrawing}
+        onTouchStart={startDrawing}
+        onTouchMove={drawMove}
+        onTouchEnd={stopDrawing}
       />
       {/* Floating Canvas Brush Controls */}
       <div className="absolute bottom-6 right-6 bg-white border-[3px] border-ink p-4 wobbly-sm shadow-hard pointer-events-auto flex flex-col gap-4 select-none animate-bounce">

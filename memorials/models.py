@@ -31,8 +31,22 @@ class Memorial(models.Model):
         return f"Memorial for {self.full_name}"
         
     def save(self, *args, **kwargs):
+        import bleach
+        from users.validators import validate_image_file, optimize_image
         if not self.public_id:
             self.public_id = uuid.uuid4().hex[:22]
+        if self.biography:
+            self.biography = bleach.clean(self.biography, tags=[], strip=True)
+        if self.tribute:
+            self.tribute = bleach.clean(self.tribute, tags=[], strip=True)
+        if self.full_name:
+            self.full_name = bleach.clean(self.full_name, tags=[], strip=True)
+        if self.profile_image:
+            validate_image_file(self.profile_image)
+            optimize_image(self.profile_image)
+        if self.cover_image:
+            validate_image_file(self.cover_image)
+            optimize_image(self.cover_image)
         super().save(*args, **kwargs)
     
     def get_absolute_url(self):
@@ -46,6 +60,16 @@ class MemorialPhoto(models.Model):
 
     def __str__(self):
         return f"Photo for {self.memorial.full_name} ({self.id})"
+
+    def save(self, *args, **kwargs):
+        import bleach
+        from users.validators import validate_image_file, optimize_image
+        if self.caption:
+            self.caption = bleach.clean(self.caption, tags=[], strip=True)
+        if self.image:
+            validate_image_file(self.image)
+            optimize_image(self.image)
+        super().save(*args, **kwargs)
 
 class TimelineEvent(models.Model):
     memorial = models.ForeignKey(Memorial, on_delete=models.CASCADE, related_name='timeline_events')
@@ -61,6 +85,18 @@ class TimelineEvent(models.Model):
     def __str__(self):
         return f"Event '{self.title}' on {self.memorial.full_name}"
 
+    def save(self, *args, **kwargs):
+        import bleach
+        from users.validators import validate_image_file, optimize_image
+        if self.title:
+            self.title = bleach.clean(self.title, tags=[], strip=True)
+        if self.description:
+            self.description = bleach.clean(self.description, tags=[], strip=True)
+        if self.image:
+            validate_image_file(self.image)
+            optimize_image(self.image)
+        super().save(*args, **kwargs)
+
 class Message(models.Model):
     memorial = models.ForeignKey(Memorial, on_delete=models.CASCADE, related_name='messages')
     author_name = models.CharField(max_length=255)
@@ -71,6 +107,14 @@ class Message(models.Model):
     def __str__(self):
         return f"Message from {self.author_name} on {self.memorial.full_name}'s memorial"
 
+    def save(self, *args, **kwargs):
+        import bleach
+        if self.content:
+            self.content = bleach.clean(self.content, tags=[], strip=True)
+        if self.author_name:
+            self.author_name = bleach.clean(self.author_name, tags=[], strip=True)
+        super().save(*args, **kwargs)
+
 class Candle(models.Model):
     memorial = models.ForeignKey(Memorial, on_delete=models.CASCADE, related_name='candles')
     lit_by = models.CharField(max_length=255)
@@ -79,6 +123,14 @@ class Candle(models.Model):
     
     def __str__(self):
         return f"Candle lit by {self.lit_by} on {self.memorial.full_name}'s memorial"
+
+    def save(self, *args, **kwargs):
+        import bleach
+        if self.lit_by:
+            self.lit_by = bleach.clean(self.lit_by, tags=[], strip=True)
+        if self.message:
+            self.message = bleach.clean(self.message, tags=[], strip=True)
+        super().save(*args, **kwargs)
 
 class Memory(models.Model):
     VISIBILITY_CHOICES = (
@@ -101,6 +153,20 @@ class Memory(models.Model):
 
     def __str__(self):
         return f"Memory '{self.title}' on {self.memorial.full_name}"
+
+    def save(self, *args, **kwargs):
+        import bleach
+        from users.validators import validate_image_file, validate_audio_file, optimize_image
+        if self.title:
+            self.title = bleach.clean(self.title, tags=[], strip=True)
+        if self.story:
+            self.story = bleach.clean(self.story, tags=[], strip=True)
+        if self.image:
+            validate_image_file(self.image)
+            optimize_image(self.image)
+        if self.voice_note:
+            validate_audio_file(self.voice_note)
+        super().save(*args, **kwargs)
 
 class ExperienceTag(models.Model):
     name = models.CharField(max_length=100, unique=True)

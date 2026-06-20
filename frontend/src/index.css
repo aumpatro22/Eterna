@@ -289,3 +289,10 @@ html.lenis, html.lenis body {
 .lenis.lenis-smooth iframe {
   pointer-events: none;
 }
+
+/* Accessibility: Keyboard navigation focus indicators */
+*:focus-visible {
+  outline: 3px dotted var(--color-ink, #2d2d2d) !important;
+  outline-offset: 4.5px;
+  border-radius: 4px;
+}

@@ -7,7 +7,7 @@ import Lenis from 'lenis';
 
 /* ─── Pressed Flower Decorative Vector ──────────────────────── */
 const PressedFlower = ({ className }) => (
-  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
     <path d="M50 85 C52 68 48 52 50 32" stroke="#8c9a6b" strokeWidth="2.5" strokeLinecap="round" />
     <path d="M50 68 C40 65 35 57 38 54 C41 51 46 57 50 62" fill="#7a8a59" opacity="0.7" />
     <path d="M50 52 C60 50 65 42 62 39 C59 36 54 44 50 49" fill="#7a8a59" opacity="0.7" />
@@ -25,7 +25,7 @@ const PressedFlower = ({ className }) => (
 
 /* ─── Hand-Drawn Sketch Arrow ─────────────────────────────── */
 const HandDrawnArrow = ({ className }) => (
-  <svg viewBox="0 0 100 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+  <svg viewBox="0 0 100 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
     <path 
       d="M5 22 C25 24 55 12 90 14" 
       stroke="#2d2d2d" 
@@ -43,7 +43,7 @@ const HandDrawnArrow = ({ className }) => (
 
 /* ─── Ink Splash Doodle ───────────────────────────────────── */
 const InkSplash = ({ className }) => (
-  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
     <path d="M50 50 C40 45 42 35 48 30 C54 25 62 28 65 35 C68 42 60 48 55 52 C50 56 46 62 42 66 C38 70 30 72 28 65 C26 58 35 55 50 50 Z" fill="#2d2d2d" opacity="0.1" />
     <circle cx="35" cy="30" r="3" fill="#2d2d2d" opacity="0.1" />
     <circle cx="68" cy="62" r="2.5" fill="#2d2d2d" opacity="0.1" />
@@ -295,7 +295,7 @@ export default function Landing() {
           transition: 'transform 0.15s cubic-bezier(0.165, 0.84, 0.44, 1)',
         }}
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path 
             d="M3 17.25V21H6.75L17.81 9.94L14.06 6.19L3 17.25Z" 
             fill="#2d2d2d" 
@@ -453,7 +453,7 @@ export default function Landing() {
         {/* Scroll hint indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 animate-bounce select-none pointer-events-none">
           <span className="font-kalam text-xs text-ink/40">Scroll to explore</span>
-          <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-ink/35">
+          <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-ink/35" aria-hidden="true">
             <path d="M11 4v14M5 12l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>

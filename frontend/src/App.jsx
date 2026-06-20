@@ -19,6 +19,8 @@ import TaleDetail from './pages/TaleDetail';
 import CommunityList from './pages/CommunityList';
 import CommunityDetail from './pages/CommunityDetail';
 import ProfileDetail from './pages/ProfileDetail';
+import DirectMessages from './pages/DirectMessages';
+import About from './pages/About';
 
 function NotFound() {
   return (
@@ -62,6 +64,8 @@ function App() {
                   <Route path="/communities" element={<CommunityList />} />
                   <Route path="/communities/:slug" element={<CommunityDetail />} />
                   <Route path="/profile/:username" element={<ProfileDetail />} />
+                  <Route path="/messages" element={<DirectMessages />} />
+                  <Route path="/about" element={<About />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

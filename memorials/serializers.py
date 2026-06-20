@@ -212,20 +212,18 @@ class MemorialCreateSerializer(serializers.ModelSerializer):
 
 class ContributorSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
-    email = serializers.CharField(source='user.email', read_only=True)
 
     class Meta:
         model = Contributor
-        fields = ['id', 'user', 'username', 'email', 'role', 'created_at']
+        fields = ['id', 'user', 'username', 'role', 'created_at']
         read_only_fields = ['id', 'created_at']
 
 
 class ContributorInvitationSerializer(serializers.ModelSerializer):
     invited_username = serializers.CharField(source='invited_user.username', read_only=True)
-    invited_email = serializers.CharField(source='invited_user.email', read_only=True)
     memorial_name = serializers.CharField(source='memorial.full_name', read_only=True)
 
     class Meta:
         model = ContributorInvitation
-        fields = ['id', 'memorial', 'memorial_name', 'invited_user', 'invited_username', 'invited_email', 'role', 'status', 'created_at']
+        fields = ['id', 'memorial', 'memorial_name', 'invited_user', 'invited_username', 'role', 'status', 'created_at']
         read_only_fields = ['id', 'created_at', 'status']

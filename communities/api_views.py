@@ -2,39 +2,63 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.db.models import Q
+from django.conf import settings
+from django.contrib.auth.models import User
 
 from rest_framework import generics, status, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
+from users.throttles import MessageThrottle
 
-from .models import Community, Channel, Membership, CommunityMessage
+from .models import Community, Membership, CommunityJoinRequest, CommunityMessage, CommunityBan
 from .serializers import (
     CommunityListSerializer,
     CommunityDetailSerializer,
     CommunityCreateSerializer,
-    ChannelSerializer,
     CommunityMessageSerializer,
     MembershipSerializer,
+    CommunityJoinRequestSerializer,
 )
 
 
+def get_user_role(community, user):
+    if not user or not user.is_authenticated:
+        return None
+    mem = Membership.objects.filter(community=community, user=user).first()
+    return mem.role if mem else None
+
+
 class CommunityListView(generics.ListAPIView):
-    """GET /api/communities/ — list communities with search."""
+    """GET /api/communities/ — list communities.
+    Public communities are visible to everyone.
+    Private communities are visible only to members.
+    """
     serializer_class = CommunityListSerializer
     permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
+        user = self.request.user
         q = (self.request.query_params.get('q') or '').strip()
-        qs = Community.objects.select_related('owner').order_by('-created_at')
+        
+        # Base filter: visible communities
+        if user.is_authenticated:
+            # User can see public communities, or private ones where they are a member
+            member_community_ids = Membership.objects.filter(user=user).values_list('community_id', flat=True)
+            qs = Community.objects.filter(
+                Q(community_type='PUBLIC') | Q(id__in=member_community_ids)
+            )
+        else:
+            # Anonymous users can only see public communities
+            qs = Community.objects.filter(community_type='PUBLIC')
+
         if q:
-            qs = qs.filter(Q(name__icontains=q) | Q(description__icontains=q))
-        if not self.request.user.is_authenticated:
-            qs = qs.filter(is_public=True)
-        return qs
+            qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
+            
+        return qs.select_related('owner').order_by('-created_at')
 
 
 class CommunityDetailView(generics.RetrieveAPIView):
-    """GET /api/communities/<slug>/ — detail with channels and membership info."""
+    """GET /api/communities/<slug>/ — detail view with membership state."""
     serializer_class = CommunityDetailSerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = 'slug'
@@ -42,23 +66,37 @@ class CommunityDetailView(generics.RetrieveAPIView):
 
     def retrieve(self, request, *args, **kwargs):
         community = self.get_object()
+        user = request.user
 
-        # Membership info
-        mem = None
-        if request.user.is_authenticated:
-            mem = Membership.objects.filter(community=community, user=request.user).first()
-        is_member = bool(mem)
-        is_owner = bool(mem and mem.role == 'owner')
-        is_admin = bool(mem and mem.role in ('owner', 'admin'))
+        role = get_user_role(community, user)
+        is_member = role is not None
+        is_owner = role == 'ADMIN'
+        is_admin = role in ('ADMIN', 'CO_ADMIN')
 
-        if not community.is_public and not is_member:
-            return Response({'error': 'This community is private.'}, status=status.HTTP_403_FORBIDDEN)
+        # Check if user has pending join request or invite
+        has_pending_request = False
+        has_pending_invite = False
+        if user.is_authenticated and not is_member:
+            has_pending_request = CommunityJoinRequest.objects.filter(
+                community=community, user=user, status='PENDING', is_invite=False
+            ).exists()
+            has_pending_invite = CommunityJoinRequest.objects.filter(
+                community=community, user=user, status='PENDING', is_invite=True
+            ).exists()
+
+        # Enforce private community visibility check
+        # A private community is accessible only to members or pending invitees (to allow them to view it to accept)
+        if community.community_type == 'PRIVATE':
+            if not is_member and not has_pending_invite:
+                return Response({'error': 'This community is private.'}, status=status.HTTP_403_FORBIDDEN)
 
         data = self.get_serializer(community).data
         data['is_member'] = is_member
         data['is_owner'] = is_owner
         data['is_admin'] = is_admin
-        data['my_role'] = mem.role if mem else None
+        data['my_role'] = role
+        data['has_pending_request'] = has_pending_request
+        data['has_pending_invite'] = has_pending_invite
 
         return Response(data)
 
@@ -70,81 +108,342 @@ def community_create(request):
     serializer = CommunityCreateSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     community = serializer.save(owner=request.user)
-    Membership.objects.create(community=community, user=request.user, role='owner')
-    Channel.objects.create(community=community, name='general', is_public=True)
+    # Creator is automatically the single ADMIN
+    Membership.objects.create(community=community, user=request.user, role='ADMIN')
+    
     result = CommunityDetailSerializer(community)
     return Response(result.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
+def archive_community(request, slug):
+    """POST /api/communities/<slug>/archive/ — archive community (ADMIN only)."""
+    community = get_object_or_404(Community, slug=slug)
+    if get_user_role(community, request.user) != 'ADMIN':
+        return Response({'error': 'Only the ADMIN can archive this community.'}, status=status.HTTP_403_FORBIDDEN)
+    
+    community.is_archived = True
+    community.save()
+    return Response({'status': 'archived'})
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
 def join_community(request, slug):
-    """POST /api/communities/<slug>/join/ — join."""
+    """POST /api/communities/<slug>/join/ — request access (PUBLIC only)."""
     community = get_object_or_404(Community, slug=slug)
-    Membership.objects.get_or_create(community=community, user=request.user, defaults={'role': 'member'})
-    return Response({'status': 'joined'})
+    
+    if CommunityBan.objects.filter(community=community, user=request.user).exists():
+        return Response({'error': 'You are banned from this community.'}, status=status.HTTP_403_FORBIDDEN)
+        
+    if community.community_type == 'PRIVATE':
+        return Response({'error': 'Private communities are invitation only.'}, status=status.HTTP_403_FORBIDDEN)
+
+    role = get_user_role(community, request.user)
+    if role:
+        return Response({'status': 'already_member'})
+
+    # Create join request
+    join_req, created = CommunityJoinRequest.objects.get_or_create(
+        community=community,
+        user=request.user,
+        is_invite=False,
+        defaults={'status': 'PENDING'}
+    )
+    
+    if not created and join_req.status == 'REJECTED':
+        # Re-request if previously rejected
+        join_req.status = 'PENDING'
+        join_req.save()
+
+    return Response({'status': 'request_sent', 'request_id': join_req.id})
 
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
-def leave_community(request, slug):
-    """POST /api/communities/<slug>/leave/ — leave (non-owners only)."""
+def invite_member(request, slug):
+    """POST /api/communities/<slug>/invite/ — invite user (ADMIN or CO_ADMIN)."""
     community = get_object_or_404(Community, slug=slug)
-    Membership.objects.filter(community=community, user=request.user).exclude(role='owner').delete()
-    return Response({'status': 'left'})
+    role = get_user_role(community, request.user)
+    if role not in ('ADMIN', 'CO_ADMIN'):
+        return Response({'error': 'Only moderators can invite members.'}, status=status.HTTP_403_FORBIDDEN)
+
+    username = request.data.get('username')
+    if not username:
+        return Response({'error': 'Username is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    target_user = get_object_or_404(User, username=username)
+    
+    if CommunityBan.objects.filter(community=community, user=target_user).exists():
+        return Response({'error': 'This user is banned from this community.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    if Membership.objects.filter(community=community, user=target_user).exists():
+        return Response({'error': 'User is already a member.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    invite_req, created = CommunityJoinRequest.objects.get_or_create(
+        community=community,
+        user=target_user,
+        is_invite=True,
+        defaults={'status': 'PENDING'}
+    )
+
+    if not created and invite_req.status == 'REJECTED':
+        invite_req.status = 'PENDING'
+        invite_req.save()
+
+    return Response({'status': 'invite_sent', 'request_id': invite_req.id})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def list_join_requests(request, slug):
+    """GET /api/communities/<slug>/requests/ — list pending requests (ADMIN or CO_ADMIN)."""
+    community = get_object_or_404(Community, slug=slug)
+    role = get_user_role(community, request.user)
+    if role not in ('ADMIN', 'CO_ADMIN'):
+        return Response({'error': 'Only moderators can view requests.'}, status=status.HTTP_403_FORBIDDEN)
+
+    reqs = CommunityJoinRequest.objects.filter(community=community, status='PENDING', is_invite=False).select_related('user')
+    serializer = CommunityJoinRequestSerializer(reqs, many=True)
+    return Response(serializer.data)
 
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
-def channel_create(request, slug):
-    """POST /api/communities/<slug>/channels/ — create channel (admin/owner)."""
-    community = get_object_or_404(Community, slug=slug)
-    mem = Membership.objects.filter(community=community, user=request.user).first()
-    if not mem or mem.role not in ('owner', 'admin'):
-        return Response({'error': 'Only admins can create channels.'}, status=status.HTTP_403_FORBIDDEN)
+def respond_join_request(request, pk):
+    """POST /api/communities/requests/<pk>/respond/ — Approve/Reject join request or invitation."""
+    join_req = get_object_or_404(CommunityJoinRequest, pk=pk)
+    community = join_req.community
+    user = request.user
+    
+    resp_status = request.data.get('status')
+    if resp_status not in ('APPROVED', 'REJECTED'):
+        return Response({'error': 'Status must be APPROVED or REJECTED.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    serializer = ChannelSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    serializer.save(community=community)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    if join_req.is_invite:
+        # Invitation: only the target user can accept/decline
+        if join_req.user != user:
+            return Response({'error': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+    else:
+        # Request to join: only ADMIN or CO_ADMIN can approve/reject
+        role = get_user_role(community, user)
+        if role not in ('ADMIN', 'CO_ADMIN'):
+            return Response({'error': 'Only moderators can respond to requests.'}, status=status.HTTP_403_FORBIDDEN)
+
+    join_req.status = resp_status
+    join_req.save()
+
+    if resp_status == 'APPROVED':
+        Membership.objects.get_or_create(
+            community=community,
+            user=join_req.user,
+            defaults={'role': 'MEMBER'}
+        )
+
+    return Response({'status': resp_status})
 
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
-def post_message(request, slug, channel_slug):
-    """POST /api/communities/<slug>/c/<channel_slug>/post/ — post message."""
+@throttle_classes([MessageThrottle])
+def post_message(request, slug):
+    """POST /api/communities/<slug>/post/ — post message to community chat."""
     community = get_object_or_404(Community, slug=slug)
-    channel = get_object_or_404(Channel, community=community, slug=channel_slug)
-    if not Membership.objects.filter(community=community, user=request.user).exists():
-        return Response({'error': 'Not a member'}, status=status.HTTP_403_FORBIDDEN)
+    
+    if community.is_archived:
+        return Response({'error': 'This community is archived. Writing is disabled.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    role = get_user_role(community, request.user)
+    if not role:
+        return Response({'error': 'You must be a member to post.'}, status=status.HTTP_403_FORBIDDEN)
 
     serializer = CommunityMessageSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    serializer.save(channel=channel, author=request.user)
+
+    serializer.save(community=community, author=request.user)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
-def messages_feed(request, slug, channel_slug):
-    """GET /api/communities/<slug>/c/<channel_slug>/feed/?since= — polling feed."""
+def messages_feed(request, slug):
+    """GET /api/communities/<slug>/feed/ — get chat message history."""
     community = get_object_or_404(Community, slug=slug)
-    channel = get_object_or_404(Channel, community=community, slug=channel_slug)
+    user = request.user
 
-    is_member = request.user.is_authenticated and Membership.objects.filter(
-        community=community, user=request.user).exists()
-    if not (community.is_public or is_member):
-        return Response({'results': []}, status=status.HTTP_403_FORBIDDEN)
+    role = get_user_role(community, user)
+    is_member = role is not None
+
+    # Public community chat is viewable by anyone, Private community is restricted to members
+    if community.community_type == 'PRIVATE' and not is_member:
+        return Response({'error': 'Access denied.'}, status=status.HTTP_403_FORBIDDEN)
 
     since = request.query_params.get('since')
-    qs = channel.messages.select_related('author').order_by('created_at')
+    qs = community.messages.select_related('author').order_by('created_at')
+    
     if since:
         dt = parse_datetime(since)
         if dt:
             qs = qs.filter(created_at__gt=dt)
 
-    data = CommunityMessageSerializer(qs[:50], many=True).data
+    # Cap messages at 100
+    data = CommunityMessageSerializer(qs[:100], many=True).data
     return Response({'results': data})
+
+
+@api_view(['DELETE', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_message(request, pk):
+    """DELETE or POST /api/communities/messages/<pk>/delete/ — soft delete message (author or moderators)."""
+    msg = get_object_or_404(CommunityMessage, pk=pk)
+    community = msg.community
+    role = get_user_role(community, request.user)
+    
+    is_author = msg.author == request.user
+    is_moderator = role in ('ADMIN', 'CO_ADMIN')
+
+    if not is_author and not is_moderator:
+        return Response({'error': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+    msg.is_deleted = True
+    msg.deleted_by = request.user
+    msg.save()
+
+    return Response({'status': 'deleted'})
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def list_members(request, slug):
+    """GET /api/communities/<slug>/members/ — list members of a community."""
+    community = get_object_or_404(Community, slug=slug)
+    role = get_user_role(community, request.user)
+    
+    if community.community_type == 'PRIVATE' and not role:
+        return Response({'error': 'Access denied.'}, status=status.HTTP_403_FORBIDDEN)
+
+    mems = community.memberships.select_related('user').order_by('joined_at')
+    serializer = MembershipSerializer(mems, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def update_member_role(request, slug, username):
+    """POST /api/communities/<slug>/members/<username>/role/ — assign/remove co-admin role (ADMIN only)."""
+    community = get_object_or_404(Community, slug=slug)
+    if get_user_role(community, request.user) != 'ADMIN':
+        return Response({'error': 'Only the ADMIN can manage member roles.'}, status=status.HTTP_403_FORBIDDEN)
+
+    target_user = get_object_or_404(User, username=username)
+    membership = get_object_or_404(Membership, community=community, user=target_user)
+
+    new_role = request.data.get('role')
+    if new_role not in ('CO_ADMIN', 'MEMBER'):
+        return Response({'error': 'Role must be CO_ADMIN or MEMBER.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if new_role == 'CO_ADMIN':
+        # Check settings.MAX_COMMUNITY_COADMINS limit
+        max_coadmins = getattr(settings, 'MAX_COMMUNITY_COADMINS', 3)
+        current_coadmins = Membership.objects.filter(community=community, role='CO_ADMIN').count()
+        if current_coadmins >= max_coadmins:
+            return Response({'error': f'Maximum limit of {max_coadmins} co-admins has been reached.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Admin cannot lose ADMIN role here (target_user is not ADMIN since admin is owner and unique)
+    if membership.role == 'ADMIN':
+        return Response({'error': 'The ADMIN role cannot be modified.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    membership.role = new_role
+    membership.save()
+
+    return Response(MembershipSerializer(membership).data)
+
+
+@api_view(['DELETE', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
+def remove_member(request, slug, username):
+    """DELETE/POST /api/communities/<slug>/members/<username>/remove/ — remove member."""
+    community = get_object_or_404(Community, slug=slug)
+    actor_role = get_user_role(community, request.user)
+    
+    if actor_role not in ('ADMIN', 'CO_ADMIN'):
+        return Response({'error': 'Only moderators can remove members.'}, status=status.HTTP_403_FORBIDDEN)
+
+    target_user = get_object_or_404(User, username=username)
+    membership = get_object_or_404(Membership, community=community, user=target_user)
+
+    # ADMIN cannot be removed
+    if membership.role == 'ADMIN':
+        return Response({'error': 'The ADMIN cannot be removed.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # CO_ADMIN can only remove regular MEMBERs
+    if actor_role == 'CO_ADMIN' and membership.role in ('ADMIN', 'CO_ADMIN'):
+        return Response({'error': 'Co-admins can only remove regular members.'}, status=status.HTTP_403_FORBIDDEN)
+
+    membership.delete()
+    return Response({'status': 'removed'})
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def leave_community(request, slug):
+    """POST /api/communities/<slug>/leave/ — leave community (non-ADMINs only)."""
+    community = get_object_or_404(Community, slug=slug)
+    # ADMIN cannot leave (they must delete/archive or transfer ownership first)
+    mems = Membership.objects.filter(community=community, user=request.user)
+    if mems.filter(role='ADMIN').exists():
+        return Response({'error': 'The ADMIN cannot leave the community. Archive instead.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    mems.delete()
+    return Response({'status': 'left'})
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def ban_user(request, slug, username):
+    """POST /api/communities/<slug>/ban/<username>/ — ban a user from the community."""
+    community = get_object_or_404(Community, slug=slug)
+    role = get_user_role(community, request.user)
+    if role not in ('ADMIN', 'CO_ADMIN'):
+        return Response({'error': 'Only moderators can ban users.'}, status=status.HTTP_403_FORBIDDEN)
+    
+    target_user = get_object_or_404(User, username=username)
+    if target_user == community.owner:
+        return Response({'error': 'Cannot ban the community owner.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    target_role = get_user_role(community, target_user)
+    if role == 'CO_ADMIN' and target_role in ('ADMIN', 'CO_ADMIN'):
+        return Response({'error': 'Co-admins cannot ban other moderators.'}, status=status.HTTP_403_FORBIDDEN)
+    
+    reason = request.data.get('reason', '')
+    
+    ban, created = CommunityBan.objects.get_or_create(
+        community=community,
+        user=target_user,
+        defaults={'banned_by': request.user, 'reason': reason}
+    )
+    
+    Membership.objects.filter(community=community, user=target_user).delete()
+    CommunityJoinRequest.objects.filter(community=community, user=target_user).delete()
+    
+    return Response({'status': 'banned'})
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def unban_user(request, slug, username):
+    """POST /api/communities/<slug>/unban/<username>/ — unban a user."""
+    community = get_object_or_404(Community, slug=slug)
+    role = get_user_role(community, request.user)
+    if role not in ('ADMIN', 'CO_ADMIN'):
+        return Response({'error': 'Only moderators can unban users.'}, status=status.HTTP_403_FORBIDDEN)
+    
+    target_user = get_object_or_404(User, username=username)
+    CommunityBan.objects.filter(community=community, user=target_user).delete()
+    
+    return Response({'status': 'unbanned'})
+

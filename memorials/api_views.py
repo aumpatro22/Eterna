@@ -61,7 +61,7 @@ class MemorialListView(generics.ListAPIView):
         else:
             qs = Memorial.objects.filter(visibility='PUBLIC')
 
-        qs = qs.select_related('owner').order_by('-created_at')
+        qs = qs.select_related('owner').prefetch_related('tags').order_by('-created_at')
         
         search = (self.request.query_params.get('search') or '').strip()
         owner_id = (self.request.query_params.get('owner') or '').strip()
@@ -241,11 +241,29 @@ def memorial_delete(request, pk):
     return Response({'status': 'deleted'}, status=status.HTTP_204_NO_CONTENT)
 
 
+def check_memorial_access(memorial, user):
+    if memorial.visibility == 'PUBLIC':
+        return True
+    if user.is_authenticated:
+        if memorial.owner == user:
+            return True
+        try:
+            from .models import Contributor
+            if Contributor.objects.filter(memorial=memorial, user=user).exists():
+                return True
+        except Exception:
+            pass
+    return False
+
+
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def add_message(request, pk):
     """POST /api/memorials/<pk>/messages/ — leave a message."""
     memorial = get_object_or_404(Memorial, pk=pk)
+    if not check_memorial_access(memorial, request.user):
+        raise PermissionDenied("This memorial is private.")
+        
     data = request.data.copy()
     if request.user.is_authenticated:
         if not data.get('author_name'):
@@ -270,6 +288,9 @@ def add_message(request, pk):
 def light_candle(request, pk):
     """POST /api/memorials/<pk>/candles/ — light a candle."""
     memorial = get_object_or_404(Memorial, pk=pk)
+    if not check_memorial_access(memorial, request.user):
+        raise PermissionDenied("This memorial is private.")
+        
     serializer = CandleSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -429,7 +450,7 @@ def list_contributors(request, pk):
         if not is_contributor:
             raise PermissionDenied("Not authorized to view contributors.")
 
-    contributors = Contributor.objects.filter(memorial=memorial)
+    contributors = Contributor.objects.filter(memorial=memorial).select_related('user')
     serializer = ContributorSerializer(contributors, many=True)
     return Response(serializer.data)
 
@@ -468,7 +489,7 @@ def invite_contributor(request, pk):
 @permission_classes([permissions.IsAuthenticated])
 def list_invitations(request):
     """GET /api/invitations/ — list pending invitations for the logged-in user."""
-    invitations = ContributorInvitation.objects.filter(invited_user=request.user, status='PENDING')
+    invitations = ContributorInvitation.objects.filter(invited_user=request.user, status='PENDING').select_related('memorial', 'invited_user')
     serializer = ContributorInvitationSerializer(invitations, many=True, context={'request': request})
     return Response(serializer.data)
 
@@ -494,3 +515,59 @@ def respond_invitation(request, pk):
         )
 
     return Response({'status': response_status})
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_timeline_event(request, pk):
+    event = get_object_or_404(TimelineEvent, pk=pk)
+    memorial = event.memorial
+    user = request.user
+
+    is_contributor = False
+    try:
+        from .models import Contributor
+        is_contributor = Contributor.objects.filter(memorial=memorial, user=user).exists()
+    except Exception:
+        pass
+
+    if memorial.owner != user and not is_contributor:
+        return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+    event.delete()
+    return Response({'status': 'deleted'}, status=status.HTTP_200_OK)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_memory(request, pk):
+    memory = get_object_or_404(Memory, pk=pk)
+    memorial = memory.memorial
+    user = request.user
+
+    if memorial.owner != user and memory.author != user:
+        return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+    memory.delete()
+    return Response({'status': 'deleted'}, status=status.HTTP_200_OK)
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_message(request, pk):
+    message = get_object_or_404(Message, pk=pk)
+    memorial = message.memorial
+    user = request.user
+
+    is_contributor = False
+    try:
+        from .models import Contributor
+        is_contributor = Contributor.objects.filter(memorial=memorial, user=user).exists()
+    except Exception:
+        pass
+
+    if memorial.owner != user and not is_contributor:
+        return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
+
+    message.delete()
+    return Response({'status': 'deleted'}, status=status.HTTP_200_OK)

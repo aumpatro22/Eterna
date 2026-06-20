@@ -17,5 +17,8 @@ urlpatterns = [
     path('invitations/', api_views.list_invitations, name='api_invitations_list'),
     path('invitations/<int:pk>/respond/', api_views.respond_invitation, name='api_invitations_respond'),
     path('tags/', api_views.list_tags, name='api_tags_list'),
+    path('timeline/<int:pk>/delete/', api_views.delete_timeline_event, name='api_timeline_delete'),
+    path('memories/<int:pk>/delete/', api_views.delete_memory, name='api_memory_delete'),
+    path('messages/<int:pk>/delete/', api_views.delete_message, name='api_message_delete'),
     path('by-id/<str:public_id>/', api_views.MemorialByPublicIdView.as_view(), name='api_memorial_by_id'),
 ]

@@ -1,26 +1,26 @@
 from django.contrib import admin
-from .models import Community, Membership, Channel, CommunityMessage
+from .models import Community, Membership, CommunityJoinRequest, CommunityMessage
 
 @admin.register(Community)
 class CommunityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'is_public', 'created_at')
-    search_fields = ('name', 'description')
-    list_filter = ('is_public', 'created_at')
+    list_display = ('title', 'owner', 'community_type', 'is_archived', 'created_at')
+    search_fields = ('title', 'description')
+    list_filter = ('community_type', 'is_archived', 'created_at')
 
 @admin.register(Membership)
 class MembershipAdmin(admin.ModelAdmin):
     list_display = ('community', 'user', 'role', 'joined_at')
     list_filter = ('role', 'joined_at')
-    search_fields = ('community__name', 'user__username')
+    search_fields = ('community__title', 'user__username')
 
-@admin.register(Channel)
-class ChannelAdmin(admin.ModelAdmin):
-    list_display = ('name', 'community', 'is_public', 'created_at')
-    list_filter = ('is_public', 'created_at')
-    search_fields = ('name', 'community__name')
+@admin.register(CommunityJoinRequest)
+class CommunityJoinRequestAdmin(admin.ModelAdmin):
+    list_display = ('community', 'user', 'status', 'is_invite', 'created_at')
+    list_filter = ('status', 'is_invite', 'created_at')
+    search_fields = ('community__title', 'user__username')
 
 @admin.register(CommunityMessage)
 class CommunityMessageAdmin(admin.ModelAdmin):
-    list_display = ('channel', 'author', 'created_at')
-    search_fields = ('content', 'author__username', 'channel__name')
-    list_filter = ('created_at',)
+    list_display = ('community', 'author', 'is_deleted', 'created_at')
+    search_fields = ('content', 'author__username', 'community__title')
+    list_filter = ('is_deleted', 'created_at')

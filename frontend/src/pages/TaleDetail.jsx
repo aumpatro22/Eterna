@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
+import { motion } from 'framer-motion';
+import ReportModal from '../components/layout/ReportModal';
 
 // Pagination helper: groups paragraphs into pages of roughly 750 characters
 const paginateContent = (text, charsPerPage = 750) => {
@@ -34,6 +36,11 @@ export default function TaleDetail() {
   const [comments, setComments] = useState([]);
   const [isCommenting, setIsCommenting] = useState(false);
   const [commentForm, setCommentForm] = useState({ author: '', content: '' });
+
+  // Report modal states
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportTargetType, setReportTargetType] = useState('TALE');
+  const [reportTargetId, setReportTargetId] = useState(null);
 
   // New chapter states
   const [isAddingChapter, setIsAddingChapter] = useState(false);
@@ -134,6 +141,12 @@ export default function TaleDetail() {
     setIsCommenting(false);
   };
 
+  const deleteComment = (id) => {
+    const updated = comments.filter(c => c.id !== id);
+    setComments(updated);
+    localStorage.setItem(`eterna_tale_comments_${slug}`, JSON.stringify(updated));
+  };
+
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-20 gap-4">
       <div className="w-12 h-12 border-[4px] border-ink border-t-marker rounded-full animate-spin"></div>
@@ -154,6 +167,18 @@ export default function TaleDetail() {
         {tale.subtitle && <h2 className="font-patrick text-2xl text-ink/70 mb-4">{tale.subtitle}</h2>}
         <p className="font-patrick text-lg font-bold border-t-[3px] border-dashed border-ink inline-block pt-3">
           Authored by {tale.author_username}
+          {user && tale.author_id !== user.id && (
+            <button
+              onClick={() => {
+                setReportTargetType('TALE');
+                setReportTargetId(tale.id);
+                setShowReportModal(true);
+              }}
+              className="ml-3 hover:text-marker text-sm font-bold underline cursor-pointer"
+            >
+              🛡️ Report Tale
+            </button>
+          )}
         </p>
       </div>
 
@@ -294,23 +319,32 @@ export default function TaleDetail() {
           ) : activeChapter ? (
             <div className="relative">
               
-              {/* Outer Margin Comments - Absolute positioned for desktop screens */}
+              {/* Outer Margin Comments - Draggable & Dismissible */}
               <div className="hidden xl:block">
                 {comments.map((comment) => (
-                  <div
+                  <motion.div
+                    drag
+                    dragMomentum={false}
                     key={comment.id}
-                    className={`absolute w-36 p-3 bg-postit border-2 border-ink wobbly-sm shadow-hard-hover text-left rotate-[${comment.rotate}deg] font-patrick`}
+                    className={`absolute w-36 p-3 bg-postit border-2 border-ink wobbly-sm shadow-hard-hover text-left rotate-[${comment.rotate}deg] font-patrick cursor-grab active:cursor-grabbing z-30`}
                     style={{
-                      left: comment.side === 'left' ? '-170px' : 'auto',
-                      right: comment.side === 'right' ? '-170px' : 'auto',
+                      left: comment.side === 'left' ? '-195px' : 'auto',
+                      right: comment.side === 'right' ? '-195px' : 'auto',
                       top: `${comment.top}px`,
                       transform: `rotate(${comment.rotate}deg)`,
                     }}
                   >
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); deleteComment(comment.id); }}
+                      className="absolute top-1 right-1 text-xs font-bold text-ink/40 hover:text-marker"
+                      title="Remove note"
+                    >
+                      ✖
+                    </button>
                     <div className="absolute top-[-6px] left-1/2 transform -translate-x-1/2 w-3 h-3 bg-marker border border-ink rounded-full" />
                     <span className="font-kalam text-sm font-bold text-ink/80 block border-b border-dashed border-ink/20 pb-1">{comment.author}</span>
                     <p className="text-sm mt-1 text-ink/90 leading-tight">{comment.content}</p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
 
@@ -339,7 +373,10 @@ export default function TaleDetail() {
                   <div className="relative z-10">
                     <h3 className="font-kalam text-2xl text-ink/40 mb-6 uppercase tracking-wider">{tale.title}</h3>
                     {leftPageText ? (
-                      <div className="font-patrick text-xl md:text-2xl leading-relaxed whitespace-pre-wrap text-ink/90">
+                      <div 
+                        className="font-patrick text-lg md:text-xl whitespace-pre-wrap text-ink/90"
+                        style={{ lineHeight: '28px', paddingTop: '4px' }}
+                      >
                         {bookIndex === 0 ? (
                           <>
                             {/* Drop Cap */}
@@ -378,7 +415,10 @@ export default function TaleDetail() {
                   <div className="relative z-10">
                     <h3 className="font-kalam text-2xl text-ink/40 mb-6 uppercase tracking-wider">{activeChapter.title}</h3>
                     {rightPageText ? (
-                      <div className="font-patrick text-xl md:text-2xl leading-relaxed whitespace-pre-wrap text-ink/90">
+                      <div 
+                        className="font-patrick text-lg md:text-xl whitespace-pre-wrap text-ink/90"
+                        style={{ lineHeight: '28px', paddingTop: '4px' }}
+                      >
                         {rightPageText}
                       </div>
                     ) : (
@@ -422,7 +462,14 @@ export default function TaleDetail() {
                 <h4 className="font-kalam text-2xl mb-4 border-b-2 border-dashed border-ink/20 pb-2">Margin Comments</h4>
                 <div className="flex flex-col gap-4">
                   {comments.map((comment) => (
-                    <div key={comment.id} className="p-3 bg-postit border-2 border-ink wobbly-sm font-patrick text-left">
+                    <div key={comment.id} className="p-3 bg-postit border-2 border-ink wobbly-sm font-patrick text-left relative">
+                      <button 
+                        onClick={() => deleteComment(comment.id)}
+                        className="absolute top-2 right-2 text-xs font-bold text-ink/40 hover:text-marker"
+                        title="Remove note"
+                      >
+                        ✖
+                      </button>
                       <span className="font-kalam text-base font-bold text-ink/80 block border-b border-dashed border-ink/20 pb-1">{comment.author}</span>
                       <p className="text-lg mt-1 text-ink/90">{comment.content}</p>
                     </div>
@@ -442,6 +489,14 @@ export default function TaleDetail() {
         </div>
 
       </div>
+
+      {showReportModal && (
+        <ReportModal
+          targetType={reportTargetType}
+          targetId={reportTargetId}
+          onClose={() => setShowReportModal(false)}
+        />
+      )}
     </div>
   );
 }

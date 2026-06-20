@@ -3,60 +3,145 @@ from django.contrib.auth.models import User
 from django.utils.text import slugify
 
 class Community(models.Model):
+    COMMUNITY_TYPE_CHOICES = (
+        ('PUBLIC', 'Public'),
+        ('PRIVATE', 'Private'),
+    )
+    
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_communities')
-    name = models.CharField(max_length=80, unique=True)
+    title = models.CharField(max_length=80, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True)
     description = models.TextField(blank=True)
-    is_public = models.BooleanField(default=True)
+    
+    # Rules and welcome message defaults as specified
+    rules = models.TextField(
+        default="1. Be respectful.\n2. No harassment.\n3. Support others kindly.\n4. No spam."
+    )
+    welcome_message = models.TextField(
+        default="We're sorry you're here, but you're not alone."
+    )
+    
+    cover_image = models.ImageField(upload_to='communities/covers/', null=True, blank=True)
+    icon_image = models.ImageField(upload_to='communities/icons/', null=True, blank=True)
+    
+    community_type = models.CharField(
+        max_length=10, 
+        choices=COMMUNITY_TYPE_CHOICES, 
+        default='PUBLIC'
+    )
+    
+    is_archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
+        import bleach
+        from users.validators import validate_image_file, optimize_image
         if not self.slug:
-            self.slug = slugify(self.name)[:95]
+            self.slug = slugify(self.title)[:95]
+        if self.title:
+            self.title = bleach.clean(self.title, tags=[], strip=True)
+        if self.description:
+            self.description = bleach.clean(self.description, tags=[], strip=True)
+        if self.rules:
+            self.rules = bleach.clean(self.rules, tags=[], strip=True)
+        if self.welcome_message:
+            self.welcome_message = bleach.clean(self.welcome_message, tags=[], strip=True)
+        if self.cover_image:
+            validate_image_file(self.cover_image)
+            optimize_image(self.cover_image)
+        if self.icon_image:
+            validate_image_file(self.icon_image)
+            optimize_image(self.icon_image)
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.name
+        return self.title
+
 
 class Membership(models.Model):
-    ROLE_CHOICES = (('owner', 'Owner'), ('admin', 'Admin'), ('member', 'Member'))
+    ROLE_CHOICES = (
+        ('ADMIN', 'Admin'), 
+        ('CO_ADMIN', 'Co-Admin'), 
+        ('MEMBER', 'Member')
+    )
+    
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='memberships')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_memberships')
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='member')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='MEMBER')
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = ('community', 'user')
 
     def __str__(self):
-        return f"{self.user.username} in {self.community.name}"
+        return f"{self.user.username} ({self.role}) in {self.community.title}"
 
-class Channel(models.Model):
-    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='channels')
-    name = models.CharField(max_length=80)
-    slug = models.SlugField(max_length=100, blank=True)
-    is_public = models.BooleanField(default=True)
+
+class CommunityJoinRequest(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_join_requests')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='join_requests')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    is_invite = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('community', 'slug')
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)[:95]
-        super().save(*args, **kwargs)
+        unique_together = ('user', 'community', 'is_invite')
 
     def __str__(self):
-        return f"#{self.name} ({self.community.name})"
+        direction = "Invite to" if self.is_invite else "Request from"
+        return f"{direction} {self.user.username} for {self.community.title} ({self.status})"
+
 
 class CommunityMessage(models.Model):
-    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, related_name='messages')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='messages', null=True, blank=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_messages')
     content = models.TextField()
+    image = models.ImageField(upload_to='community_messages/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Soft delete fields
+    is_deleted = models.BooleanField(default=False)
+    deleted_by = models.ForeignKey(
+        User, 
+        null=True, 
+        blank=True, 
+        on_delete=models.SET_NULL, 
+        related_name='deleted_community_messages'
+    )
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        deleted_status = " (Deleted)" if self.is_deleted else ""
+        return f"{self.author.username} in {self.community.title}: {self.content[:30]}{deleted_status}"
+
+    def save(self, *args, **kwargs):
+        import bleach
+        from users.validators import validate_image_file, optimize_image
+        if self.content:
+            self.content = bleach.clean(self.content, tags=[], strip=True)
+        if self.image:
+            validate_image_file(self.image)
+            optimize_image(self.image)
+        super().save(*args, **kwargs)
+
+
+class CommunityBan(models.Model):
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='bans')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_bans')
+    banned_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bans_issued')
+    reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-created_at']
+        unique_together = ('community', 'user')
 
     def __str__(self):
-        return f"{self.author.username}: {self.content[:30]}"
+        return f"{self.user.username} banned from {self.community.title} by {self.banned_by.username}"

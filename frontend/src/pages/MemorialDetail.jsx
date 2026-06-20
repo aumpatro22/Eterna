@@ -4,12 +4,44 @@ import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import InteractiveCandle from '../components/Memorial/InteractiveCandle';
 import CassetteTapePlayer from '../components/Memorial/CassetteTapePlayer';
+import ReportModal from '../components/layout/ReportModal';
+
+const formatLocalTime = (isoString) => {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+};
+
+const formatCalendarDate = (dateString) => {
+  if (!dateString) return '';
+  const parts = dateString.split('-');
+  if (parts.length === 3) {
+    const year = parts[0];
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const date = new Date(year, month, day);
+    return date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+  return new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+};
 
 export default function MemorialDetail() {
   const { id } = useParams();
   const { user } = useAuth();
   const [memorial, setMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Report modal states
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportTargetType, setReportTargetType] = useState('MEMORIAL');
+  const [reportTargetId, setReportTargetId] = useState(null);
   
   // Tab states: 'overview', 'memories', 'timeline', 'photos', 'contributors'
   const [activeTab, setActiveTab] = useState('overview');
@@ -35,6 +67,12 @@ export default function MemorialDetail() {
   const [contributors, setContributors] = useState([]);
   const [invitations, setInvitations] = useState([]);
 
+  // Timeline creation states
+  const [timelineForm, setTimelineForm] = useState({ title: '', event_date: '', description: '', image: null });
+  const [timelineLoading, setTimelineLoading] = useState(false);
+  const [timelineError, setTimelineError] = useState('');
+  const [showTimelineForm, setShowTimelineForm] = useState(false);
+
   useEffect(() => {
     fetchMemorial();
   }, [id, user]);
@@ -49,10 +87,8 @@ export default function MemorialDetail() {
           author_name: user.first_name || user.username,
           author_email: user.email
         }));
-        // If owner, fetch contributors and invitations
-        if (data.owner_id === user.id) {
-          fetchContributors();
-        }
+        // Fetch contributors for all authenticated users to check contributor permissions
+        fetchContributors();
       }
     } catch (err) {
       console.error(err);
@@ -75,6 +111,74 @@ export default function MemorialDetail() {
       // For now, let's assume we can invite by username and show status.
     } catch (err) {
       console.error('Failed to load contributors', err);
+    }
+  };
+
+  const handleAddTimeline = async (e) => {
+    e.preventDefault();
+    if (!timelineForm.title.trim() || !timelineForm.event_date) return;
+    setTimelineLoading(true);
+    setTimelineError('');
+
+    const formData = new FormData();
+    formData.append('title', timelineForm.title);
+    formData.append('event_date', timelineForm.event_date);
+    formData.append('description', timelineForm.description);
+    if (timelineForm.image) {
+      formData.append('image', timelineForm.image);
+    }
+
+    try {
+      const newEv = await api.post(`/api/memorials/${id}/timeline/`, formData);
+      setMemorial(prev => ({
+        ...prev,
+        timeline_events: [...(prev.timeline_events || []), newEv].sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
+      }));
+      setTimelineForm({ title: '', event_date: '', description: '', image: null });
+      setShowTimelineForm(false);
+    } catch (err) {
+      setTimelineError(err.message || 'Failed to add milestone.');
+    } finally {
+      setTimelineLoading(false);
+    }
+  };
+
+  const handleDeleteTimeline = async (eventId) => {
+    if (!window.confirm('Are you sure you want to delete this milestone?')) return;
+    try {
+      await api.delete(`/api/memorials/timeline/${eventId}/delete/`);
+      setMemorial(prev => ({
+        ...prev,
+        timeline_events: prev.timeline_events.filter(ev => ev.id !== eventId)
+      }));
+    } catch (err) {
+      alert('Failed to delete milestone.');
+    }
+  };
+
+  const handleDeleteMemory = async (memoryId) => {
+    if (!window.confirm('Are you sure you want to delete this memory?')) return;
+    try {
+      await api.delete(`/api/memorials/memories/${memoryId}/delete/`);
+      setMemorial(prev => ({
+        ...prev,
+        memories: prev.memories.filter(m => m.id !== memoryId)
+      }));
+    } catch (err) {
+      alert('Failed to delete memory.');
+    }
+  };
+
+  const handleDeleteMessage = async (msgId) => {
+    if (!window.confirm('Are you sure you want to delete this guestbook message?')) return;
+    try {
+      await api.delete(`/api/memorials/messages/${msgId}/delete/`);
+      setMemorial(prev => ({
+        ...prev,
+        messages: prev.messages.filter(m => m.id !== msgId)
+      }));
+    } catch (err) {
+      alert('Failed to delete guestbook message.');
     }
   };
 
@@ -166,7 +270,11 @@ export default function MemorialDetail() {
   );
   if (!memorial) return <div className="text-center font-kalam text-4xl mt-12">Memorial not found.</div>;
 
-  const isOwner = user && memorial.owner_id === user.id;
+  const isOwner = user && memorial && memorial.owner_id === user.id;
+  const isContributor = user && (
+    isOwner || 
+    contributors.some(c => c.username === user.username)
+  );
 
   return (
     <div className="flex flex-col gap-8">
@@ -222,6 +330,18 @@ export default function MemorialDetail() {
                     <span className="ml-3 px-2 py-0.5 bg-marker text-white text-xs font-bold rounded">
                       🔒 {memorial.visibility}
                     </span>
+                  )}
+                  {user && memorial.owner_username !== user.username && (
+                    <button
+                      onClick={() => {
+                        setReportTargetType('MEMORIAL');
+                        setReportTargetId(memorial.id);
+                        setShowReportModal(true);
+                      }}
+                      className="ml-3 hover:text-marker text-sm font-bold underline cursor-pointer"
+                    >
+                      🛡️ Report Memorial
+                    </button>
                   )}
                 </p>
               </div>
@@ -320,10 +440,34 @@ export default function MemorialDetail() {
                     <p className="font-patrick text-xl italic text-ink/65 text-center py-6">The guestbook is currently quiet. Leave a note above.</p>
                   ) : (
                     memorial.messages.map((msg, idx) => (
-                      <div key={msg.id} className={`p-4 border-[3px] border-ink ${idx % 2 === 0 ? 'bg-white rotate-0.5' : 'bg-postit -rotate-0.5'} wobbly-sm shadow-md`}>
-                        <div className="flex justify-between items-start mb-2 border-b-[2px] border-dashed border-ink/20 pb-2">
+                      <div key={msg.id} className={`p-4 border-[3px] border-ink ${idx % 2 === 0 ? 'bg-white rotate-0.5' : 'bg-postit -rotate-0.5'} wobbly-sm shadow-md relative`}>
+                        <div className="absolute top-2 right-2 flex gap-2">
+                          {user && (
+                            <button
+                              onClick={() => {
+                                setReportTargetType('MEMORIAL_MESSAGE');
+                                setReportTargetId(msg.id);
+                                setShowReportModal(true);
+                              }}
+                              className="text-ink/40 hover:text-marker text-sm"
+                              title="Report Message"
+                            >
+                              🛡️
+                            </button>
+                          )}
+                          {isContributor && (
+                            <button
+                              onClick={() => handleDeleteMessage(msg.id)}
+                              className="text-ink/40 hover:text-marker font-bold text-sm"
+                              title="Delete Message"
+                            >
+                              ✖
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex justify-between items-start mb-2 border-b-[2px] border-dashed border-ink/20 pb-2 mr-6">
                           <span className="font-kalam text-xl font-bold">{msg.author_name}</span>
-                          <span className="font-patrick text-sm text-ink/60">{msg.created_at_display}</span>
+                          <span className="font-patrick text-sm text-ink/60">{formatLocalTime(msg.created_at)}</span>
                         </div>
                         <p className="font-patrick text-xl whitespace-pre-wrap">{msg.content}</p>
                       </div>
@@ -429,19 +573,43 @@ export default function MemorialDetail() {
                   </p>
                 ) : (
                   memorial.memories.map((mem, idx) => (
-                    <div key={mem.id} className={`paper-card p-6 ${idx % 2 === 0 ? '-rotate-0.5 bg-white' : 'rotate-0.5 bg-erased'}`}>
-                      <div className="flex justify-between items-start mb-4 border-b-[2px] border-dashed border-ink/20 pb-2">
+                    <div key={mem.id} className={`paper-card p-6 ${idx % 2 === 0 ? '-rotate-0.5 bg-white' : 'rotate-0.5 bg-erased'} relative`}>
+                      <div className="absolute top-4 right-4 flex gap-3">
+                        {user && mem.author_username !== user.username && (
+                          <button
+                            onClick={() => {
+                              setReportTargetType('MEMORY');
+                              setReportTargetId(mem.id);
+                              setShowReportModal(true);
+                            }}
+                            className="text-ink/40 hover:text-marker text-base"
+                            title="Report Memory"
+                          >
+                            🛡️
+                          </button>
+                        )}
+                        {user && (isContributor || mem.author_username === user.username) && (
+                          <button
+                            onClick={() => handleDeleteMemory(mem.id)}
+                            className="text-ink/40 hover:text-marker font-bold text-base"
+                            title="Delete Memory"
+                          >
+                            ✖
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-start mb-4 border-b-[2px] border-dashed border-ink/20 pb-2 mr-6">
                         <div>
                           <h4 className="font-kalam text-3xl mb-1">{mem.title}</h4>
                           <p className="font-patrick text-sm text-ink/75">
                             Shared by <strong>{mem.author_username}</strong> 
-                            {mem.memory_date && ` • Event Date: ${new Date(mem.memory_date).toLocaleDateString()}`}
+                            {mem.memory_date && ` • Event Date: ${formatCalendarDate(mem.memory_date)}`}
                             {mem.visibility !== 'PUBLIC' && (
                               <span className="ml-2 px-1 bg-marker text-white text-xs rounded">🔒 {mem.visibility}</span>
                             )}
                           </p>
                         </div>
-                        <span className="font-patrick text-sm text-ink/60">{mem.created_at_display}</span>
+                        <span className="font-patrick text-sm text-ink/60">{formatLocalTime(mem.created_at)}</span>
                       </div>
 
                       <div className="flex flex-col md:flex-row gap-6 items-start">
@@ -475,7 +643,82 @@ export default function MemorialDetail() {
           {activeTab === 'timeline' && (
             <div className="paper-card p-6 rotate-1">
               <h3 className="font-kalam text-3xl mb-6 underline decoration-wavy">Life Milestones</h3>
-              
+
+              {/* Add Timeline Event (Milestone) Form for Owner/Contributors */}
+              {isContributor && (
+                <div className="mb-8">
+                  {!showTimelineForm ? (
+                    <button 
+                      onClick={() => setShowTimelineForm(true)} 
+                      className="btn btn-primary font-kalam font-bold text-xl flex items-center gap-2"
+                    >
+                      ➕ Add Timeline Milestone
+                    </button>
+                  ) : (
+                    <div className="paper-card bg-paper p-6 -rotate-0.5 border-[3px] border-ink w-full max-w-lg mb-6">
+                      <h4 className="font-kalam text-2xl font-bold mb-4 border-b-[2px] border-dashed border-ink/20 pb-2">Add Milestone Event</h4>
+                      {timelineError && (
+                        <div className="bg-marker/10 border-l-4 border-marker p-3 font-patrick text-lg mb-4">
+                          {timelineError}
+                        </div>
+                      )}
+                      <form onSubmit={handleAddTimeline} className="flex flex-col gap-4 font-patrick text-lg">
+                        <div>
+                          <label className="input-label text-sm">Event Date *</label>
+                          <input 
+                            type="date" 
+                            className="input bg-white" 
+                            required 
+                            value={timelineForm.event_date} 
+                            onChange={e => setTimelineForm({...timelineForm, event_date: e.target.value})} 
+                          />
+                        </div>
+                        <div>
+                          <label className="input-label text-sm">Event Title *</label>
+                          <input 
+                            className="input" 
+                            required 
+                            placeholder="e.g. Born in Chicago, IL" 
+                            value={timelineForm.title} 
+                            onChange={e => setTimelineForm({...timelineForm, title: e.target.value})} 
+                          />
+                        </div>
+                        <div>
+                          <label className="input-label text-sm">Description (Optional)</label>
+                          <textarea 
+                            className="input h-24" 
+                            placeholder="Describe this life milestone..." 
+                            value={timelineForm.description} 
+                            onChange={e => setTimelineForm({...timelineForm, description: e.target.value})} 
+                          />
+                        </div>
+                        <div>
+                          <label className="input-label text-sm">Event Photo (Optional)</label>
+                          <input 
+                            type="file" 
+                            className="input bg-white text-sm" 
+                            accept="image/*" 
+                            onChange={e => setTimelineForm({...timelineForm, image: e.target.files[0]})} 
+                          />
+                        </div>
+                        <div className="flex gap-3 mt-2">
+                          <button type="submit" className="btn btn-primary px-6 py-2" disabled={timelineLoading}>
+                            {timelineLoading ? 'Adding...' : 'Save Milestone'}
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={() => { setShowTimelineForm(false); setTimelineError(''); }} 
+                            className="btn btn-secondary px-4 py-2"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {(!memorial.timeline_events || memorial.timeline_events.length === 0) ? (
                 <p className="font-patrick text-xl italic text-ink/65 text-center py-6">No milestones added yet.</p>
               ) : (
@@ -486,10 +729,19 @@ export default function MemorialDetail() {
                       <div className="absolute -left-[41px] top-1.5 w-6 h-6 rounded-full border-[3px] border-ink bg-marker flex items-center justify-center">
                         <span className="w-2 h-2 rounded-full bg-white"></span>
                       </div>
-                      
-                      <div className={`p-4 border-[3px] border-ink wobbly-sm bg-white shadow-md inline-block max-w-lg ${idx % 2 === 0 ? 'rotate-0.5' : '-rotate-0.5'}`}>
+
+                      <div className={`p-4 border-[3px] border-ink wobbly-sm bg-white shadow-md inline-block max-w-lg ${idx % 2 === 0 ? 'rotate-0.5' : '-rotate-0.5'} relative`}>
+                        {isContributor && (
+                          <button
+                            onClick={() => handleDeleteTimeline(ev.id)}
+                            className="absolute top-2 right-2 text-ink/40 hover:text-marker font-bold text-sm"
+                            title="Delete Milestone"
+                          >
+                            ✖
+                          </button>
+                        )}
                         <span className="font-kalam font-bold text-xl text-marker block mb-1">
-                          {new Date(ev.event_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                          {formatCalendarDate(ev.event_date)}
                         </span>
                         <h4 className="font-kalam text-2xl mb-2">{ev.title}</h4>
                         {ev.image_url && (
@@ -637,6 +889,14 @@ export default function MemorialDetail() {
 
         </div>
       </div>
+
+      {showReportModal && (
+        <ReportModal
+          targetType={reportTargetType}
+          targetId={reportTargetId}
+          onClose={() => setShowReportModal(false)}
+        />
+      )}
     </div>
   );
 }
