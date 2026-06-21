@@ -238,11 +238,15 @@ CSRF_TRUSTED_ORIGINS += [
 
 FRONTEND_URL = os.environ.get('FRONTEND_URL')
 if FRONTEND_URL:
-    if FRONTEND_URL.startswith('http://') or FRONTEND_URL.startswith('https://'):
-        CORS_ALLOWED_ORIGINS.append(FRONTEND_URL)
-        CSRF_TRUSTED_ORIGINS.append(FRONTEND_URL)
-    elif FRONTEND_URL == '*':
+    if FRONTEND_URL == '*':
         CORS_ALLOW_ALL_ORIGINS = True
+    else:
+        from urllib.parse import urlparse
+        parsed = urlparse(FRONTEND_URL)
+        if parsed.scheme and parsed.netloc:
+            origin = f"{parsed.scheme}://{parsed.netloc}"
+            CORS_ALLOWED_ORIGINS.append(origin)
+            CSRF_TRUSTED_ORIGINS.append(origin)
 
 # Eterna Support Circle Co-Admin Limits
 MAX_COMMUNITY_COADMINS = 3

@@ -10,7 +10,7 @@ function getCookie(name) {
 }
 
 async function request(url, options = {}) {
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+  const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
   let targetUrl = url;
   if (url.startsWith('/')) {
     targetUrl = `${BASE_URL}${url}`;
