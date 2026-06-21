@@ -1,7 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import UserSearch from './UserSearch';
 
 export default function Navbar({ sketchMode, setSketchMode }) {
   const { user, logout } = useAuth();
@@ -36,8 +35,6 @@ export default function Navbar({ sketchMode, setSketchMode }) {
           {user && (
             <Link to="/messages" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Messages</Link>
           )}
-          
-          <UserSearch />
 
           {/* Sketch Mode Toggler */}
           <button
@@ -85,7 +82,6 @@ export default function Navbar({ sketchMode, setSketchMode }) {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div className="md:hidden border-t-[3px] border-ink bg-white p-6 flex flex-col gap-4 font-kalam text-xl">
-          <UserSearch onNavigate={() => setMobileOpen(false)} />
           <Link to="/" onClick={() => setMobileOpen(false)} className="hover:text-marker">Home</Link>
           <Link to="/memorials" onClick={() => setMobileOpen(false)} className="hover:text-marker">Memorials</Link>
           <Link to="/communities" onClick={() => setMobileOpen(false)} className="hover:text-marker">Communities</Link>

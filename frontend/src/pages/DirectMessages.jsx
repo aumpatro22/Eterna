@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { compressImage } from '../utils/imageCompression';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -24,11 +24,17 @@ export default function DirectMessages() {
   const [newChatLoading, setNewChatLoading] = useState(false);
   const [newChatError, setNewChatError] = useState('');
 
+  // Live Search recommendations
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const prevActiveConvId = useRef(null);
   const prevMessagesLength = useRef(0);
+  const searchWrapperRef = useRef(null);
 
   const autoStartChat = async (targetUsername) => {
     try {
@@ -85,6 +91,40 @@ export default function DirectMessages() {
       prevMessagesLength.current = messages.length;
     }
   }, [messages, activeConv, user]);
+
+  // Click outside search recommendations list to close it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Debounced user search matching what user types
+  useEffect(() => {
+    if (!newChatUsername.trim()) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+    const delayDebounceFn = setTimeout(async () => {
+      setSearchLoading(true);
+      setShowDropdown(true);
+      try {
+        const data = await api.get(`/api/users/search/?q=${encodeURIComponent(newChatUsername)}&limit=5`);
+        setSearchResults(data.results || []);
+      } catch (e) {
+        console.error('Search failed', e);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [newChatUsername]);
 
   const fetchConversations = async () => {
     try {
@@ -197,23 +237,92 @@ export default function DirectMessages() {
         <h3 className="font-kalam text-3xl border-b-[3px] border-ink pb-2 mb-2">My Conversations</h3>
 
         {/* Start new conversation */}
-        <form onSubmit={handleStartChat} className="bg-erased p-3 border-[2px] border-ink wobbly-sm mb-2">
-          <h4 className="font-kalam text-lg font-bold mb-2">Start a New Chat</h4>
-          {newChatError && <p className="text-marker text-sm mb-1">{newChatError}</p>}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              className="input text-base flex-1 py-1 px-2"
-              placeholder="Enter username..."
-              required
-              value={newChatUsername}
-              onChange={e => setNewChatUsername(e.target.value)}
-            />
-            <button type="submit" disabled={newChatLoading} className="btn btn-primary text-sm py-1 px-3">
-              {newChatLoading ? '...' : 'Chat'}
-            </button>
-          </div>
-        </form>
+        <div ref={searchWrapperRef} className="relative mb-2">
+          <form onSubmit={handleStartChat} className="bg-erased p-3 border-[2px] border-ink wobbly-sm">
+            <h4 className="font-kalam text-lg font-bold mb-2">Start a New Chat</h4>
+            {newChatError && <p className="text-marker text-sm mb-1">{newChatError}</p>}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                className="input text-base flex-1 py-1 px-2"
+                placeholder="Enter username..."
+                required
+                value={newChatUsername}
+                onChange={e => {
+                  setNewChatUsername(e.target.value);
+                  setShowDropdown(true);
+                }}
+                onFocus={() => {
+                  if (newChatUsername.trim()) {
+                    setShowDropdown(true);
+                  }
+                }}
+              />
+              <button type="submit" disabled={newChatLoading} className="btn btn-primary text-sm py-1 px-3">
+                {newChatLoading ? '...' : 'Chat'}
+              </button>
+            </div>
+
+            {/* Live Search Recommendations */}
+            {showDropdown && newChatUsername.trim() && (
+              <div className="mt-2 bg-white border-[2px] border-ink p-1 wobbly-xs max-h-48 overflow-y-auto flex flex-col gap-1 z-10">
+                {searchLoading && <div className="text-xs text-ink/75 p-1 animate-pulse">Searching...</div>}
+                {!searchLoading && searchResults.length === 0 && (
+                  <div className="text-xs text-ink/50 italic p-1">No users found.</div>
+                )}
+                {!searchLoading && searchResults.map(profile => (
+                  <div 
+                    key={profile.user.username} 
+                    className="flex items-center justify-between p-1.5 hover:bg-postit/50 rounded border-b border-ink/10 last:border-0"
+                  >
+                    <div 
+                      onClick={() => {
+                        setNewChatUsername(profile.user.username);
+                        autoStartChat(profile.user.username);
+                        setShowDropdown(false);
+                      }}
+                      className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
+                    >
+                      <img
+                        src={profile.avatar_url || `${import.meta.env.BASE_URL}default_avatar.jpg`}
+                        alt={profile.user.username}
+                        className="w-7 h-7 rounded-full border border-ink object-cover"
+                        onError={(e) => { e.target.src = `${import.meta.env.BASE_URL}default_avatar.jpg` }}
+                      />
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-bold text-xs truncate leading-tight">
+                          {profile.display_name || profile.user.username}
+                        </span>
+                        <span className="text-[10px] text-ink/60 truncate leading-none">
+                          @{profile.user.username}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewChatUsername(profile.user.username);
+                          autoStartChat(profile.user.username);
+                          setShowDropdown(false);
+                        }}
+                        className="text-[10px] font-bold bg-postit border border-ink px-1.5 py-0.5 rounded hover:bg-postit/80"
+                      >
+                        Chat
+                      </button>
+                      <Link
+                        to={`/profile/${profile.user.username}`}
+                        className="text-[10px] font-bold bg-white border border-ink px-1.5 py-0.5 rounded hover:bg-erased/80 text-center"
+                      >
+                        Explore
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </form>
+        </div>
 
         {/* List of active chats */}
         <div className="flex flex-col gap-3">
