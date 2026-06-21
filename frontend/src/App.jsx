@@ -65,7 +65,7 @@ function App() {
     const checkHealth = async () => {
       const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
       try {
-        const res = await fetch(`${BASE_URL}/health/`);
+        const res = await fetch(`${BASE_URL}/api/health/`);
         if (res.ok && active) {
           setIsWakingUp(false);
           return;
@@ -102,7 +102,7 @@ function App() {
             } />
             {/* All other pages — constrained centered layout */}
             <Route path="*" element={
-              <main className="flex-1 max-w-5xl w-full mx-auto px-6 py-12">
+              <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6 md:px-6 md:py-12">
                 <Routes>
                   <Route path="/memorials" element={<Home />} />
                   <Route path="/login" element={<Login />} />

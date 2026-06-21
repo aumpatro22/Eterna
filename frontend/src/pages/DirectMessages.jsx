@@ -29,6 +29,9 @@ export default function DirectMessages() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
+  // Mobile layout state
+  const [showChatListOnMobile, setShowChatListOnMobile] = useState(true);
+
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const scrollContainerRef = useRef(null);
@@ -44,6 +47,7 @@ export default function DirectMessages() {
         return [data, ...prev];
       });
       setActiveConv(data);
+      setShowChatListOnMobile(false);
     } catch (e) {
       console.error('Failed to auto-start conversation', e);
     }
@@ -163,6 +167,7 @@ export default function DirectMessages() {
       });
       
       setActiveConv(data);
+      setShowChatListOnMobile(false);
       setNewChatUsername('');
     } catch (err) {
       setNewChatError(err.message || 'User not found or invalid.');
@@ -233,7 +238,7 @@ export default function DirectMessages() {
     <div className="flex flex-col md:flex-row h-[calc(100vh-150px)] gap-6 font-patrick">
       
       {/* Left Pane: Conversations list & search */}
-      <div className="md:col-span-1 paper-card bg-white p-6 flex flex-col gap-4 md:w-80 w-full overflow-y-auto tack-decoration -rotate-0.5">
+      <div className={`${showChatListOnMobile ? 'flex' : 'hidden'} md:flex md:col-span-1 paper-card bg-white p-6 flex-col gap-4 md:w-80 w-full overflow-y-auto tack-decoration -rotate-0.5`}>
         <h3 className="font-kalam text-3xl border-b-[3px] border-ink pb-2 mb-2">My Conversations</h3>
 
         {/* Start new conversation */}
@@ -340,7 +345,7 @@ export default function DirectMessages() {
               return (
                 <button
                   key={c.id}
-                  onClick={() => setActiveConv(c)}
+                  onClick={() => { setActiveConv(c); setShowChatListOnMobile(false); }}
                   className={`text-left p-3 border-[3px] border-ink wobbly-sm font-bold transition-all ${
                     isSelected
                       ? 'bg-postit rotate-1 shadow-sm'
@@ -369,13 +374,20 @@ export default function DirectMessages() {
       </div>
 
       {/* Right Pane: Chat History & Inputs */}
-      <div className="flex-1 paper-card bg-white flex flex-col min-h-0 rotate-0.5">
+      <div className={`${!showChatListOnMobile ? 'flex' : 'hidden'} md:flex flex-1 paper-card bg-white flex-col min-h-0 rotate-0.5`}>
         {activeConv ? (
           <>
             {/* Active chat header */}
             <div className="p-4 border-b-[3px] border-ink bg-postit flex justify-between items-center rotate-0.5">
-              <div>
-                <h3 className="font-kalam text-3xl">Chat with {getParticipantName(activeConv)}</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowChatListOnMobile(true)}
+                  className="md:hidden bg-white border-[2px] border-ink px-2.5 py-1 text-base font-bold wobbly-sm hover:-rotate-1 active:translate-y-0.5 mr-1"
+                >
+                  ← Back
+                </button>
+                <h3 className="font-kalam text-2xl md:text-3xl">Chat with {getParticipantName(activeConv)}</h3>
               </div>
               <div className="flex gap-2">
                 {activeConv.is_blocked ? (

@@ -41,6 +41,9 @@ export default function CommunityDetail() {
   // Tab state for left panel: 'info', 'members', 'requests' (moderators only)
   const [activeLeftTab, setActiveLeftTab] = useState('info');
 
+  // Mobile layout section toggle: 'chat' (Noticeboard) or 'about' (Rules, People, Requests)
+  const [mobileActiveSection, setMobileActiveSection] = useState('chat');
+
   useEffect(() => {
     setCommunity(null);
     setMessages([]);
@@ -330,10 +333,31 @@ export default function CommunityDetail() {
 
       {/* Main Split-Pane Workspace */}
       {showChat ? (
-        <div className="grid md:grid-cols-4 gap-8 flex-1 min-h-0">
-          
-          {/* Left Panel: Info / Members / Requests (Tabs) */}
-          <div className="md:col-span-1 paper-card bg-white p-6 flex flex-col gap-4 overflow-y-auto tack-decoration -rotate-0.5">
+        <>
+          {/* Mobile Tab Selector */}
+          <div className="md:hidden flex border-[3px] border-ink bg-white w-full font-kalam text-lg wobbly-sm mb-4 divide-x-[3px] divide-ink overflow-hidden">
+            <button
+              onClick={() => setMobileActiveSection('chat')}
+              className={`flex-1 py-2 text-center font-bold transition-colors ${
+                mobileActiveSection === 'chat' ? 'bg-postit text-ink' : 'bg-white hover:bg-erased'
+              }`}
+            >
+              💬 Noticeboard
+            </button>
+            <button
+              onClick={() => setMobileActiveSection('about')}
+              className={`flex-1 py-2 text-center font-bold transition-colors ${
+                mobileActiveSection === 'about' ? 'bg-postit text-ink' : 'bg-white hover:bg-erased'
+              }`}
+            >
+              ℹ️ Circle Info
+            </button>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-8 flex-1 min-h-0">
+            
+            {/* Left Panel: Info / Members / Requests (Tabs) */}
+            <div className={`${mobileActiveSection === 'about' ? 'flex' : 'hidden'} md:flex md:col-span-1 paper-card bg-white p-6 flex-col gap-4 overflow-y-auto tack-decoration -rotate-0.5`}>
             <div className="flex border-b-[2px] border-ink/20 pb-2 mb-2 font-kalam text-lg gap-2 flex-wrap">
               <button 
                 onClick={() => setActiveLeftTab('info')} 
@@ -488,7 +512,7 @@ export default function CommunityDetail() {
           </div>
 
           {/* Right Panel: Chat Area */}
-          <div className="md:col-span-3 paper-card bg-white flex flex-col min-h-0 rotate-0.5">
+          <div className={`${mobileActiveSection === 'chat' ? 'flex' : 'hidden'} md:flex md:col-span-3 paper-card bg-white flex-col min-h-0 rotate-0.5`}>
             {community.is_member ? (
               <>
                 {/* Messages Feed */}
@@ -669,6 +693,7 @@ export default function CommunityDetail() {
             )}
           </div>
         </div>
+        </>
       ) : (
         <div className="paper-card p-16 text-center flex-1 flex flex-col items-center justify-center bg-erased wobbly-sm rotate-1">
           <span className="text-7xl mb-4 opacity-50">🔒</span>

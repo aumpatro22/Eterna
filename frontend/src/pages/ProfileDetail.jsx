@@ -311,7 +311,7 @@ export default function ProfileDetail() {
     <div className="flex flex-col gap-10 max-w-4xl mx-auto font-patrick text-xl">
       
       {/* Header Profile Card */}
-      <div className="paper-card p-10 text-center bg-postit tack-decoration rotate-0.5 relative">
+      <div className="paper-card p-6 md:p-10 text-center bg-postit tack-decoration rotate-0.5 relative">
         {/* Report Button (if visitor) */}
         {!isOwner && user && (
           <button
