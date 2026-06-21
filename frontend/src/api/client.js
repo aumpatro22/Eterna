@@ -10,6 +10,12 @@ function getCookie(name) {
 }
 
 async function request(url, options = {}) {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+  let targetUrl = url;
+  if (url.startsWith('/')) {
+    targetUrl = `${BASE_URL}${url}`;
+  }
+
   const defaults = {
     credentials: 'include',
     headers: {
@@ -28,7 +34,22 @@ async function request(url, options = {}) {
     headers: { ...defaults.headers, ...options.headers },
   };
 
-  const response = await fetch(url, config);
+  let response;
+  try {
+    response = await fetch(targetUrl, config);
+  } catch (err) {
+    const error = new Error("Preparing your memory space...");
+    error.isWakeupError = true;
+    error.status = 503;
+    throw error;
+  }
+
+  if (response.status === 502 || response.status === 503) {
+    const error = new Error("Preparing your memory space...");
+    error.isWakeupError = true;
+    error.status = response.status;
+    throw error;
+  }
 
   if (response.status === 204) {
     return { ok: true, data: null };

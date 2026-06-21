@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from .models import Profile, Reaction, DirectMessage, Conversation, CircleConnection, ProfileTimelineEvent
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -44,7 +46,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['user', 'display_name', 'bio', 'avatar_url', 'public_search', 'tags', 'tags_list', 
-                  'privacy_setting', 'timeline_events', 'joined_communities']
+                  'privacy_setting', 'timeline_events', 'joined_communities', 'storage_used', 'storage_limit']
 
     def get_avatar_url(self, obj):
         if obj.profile_image:

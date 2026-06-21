@@ -1,6 +1,6 @@
 import uuid
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -10,7 +10,7 @@ class Memorial(models.Model):
         ('FAMILY_ONLY', 'Family Only'),
         ('PUBLIC', 'Public'),
     )
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='memorials')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='memorials')
     full_name = models.CharField(max_length=255)
     birth_date = models.DateField(null=True, blank=True)
     passing_date = models.DateField(null=True, blank=True)
@@ -47,7 +47,19 @@ class Memorial(models.Model):
         if self.cover_image:
             validate_image_file(self.cover_image)
             optimize_image(self.cover_image)
+            
+        from users.storage_utils import handle_storage_pre_save, add_user_storage
+        delta = handle_storage_pre_save(self, ['profile_image', 'cover_image'], self.owner)
+        
         super().save(*args, **kwargs)
+        
+        if delta != 0:
+            add_user_storage(self.owner, delta)
+
+    def delete(self, *args, **kwargs):
+        from users.storage_utils import handle_storage_delete
+        handle_storage_delete(self, ['profile_image', 'cover_image'], self.owner)
+        super().delete(*args, **kwargs)
     
     def get_absolute_url(self):
         return reverse('memorial_detail_by_id', kwargs={'public_id': self.public_id})
@@ -69,7 +81,19 @@ class MemorialPhoto(models.Model):
         if self.image:
             validate_image_file(self.image)
             optimize_image(self.image)
+            
+        from users.storage_utils import handle_storage_pre_save, add_user_storage
+        delta = handle_storage_pre_save(self, ['image'], self.memorial.owner)
+        
         super().save(*args, **kwargs)
+        
+        if delta != 0:
+            add_user_storage(self.memorial.owner, delta)
+
+    def delete(self, *args, **kwargs):
+        from users.storage_utils import handle_storage_delete
+        handle_storage_delete(self, ['image'], self.memorial.owner)
+        super().delete(*args, **kwargs)
 
 class TimelineEvent(models.Model):
     memorial = models.ForeignKey(Memorial, on_delete=models.CASCADE, related_name='timeline_events')
@@ -95,7 +119,19 @@ class TimelineEvent(models.Model):
         if self.image:
             validate_image_file(self.image)
             optimize_image(self.image)
+            
+        from users.storage_utils import handle_storage_pre_save, add_user_storage
+        delta = handle_storage_pre_save(self, ['image'], self.memorial.owner)
+        
         super().save(*args, **kwargs)
+        
+        if delta != 0:
+            add_user_storage(self.memorial.owner, delta)
+
+    def delete(self, *args, **kwargs):
+        from users.storage_utils import handle_storage_delete
+        handle_storage_delete(self, ['image'], self.memorial.owner)
+        super().delete(*args, **kwargs)
 
 class Message(models.Model):
     memorial = models.ForeignKey(Memorial, on_delete=models.CASCADE, related_name='messages')
@@ -139,7 +175,7 @@ class Memory(models.Model):
         ('PUBLIC', 'Public'),
     )
     memorial = models.ForeignKey(Memorial, on_delete=models.CASCADE, related_name='memories')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_memories')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_memories')
     title = models.CharField(max_length=255)
     story = models.TextField()
     image = models.ImageField(upload_to='memories/', null=True, blank=True)
@@ -166,7 +202,19 @@ class Memory(models.Model):
             optimize_image(self.image)
         if self.voice_note:
             validate_audio_file(self.voice_note)
+            
+        from users.storage_utils import handle_storage_pre_save, add_user_storage
+        delta = handle_storage_pre_save(self, ['image', 'voice_note'], self.author)
+        
         super().save(*args, **kwargs)
+        
+        if delta != 0:
+            add_user_storage(self.author, delta)
+
+    def delete(self, *args, **kwargs):
+        from users.storage_utils import handle_storage_delete
+        handle_storage_delete(self, ['image', 'voice_note'], self.author)
+        super().delete(*args, **kwargs)
 
 class ExperienceTag(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -182,7 +230,7 @@ class Contributor(models.Model):
         ('EDITOR', 'Editor'),
     )
     memorial = models.ForeignKey(Memorial, on_delete=models.CASCADE, related_name='contributors')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contributions')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='contributions')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='FAMILY_MEMBER')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -199,7 +247,7 @@ class ContributorInvitation(models.Model):
         ('DECLINED', 'Declined'),
     )
     memorial = models.ForeignKey(Memorial, on_delete=models.CASCADE, related_name='invitations')
-    invited_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='invitations')
+    invited_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='invitations')
     role = models.CharField(max_length=20, choices=Contributor.ROLE_CHOICES, default='FAMILY_MEMBER')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
     created_at = models.DateTimeField(auto_now_add=True)

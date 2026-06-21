@@ -1,5 +1,5 @@
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login, logout, get_user_model
+User = get_user_model()
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404
@@ -59,6 +59,8 @@ def login_view(request):
     )
     if user is None:
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    if getattr(user, 'is_banned', False):
+        return Response({'error': f'Your account has been banned: {user.ban_reason or "No reason provided."}'}, status=status.HTTP_403_FORBIDDEN)
     login(request, user)
     return Response({
         'status': 'ok',
@@ -324,6 +326,21 @@ def send_direct_message(request, pk):
     conv = get_object_or_404(Conversation, pk=pk)
     if not conv.participants.filter(id=request.user.id).exists():
         return Response({'error': 'Access denied.'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Check daily DM limit
+    import datetime
+    from django.utils import timezone
+    from django.conf import settings
+    start_time = timezone.now() - datetime.timedelta(days=1)
+    sent_count = DirectMessage.objects.filter(
+        sender=request.user,
+        created_at__gte=start_time
+    ).count()
+    if sent_count >= getattr(settings, 'FREE_TIER_DAILY_DM_LIMIT', 30):
+        return Response(
+            {'error': 'Daily direct message limit reached (30 messages/day).'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     if conv.is_blocked:
         return Response(

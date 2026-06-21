@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { compressImage } from '../utils/imageCompression';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,11 +34,16 @@ export default function CommunityDetail() {
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const prevSlug = useRef(null);
+  const prevMessagesLength = useRef(0);
 
   // Tab state for left panel: 'info', 'members', 'requests' (moderators only)
   const [activeLeftTab, setActiveLeftTab] = useState('info');
 
   useEffect(() => {
+    setCommunity(null);
+    setMessages([]);
     fetchCommunity();
   }, [slug]);
 
@@ -50,8 +56,31 @@ export default function CommunityDetail() {
   }, [community]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (!slug) return;
+
+    const isNewSlug = prevSlug.current !== slug;
+    const hasNewMessages = messages.length > prevMessagesLength.current;
+    
+    if (isNewSlug && messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      prevSlug.current = slug;
+      prevMessagesLength.current = messages.length;
+    } else if (hasNewMessages) {
+      const lastMsg = messages[messages.length - 1];
+      const isMyMsg = lastMsg && lastMsg.author_username === user?.username;
+      
+      const scrollContainer = scrollContainerRef.current;
+      if (scrollContainer) {
+        const isNearBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 120;
+        if (isMyMsg || isNearBottom) {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+      prevMessagesLength.current = messages.length;
+    } else {
+      prevMessagesLength.current = messages.length;
+    }
+  }, [messages, slug, user]);
 
   const fetchCommunity = async () => {
     try {
@@ -462,6 +491,7 @@ export default function CommunityDetail() {
           <div className="md:col-span-3 paper-card bg-white flex flex-col min-h-0 rotate-0.5">
             {/* Messages Feed */}
             <div 
+              ref={scrollContainerRef}
               className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-erased" 
               style={{ backgroundImage: 'radial-gradient(#e5e0d8 1.5px, transparent 1.5px)', backgroundSize: '24px 24px' }}
             >
@@ -574,7 +604,15 @@ export default function CommunityDetail() {
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={e => setInputImage(e.target.files[0])}
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const compressed = await compressImage(file);
+                              setInputImage(compressed);
+                            } else {
+                              setInputImage(null);
+                            }
+                          }}
                         />
                       </label>
                       {inputImage && (

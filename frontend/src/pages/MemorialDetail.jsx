@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { compressImage } from '../utils/imageCompression';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
@@ -544,7 +545,15 @@ export default function MemorialDetail() {
                           type="file" 
                           className="input bg-white text-sm" 
                           accept="image/*" 
-                          onChange={e => setMemoryForm({...memoryForm, image: e.target.files[0]})} 
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const compressed = await compressImage(file);
+                              setMemoryForm({...memoryForm, image: compressed});
+                            } else {
+                              setMemoryForm({...memoryForm, image: null});
+                            }
+                          }} 
                         />
                       </div>
                       <div>
@@ -698,7 +707,15 @@ export default function MemorialDetail() {
                             type="file" 
                             className="input bg-white text-sm" 
                             accept="image/*" 
-                            onChange={e => setTimelineForm({...timelineForm, image: e.target.files[0]})} 
+                            onChange={async (e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const compressed = await compressImage(file);
+                                setTimelineForm({...timelineForm, image: compressed});
+                              } else {
+                                setTimelineForm({...timelineForm, image: null});
+                              }
+                            }} 
                           />
                         </div>
                         <div className="flex gap-3 mt-2">

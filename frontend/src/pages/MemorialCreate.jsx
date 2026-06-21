@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
+import { compressImage } from '../utils/imageCompression';
 
 export default function MemorialCreate() {
   const navigate = useNavigate();
@@ -222,7 +223,13 @@ export default function MemorialCreate() {
                   type="file" 
                   className="input bg-white" 
                   accept="image/*" 
-                  onChange={e => setForm({...form, profile_image: e.target.files[0]})} 
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const compressed = await compressImage(file);
+                      setForm({...form, profile_image: compressed});
+                    }
+                  }} 
                 />
               </div>
               <div>
@@ -231,7 +238,13 @@ export default function MemorialCreate() {
                   type="file" 
                   className="input bg-white" 
                   accept="image/*" 
-                  onChange={e => setForm({...form, cover_image: e.target.files[0]})} 
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const compressed = await compressImage(file);
+                      setForm({...form, cover_image: compressed});
+                    }
+                  }} 
                 />
               </div>
             </div>
@@ -273,7 +286,15 @@ export default function MemorialCreate() {
                 multiple 
                 className="input bg-white" 
                 accept="image/*" 
-                onChange={e => setAdditionalPhotos(Array.from(e.target.files))} 
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files);
+                  const compressedFiles = [];
+                  for (const file of files) {
+                    const compressed = await compressImage(file);
+                    compressedFiles.push(compressed);
+                  }
+                  setAdditionalPhotos(compressedFiles);
+                }} 
               />
               {additionalPhotos.length > 0 && (
                 <p className="font-patrick text-lg text-ink/70 mt-2">
@@ -349,7 +370,13 @@ export default function MemorialCreate() {
                   type="file" 
                   className="input py-2 bg-white" 
                   accept="image/*" 
-                  onChange={e => setTempEvent({...tempEvent, image: e.target.files[0]})} 
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const compressed = await compressImage(file);
+                      setTempEvent({...tempEvent, image: compressed});
+                    }
+                  }} 
                 />
               </div>
               <button

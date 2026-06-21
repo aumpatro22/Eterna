@@ -1,12 +1,20 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib.contenttypes.models import ContentType  # NEW
-from django.contrib.contenttypes.fields import GenericForeignKey  # NEW
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
+
+class User(AbstractUser):
+    is_banned = models.BooleanField(default=False)
+    ban_reason = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.username
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     display_name = models.CharField(max_length=100, blank=True)
     bio = models.TextField(blank=True)
     profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)
@@ -19,6 +27,10 @@ class Profile(models.Model):
         ('PRIVATE', 'Private'),
     )
     privacy_setting = models.CharField(max_length=20, choices=PRIVACY_CHOICES, default='PUBLIC')
+    
+    # Storage management
+    storage_used = models.BigIntegerField(default=0)  # in bytes
+    storage_limit = models.BigIntegerField(default=52428800)  # 50 MB default
 
     def tags_list(self):
         return [t.strip() for t in (self.tags or '').split(',') if t.strip()]
@@ -33,29 +45,51 @@ class Profile(models.Model):
             self.bio = bleach.clean(self.bio, tags=[], strip=True)
         if self.display_name:
             self.display_name = bleach.clean(self.display_name, tags=[], strip=True)
+        
+        # Avoid recursion when only updating storage_used
+        update_fields = kwargs.get('update_fields')
+        if update_fields and list(update_fields) == ['storage_used']:
+            super().save(*args, **kwargs)
+            return
+
         if self.profile_image:
             validate_image_file(self.profile_image)
             optimize_image(self.profile_image)
+            
+        from users.storage_utils import handle_storage_pre_save, add_user_storage
+        delta = handle_storage_pre_save(self, ['profile_image'], self.user)
+        
         super().save(*args, **kwargs)
+        
+        if delta != 0:
+            add_user_storage(self.user, delta)
+
+    def delete(self, *args, **kwargs):
+        from users.storage_utils import handle_storage_delete
+        handle_storage_delete(self, ['profile_image'], self.user)
+        super().delete(*args, **kwargs)
 
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
 
-@receiver(post_save, sender=User)
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+    try:
+        instance.profile.save()
+    except Profile.DoesNotExist:
+        Profile.objects.create(user=instance)
 
-# NEW: one-reaction-per-object per user; supports memorials and tales
+
 class Reaction(models.Model):
     REACTION_CHOICES = (
         ('like', 'Like'),
         ('love', 'Love'),
         ('support', 'Support'),
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reactions')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reactions')
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
@@ -69,11 +103,11 @@ class Reaction(models.Model):
         return f"{self.user.username} {self.reaction_type} {self.content_type.model}:{self.object_id}"
 
 class Conversation(models.Model):
-    participants = models.ManyToManyField(User, related_name='conversations')
+    participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='conversations')
     created_at = models.DateTimeField(auto_now_add=True)
     is_blocked = models.BooleanField(default=False)
     blocked_by = models.ForeignKey(
-        User, 
+        settings.AUTH_USER_MODEL, 
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True, 
@@ -93,7 +127,7 @@ class DirectMessage(models.Model):
         null=True, 
         blank=True
     )
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_direct_messages')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_direct_messages')
     content = models.TextField()
     image = models.ImageField(upload_to='dm_images/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -112,7 +146,19 @@ class DirectMessage(models.Model):
         if self.image:
             validate_image_file(self.image)
             optimize_image(self.image)
+            
+        from users.storage_utils import handle_storage_pre_save, add_user_storage
+        delta = handle_storage_pre_save(self, ['image'], self.sender)
+        
         super().save(*args, **kwargs)
+        
+        if delta != 0:
+            add_user_storage(self.sender, delta)
+
+    def delete(self, *args, **kwargs):
+        from users.storage_utils import handle_storage_delete
+        handle_storage_delete(self, ['image'], self.sender)
+        super().delete(*args, **kwargs)
 
 
 class CircleConnection(models.Model):
@@ -128,8 +174,8 @@ class CircleConnection(models.Model):
         ('SUPPORTER', 'Supporter'),
     )
 
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_connections')
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_connections')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_connections')
+    receiver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_connections')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
     connection_type = models.CharField(max_length=10, choices=CONNECTION_TYPE_CHOICES, default='FRIEND')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -155,9 +201,6 @@ class ProfileTimelineEvent(models.Model):
         return f"{self.title} on {self.event_date}"
 
 
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
-
 class Report(models.Model):
     REASON_CHOICES = (
         ('SPAM', 'Spam'),
@@ -166,7 +209,7 @@ class Report(models.Model):
         ('INAPPROPRIATE_CONTENT', 'Inappropriate Content'),
     )
 
-    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports_submitted')
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reports_submitted')
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
@@ -176,5 +219,3 @@ class Report(models.Model):
 
     def __str__(self):
         return f"Report by {self.reporter.username} on {self.content_type.model}:{self.object_id} ({self.reason})"
-
-

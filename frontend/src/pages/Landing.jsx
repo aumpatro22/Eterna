@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motio
 import Tilt from 'react-parallax-tilt';
 import { useInView } from 'react-intersection-observer';
 import Lenis from 'lenis';
+import { useAuth } from '../contexts/AuthContext';
 
 /* ─── Pressed Flower Decorative Vector ──────────────────────── */
 const PressedFlower = ({ className }) => (
@@ -158,6 +159,7 @@ function useCountUp(target, duration = 1800, start = false) {
    MAIN LANDING PAGE COMPONENT
    ═══════════════════════════════════════════════════════════════ */
 export default function Landing() {
+  const { user } = useAuth();
   const [scrollProgress, setScrollProgress] = useState(0);
   const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
   const [isHoveringClickable, setIsHoveringClickable] = useState(false);
@@ -170,12 +172,13 @@ export default function Landing() {
       smoothWheel: true,
     });
 
+    let rafId;
     const raf = (time) => {
       lenis.raf(time);
-      requestAnimationFrame(raf);
+      rafId = requestAnimationFrame(raf);
     };
 
-    requestAnimationFrame(raf);
+    rafId = requestAnimationFrame(raf);
 
     const handleScroll = () => {
       const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -187,6 +190,7 @@ export default function Landing() {
     window.addEventListener('scroll', handleScroll);
     return () => {
       lenis.destroy();
+      cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
@@ -371,7 +375,7 @@ export default function Landing() {
 
             <div className="flex flex-wrap gap-4 mt-2">
               <MagneticButton 
-                to="/register" 
+                to={user ? "/memorials/create" : "/register"} 
                 className="btn btn-primary btn-pulse text-xl -rotate-1 bg-marker text-white hover:bg-marker/90 font-kalam font-bold px-8 py-4"
               >
                 Create a Memorial — Free ❤️
@@ -1044,7 +1048,7 @@ export default function Landing() {
 
           <div className="flex flex-wrap justify-center gap-6 mt-6">
             <MagneticButton 
-              to="/register" 
+              to={user ? "/memorials/create" : "/register"} 
               className="inline-flex items-center gap-2 px-10 py-5 bg-white border-[3px] border-ink text-ink font-kalam text-2xl shadow-hard hover:shadow-hard-hover -rotate-1"
               style={{ borderRadius: '15px 25px 15px 25px / 25px 15px 25px 15px' }}
             >

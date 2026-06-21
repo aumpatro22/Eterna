@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { compressImage } from '../utils/imageCompression';
 import { useLocation } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,6 +26,9 @@ export default function DirectMessages() {
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const prevActiveConvId = useRef(null);
+  const prevMessagesLength = useRef(0);
 
   const autoStartChat = async (targetUsername) => {
     try {
@@ -48,6 +52,7 @@ export default function DirectMessages() {
 
   useEffect(() => {
     if (activeConv) {
+      setMessages([]);
       fetchMessages();
       const interval = setInterval(fetchMessages, 5000);
       return () => clearInterval(interval);
@@ -55,8 +60,31 @@ export default function DirectMessages() {
   }, [activeConv]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (!activeConv) return;
+
+    const isNewConv = prevActiveConvId.current !== activeConv.id;
+    const hasNewMessages = messages.length > prevMessagesLength.current;
+    
+    if (isNewConv && messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      prevActiveConvId.current = activeConv.id;
+      prevMessagesLength.current = messages.length;
+    } else if (hasNewMessages) {
+      const lastMsg = messages[messages.length - 1];
+      const isMyMsg = lastMsg && lastMsg.sender_username === user?.username;
+      
+      const scrollContainer = scrollContainerRef.current;
+      if (scrollContainer) {
+        const isNearBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 120;
+        if (isMyMsg || isNearBottom) {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+      prevMessagesLength.current = messages.length;
+    } else {
+      prevMessagesLength.current = messages.length;
+    }
+  }, [messages, activeConv, user]);
 
   const fetchConversations = async () => {
     try {
@@ -261,6 +289,7 @@ export default function DirectMessages() {
 
             {/* Messages history */}
             <div 
+              ref={scrollContainerRef}
               className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 bg-erased"
               style={{ backgroundImage: 'radial-gradient(#e5e0d8 1.5px, transparent 1.5px)', backgroundSize: '24px 24px' }}
             >
@@ -341,7 +370,15 @@ export default function DirectMessages() {
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={e => setInputImage(e.target.files[0])}
+                        onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const compressed = await compressImage(file);
+                            setInputImage(compressed);
+                          } else {
+                            setInputImage(null);
+                          }
+                        }}
                       />
                     </label>
                     {inputImage && (

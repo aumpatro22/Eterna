@@ -48,6 +48,8 @@ class CommunityListSerializer(serializers.ModelSerializer):
                   'cover_image', 'icon_image', 'owner_username', 'member_count', 'created_at']
 
     def get_member_count(self, obj):
+        if hasattr(obj, 'member_count_annotated'):
+            return obj.member_count_annotated
         return obj.memberships.count()
 
 
@@ -62,6 +64,8 @@ class CommunityDetailSerializer(serializers.ModelSerializer):
                   'owner_username', 'member_count', 'created_at']
 
     def get_member_count(self, obj):
+        if hasattr(obj, 'member_count_annotated'):
+            return obj.member_count_annotated
         return obj.memberships.count()
 
 

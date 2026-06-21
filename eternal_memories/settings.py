@@ -13,8 +13,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-key-for-dev')
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = [h for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h]
 # Allow Render's external hostname if provided by platform
 RENDER_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')  # CHANGED
 if RENDER_HOSTNAME and RENDER_HOSTNAME not in ALLOWED_HOSTS:  # FIX block
@@ -34,7 +34,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary_storage',
     'django.contrib.staticfiles',
+    'cloudinary',
     
     # Third-party
     'rest_framework',
@@ -46,6 +48,7 @@ INSTALLED_APPS = [
     'users',
     'communities',
     'tales',
+    'notifications',
     'whitenoise.runserver_nostatic',  # ensure whitenoise controls static even in dev
 ]
 
@@ -89,11 +92,13 @@ DATABASES = {
     }
 }
 # Override with DATABASE_URL when present (Render)
-if os.environ.get('DATABASE_URL'):  # FIX
+import sys
+IS_TESTING = 'test' in sys.argv
+
+if os.environ.get('DATABASE_URL') and not IS_TESTING:
     try:
         import dj_database_url
-        DATABASES['default'] = dj_database_url.parse(
-            os.environ['DATABASE_URL'],
+        DATABASES['default'] = dj_database_url.config(
             conn_max_age=600,
             ssl_require=(os.environ.get('PGSSLMODE') == 'require' or not DEBUG)
         )
@@ -133,6 +138,21 @@ if (BASE_DIR / 'frontend' / 'dist').exists():
     _static_dirs.append(BASE_DIR / 'frontend' / 'dist')
 STATICFILES_DIRS = _static_dirs
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Cloudinary Integration
+CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
+CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY', '')
+CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET', '')
+
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+        'API_KEY': CLOUDINARY_API_KEY,
+        'API_SECRET': CLOUDINARY_API_SECRET,
+    }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+else:
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 # Media files
 MEDIA_URL = '/media/'
@@ -188,6 +208,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
+        'users.permissions.IsNotBanned',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 12,
@@ -215,5 +236,17 @@ CSRF_TRUSTED_ORIGINS += [
     'http://127.0.0.1:5173',
 ]
 
+FRONTEND_URL = os.environ.get('FRONTEND_URL')
+if FRONTEND_URL:
+    CORS_ALLOWED_ORIGINS.append(FRONTEND_URL)
+    CSRF_TRUSTED_ORIGINS.append(FRONTEND_URL)
+
 # Eterna Support Circle Co-Admin Limits
-MAX_COMMUNITY_COADMINS = 3
+MAX_COMMUNITY_COADMINS = 3
+
+# Custom User Model
+AUTH_USER_MODEL = 'users.User'
+
+# Free Tier Daily Message limits
+FREE_TIER_DAILY_DM_LIMIT = 30
+FREE_TIER_DAILY_COMMUNITY_LIMIT = 30

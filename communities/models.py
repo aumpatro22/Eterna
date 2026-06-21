@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.utils.text import slugify
 
 class Community(models.Model):
@@ -8,12 +8,11 @@ class Community(models.Model):
         ('PRIVATE', 'Private'),
     )
     
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_communities')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='owned_communities')
     title = models.CharField(max_length=80, unique=True)
     slug = models.SlugField(max_length=100, unique=True, blank=True)
     description = models.TextField(blank=True)
     
-    # Rules and welcome message defaults as specified
     rules = models.TextField(
         default="1. Be respectful.\n2. No harassment.\n3. Support others kindly.\n4. No spam."
     )
@@ -52,7 +51,19 @@ class Community(models.Model):
         if self.icon_image:
             validate_image_file(self.icon_image)
             optimize_image(self.icon_image)
+            
+        from users.storage_utils import handle_storage_pre_save, add_user_storage
+        delta = handle_storage_pre_save(self, ['cover_image', 'icon_image'], self.owner)
+        
         super().save(*args, **kwargs)
+        
+        if delta != 0:
+            add_user_storage(self.owner, delta)
+
+    def delete(self, *args, **kwargs):
+        from users.storage_utils import handle_storage_delete
+        handle_storage_delete(self, ['cover_image', 'icon_image'], self.owner)
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return self.title
@@ -66,7 +77,7 @@ class Membership(models.Model):
     )
     
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='memberships')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_memberships')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='community_memberships')
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='MEMBER')
     joined_at = models.DateTimeField(auto_now_add=True)
 
@@ -84,7 +95,7 @@ class CommunityJoinRequest(models.Model):
         ('REJECTED', 'Rejected'),
     )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_join_requests')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='community_join_requests')
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='join_requests')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
     is_invite = models.BooleanField(default=False)
@@ -100,7 +111,7 @@ class CommunityJoinRequest(models.Model):
 
 class CommunityMessage(models.Model):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='messages', null=True, blank=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_messages')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='community_messages')
     content = models.TextField()
     image = models.ImageField(upload_to='community_messages/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -108,7 +119,7 @@ class CommunityMessage(models.Model):
     # Soft delete fields
     is_deleted = models.BooleanField(default=False)
     deleted_by = models.ForeignKey(
-        User, 
+        settings.AUTH_USER_MODEL, 
         null=True, 
         blank=True, 
         on_delete=models.SET_NULL, 
@@ -130,13 +141,25 @@ class CommunityMessage(models.Model):
         if self.image:
             validate_image_file(self.image)
             optimize_image(self.image)
+            
+        from users.storage_utils import handle_storage_pre_save, add_user_storage
+        delta = handle_storage_pre_save(self, ['image'], self.author)
+        
         super().save(*args, **kwargs)
+        
+        if delta != 0:
+            add_user_storage(self.author, delta)
+
+    def delete(self, *args, **kwargs):
+        from users.storage_utils import handle_storage_delete
+        handle_storage_delete(self, ['image'], self.author)
+        super().delete(*args, **kwargs)
 
 
 class CommunityBan(models.Model):
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='bans')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_bans')
-    banned_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bans_issued')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='community_bans')
+    banned_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bans_issued')
     reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -61,7 +61,12 @@ class MemorialListView(generics.ListAPIView):
         else:
             qs = Memorial.objects.filter(visibility='PUBLIC')
 
+        from django.db.models import Count
         qs = qs.select_related('owner').prefetch_related('tags').order_by('-created_at')
+        qs = qs.annotate(
+            candle_count_annotated=Count('candles', distinct=True),
+            message_count_annotated=Count('messages', distinct=True)
+        )
         
         search = (self.request.query_params.get('search') or '').strip()
         owner_id = (self.request.query_params.get('owner') or '').strip()
@@ -153,6 +158,13 @@ def _save_image_from_url(memorial, url, filename_prefix='ai_memorial'):
 @permission_classes([permissions.IsAuthenticated])
 def memorial_create(request):
     """POST /api/memorials/ — create a memorial."""
+    existing_count = Memorial.objects.filter(owner=request.user).count()
+    if existing_count >= 1:
+        return Response(
+            {'error': 'Free tier users are limited to 1 memorial.'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     serializer = MemorialCreateSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -466,7 +478,8 @@ def invite_contributor(request, pk):
     if not username:
         return Response({'detail': 'Username is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    from django.contrib.auth.models import User
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
     try:
         invited_user = User.objects.get(username=username)
     except User.DoesNotExist:
@@ -480,6 +493,14 @@ def invite_contributor(request, pk):
         invited_user=invited_user,
         defaults={'status': 'PENDING', 'role': role}
     )
+
+    if created:
+        from notifications.services import NotificationService
+        NotificationService.notify(
+            user=invited_user,
+            title="Contributor Invitation",
+            message=f"You have been invited by {request.user.username} to contribute to the memorial '{memorial.full_name}'."
+        )
 
     serializer = ContributorInvitationSerializer(invitation, context={'request': request})
     return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -512,6 +533,12 @@ def respond_invitation(request, pk):
             memorial=invitation.memorial,
             user=request.user,
             defaults={'role': invitation.role}
+        )
+        from notifications.services import NotificationService
+        NotificationService.notify(
+            user=invitation.memorial.owner,
+            title="Invitation Accepted",
+            message=f"{request.user.username} has accepted your invitation to contribute to the memorial '{invitation.memorial.full_name}'."
         )
 
     return Response({'status': response_status})

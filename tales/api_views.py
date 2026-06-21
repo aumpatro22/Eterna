@@ -17,7 +17,11 @@ class TaleListView(generics.ListAPIView):
 
     def get_queryset(self):
         q = (self.request.query_params.get('q') or '').strip()
+        from django.db.models import Count, Q
         qs = Tale.objects.select_related('author').order_by('-created_at')
+        qs = qs.annotate(
+            chapter_count_annotated=Count('chapters', filter=Q(chapters__published=True))
+        )
         if not self.request.user.is_authenticated:
             qs = qs.filter(is_public=True)
         if q:

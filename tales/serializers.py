@@ -19,6 +19,8 @@ class TaleListSerializer(serializers.ModelSerializer):
                   'author_username', 'chapter_count', 'created_at']
 
     def get_chapter_count(self, obj):
+        if hasattr(obj, 'chapter_count_annotated'):
+            return obj.chapter_count_annotated
         return obj.chapters.filter(published=True).count()
 
 

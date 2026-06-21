@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
+import { compressImage } from '../utils/imageCompression';
 
 export default function CommunityList() {
   const { user } = useAuth();
@@ -227,7 +228,15 @@ export default function CommunityList() {
                     type="file" 
                     accept="image/*"
                     className="input w-full text-sm"
-                    onChange={e => setForm({...form, icon_image: e.target.files[0]})}
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const compressed = await compressImage(file);
+                        setForm({...form, icon_image: compressed});
+                      } else {
+                        setForm({...form, icon_image: null});
+                      }
+                    }}
                   />
                 </div>
                 <div>
@@ -236,7 +245,15 @@ export default function CommunityList() {
                     type="file" 
                     accept="image/*"
                     className="input w-full text-sm"
-                    onChange={e => setForm({...form, cover_image: e.target.files[0]})}
+                    onChange={async (e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const compressed = await compressImage(file);
+                        setForm({...form, cover_image: compressed});
+                      } else {
+                        setForm({...form, cover_image: null});
+                      }
+                    }}
                   />
                 </div>
               </div>

@@ -1,0 +1,50 @@
+# Walkthrough: Eterna Infrastructure, Stability & Moderation Update
+
+We have successfully implemented the infrastructure migration, account-level moderation, notifications app, storage limit tracking system, daily messaging throttles, and client-side image compression.
+
+## Changes Completed
+
+### 1. Infrastructure & Swapping to Custom User Model
+- swapped Django's default User model with a custom `User` model (`users.User`) supporting account-level bans (`is_banned`, `ban_reason`).
+- Updated all models and ForeignKeys to refer to `settings.AUTH_USER_MODEL` or use `get_user_model()` dynamically.
+- Deleted outdated SQLite migrations and successfully regenerated clean, initial migrations.
+- Set up Render-compatible database and settings overrides (Cloudinary default storage, database URLs).
+
+### 2. Standalone Notifications App
+- Created a dedicated `notifications` app with a `Notification` model, REST API serializers/endpoints, and a non-blocking `NotificationService.notify()` helper.
+- Implemented triggers for the following events:
+  - **Join Request Approved**: Notifies the applicant user.
+  - **Invitation Accepted**: Notifies the memorial owner.
+  - **Contributor Invitation Received**: Notifies the invited user.
+
+### 3. Dynamic Storage Limit Tracking
+- Added `storage_used` and `storage_limit` (50MB default) to `Profile`.
+- Overrode `save()` and `delete()` hooks on models with file attachments (`Profile`, `DirectMessage`, `Community`, `CommunityMessage`, `Memorial`, `MemorialPhoto`, `TimelineEvent`, `Memory`) to calculate size deltas and update `profile.storage_used` dynamically.
+- Enforced file upload validation limits of **5MB** for images and **20MB** for audio.
+
+### 4. Split Messaging Throttles & Memorial Limits
+- Enforced a daily direct message limit of **30 DMs/day** in `send_direct_message`.
+- Enforced a daily community post limit of **30 posts/day** in `post_message`.
+- Maintained unlimited guestbook messages.
+- Enforced a maximum limit of **1 memorial** per free user in `memorial_create`.
+
+### 5. Frontend Image Compression & Sleeping Render Solution
+- Created `frontend/src/utils/imageCompression.js` using `browser-image-compression` targeting `300KB-500KB`.
+- Integrated image compression into file inputs across all upload forms (Direct Messages, Profile, Memorial, and Communities) while skipping audio files.
+- Configured Vite base URL support in `client.js`.
+- Implemented network and 502/503 error interception in `client.js` returning `"Preparing your memory space..."`.
+- Created an elegant, hand-drawn theme skeleton loader in `App.jsx` showing the connection status while the Render backend wakes up.
+
+## Verification
+
+### 1. Frontend Build Verification
+Successfully compiled production frontend bundle using Vite:
+```
+dist/index.html                   0.47 kB
+dist/assets/index-VhBwkvVA.css   54.75 kB
+dist/assets/index-C0qhxWiH.js   655.65 kB
+✓ built in 1.38s
+```
+
+### 2. Database Backup Strategy
+Documented the daily backup strategy using `pg_dump` and S3 backups in `document/backup_strategy.md`.

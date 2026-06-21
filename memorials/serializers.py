@@ -100,9 +100,13 @@ class MemorialListSerializer(serializers.ModelSerializer):
         return None
 
     def get_candle_count(self, obj):
+        if hasattr(obj, 'candle_count_annotated'):
+            return obj.candle_count_annotated
         return obj.candles.count()
 
     def get_message_count(self, obj):
+        if hasattr(obj, 'message_count_annotated'):
+            return obj.message_count_annotated
         return obj.messages.count()
 
 

@@ -1,9 +1,9 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.utils.text import slugify
 
 class Tale(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tales')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='tales')
     title = models.CharField(max_length=160)
     slug = models.SlugField(max_length=180, unique=True, blank=True)
     subtitle = models.CharField(max_length=200, blank=True)

@@ -35,9 +35,9 @@ def validate_image_file(file):
 def validate_audio_file(file):
     if not file:
         return
-    # Check size: 10MB
-    if file.size > 10 * 1024 * 1024:
-        raise ValidationError("Audio file size exceeds the limit of 10MB.")
+    # Check size: 20MB
+    if file.size > 20 * 1024 * 1024:
+        raise ValidationError("Audio file size exceeds the limit of 20MB.")
     
     # Check extension
     ext = os.path.splitext(file.name)[1].lower().strip('.')

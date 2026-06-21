@@ -1,5 +1,6 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+User = get_user_model()
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -264,7 +265,7 @@ class EternaSocialApiTests(APITestCase):
             validate_image_file(bad_mime_file)
 
         # 4. Reject large audio file
-        large_audio_data = b'0' * (10 * 1024 * 1024 + 1)
+        large_audio_data = b'0' * (20 * 1024 * 1024 + 1)
         large_audio = SimpleUploadedFile("test.mp3", large_audio_data, content_type="audio/mpeg")
         with self.assertRaises(ValidationError):
             validate_audio_file(large_audio)

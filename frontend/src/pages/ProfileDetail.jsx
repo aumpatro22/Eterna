@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { compressImage } from '../utils/imageCompression';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
@@ -861,9 +862,10 @@ export default function ProfileDetail() {
                   type="file"
                   accept="image/*"
                   className="text-base"
-                  onChange={e => {
+                  onChange={async (e) => {
                     if (e.target.files && e.target.files[0]) {
-                      setEditProfileImage(e.target.files[0]);
+                      const compressed = await compressImage(e.target.files[0]);
+                      setEditProfileImage(compressed);
                     }
                   }}
                 />

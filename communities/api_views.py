@@ -3,7 +3,8 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.db.models import Q
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
@@ -54,7 +55,10 @@ class CommunityListView(generics.ListAPIView):
         if q:
             qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
             
-        return qs.select_related('owner').order_by('-created_at')
+        from django.db.models import Count
+        return qs.select_related('owner').order_by('-created_at').annotate(
+            member_count_annotated=Count('memberships')
+        )
 
 
 class CommunityDetailView(generics.RetrieveAPIView):
@@ -62,7 +66,10 @@ class CommunityDetailView(generics.RetrieveAPIView):
     serializer_class = CommunityDetailSerializer
     permission_classes = [permissions.AllowAny]
     lookup_field = 'slug'
-    queryset = Community.objects.select_related('owner')
+    from django.db.models import Count
+    queryset = Community.objects.select_related('owner').annotate(
+        member_count_annotated=Count('memberships')
+    )
 
     def retrieve(self, request, *args, **kwargs):
         community = self.get_object()
@@ -242,6 +249,13 @@ def respond_join_request(request, pk):
             user=join_req.user,
             defaults={'role': 'MEMBER'}
         )
+        if not join_req.is_invite:
+            from notifications.services import NotificationService
+            NotificationService.notify(
+                user=join_req.user,
+                title="Join Request Approved",
+                message=f"Your request to join the community '{community.title}' has been approved."
+            )
 
     return Response({'status': resp_status})
 
@@ -259,6 +273,21 @@ def post_message(request, slug):
     role = get_user_role(community, request.user)
     if not role:
         return Response({'error': 'You must be a member to post.'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Check daily community post limit
+    import datetime
+    from django.utils import timezone
+    from django.conf import settings
+    start_time = timezone.now() - datetime.timedelta(days=1)
+    posts_count = CommunityMessage.objects.filter(
+        author=request.user,
+        created_at__gte=start_time
+    ).count()
+    if posts_count >= getattr(settings, 'FREE_TIER_DAILY_COMMUNITY_LIMIT', 30):
+        return Response(
+            {'error': 'Daily community post limit reached (30 posts/day).'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     serializer = CommunityMessageSerializer(data=request.data)
     if not serializer.is_valid():
