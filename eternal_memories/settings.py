@@ -238,8 +238,11 @@ CSRF_TRUSTED_ORIGINS += [
 
 FRONTEND_URL = os.environ.get('FRONTEND_URL')
 if FRONTEND_URL:
-    CORS_ALLOWED_ORIGINS.append(FRONTEND_URL)
-    CSRF_TRUSTED_ORIGINS.append(FRONTEND_URL)
+    if FRONTEND_URL.startswith('http://') or FRONTEND_URL.startswith('https://'):
+        CORS_ALLOWED_ORIGINS.append(FRONTEND_URL)
+        CSRF_TRUSTED_ORIGINS.append(FRONTEND_URL)
+    elif FRONTEND_URL == '*':
+        CORS_ALLOW_ALL_ORIGINS = True
 
 # Eterna Support Circle Co-Admin Limits
 MAX_COMMUNITY_COADMINS = 3
