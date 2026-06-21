@@ -62,6 +62,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'users.middleware.LastSeenMiddleware',
 ]
 
 ROOT_URLCONF = 'eternal_memories.urls'
@@ -89,6 +90,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'CONN_MAX_AGE': 300,
     }
 }
 # Override with DATABASE_URL when present (Render)
@@ -99,7 +101,7 @@ if os.environ.get('DATABASE_URL') and not IS_TESTING:
     try:
         import dj_database_url
         DATABASES['default'] = dj_database_url.config(
-            conn_max_age=600,
+            conn_max_age=300,
             ssl_require=(os.environ.get('PGSSLMODE') == 'require' or not DEBUG)
         )
     except Exception:
@@ -182,6 +184,10 @@ else:
     CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False') == 'True'
     SESSION_COOKIE_SAMESITE = 'Lax'
     CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Session configuration for idle user logout (2 hours)
+SESSION_COOKIE_AGE = 7200
+SESSION_SAVE_EVERY_REQUEST = True
 
 # Email configuration: console backend by default to avoid ConnectionRefused
 # Only enable SMTP when all required vars are present.

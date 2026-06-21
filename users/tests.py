@@ -315,3 +315,70 @@ class EternaSocialApiTests(APITestCase):
         })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('banned', response.data['error'])
+
+
+class EternaSessionAndIdleTests(TestCase):
+    def setUp(self):
+        from django.test import RequestFactory
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(username='testlastseen', password='Password123!')
+        self.profile = self.user.profile
+
+    def test_session_settings(self):
+        from django.conf import settings
+        self.assertEqual(settings.SESSION_COOKIE_AGE, 7200)
+        self.assertTrue(settings.SESSION_SAVE_EVERY_REQUEST)
+        self.assertEqual(settings.DATABASES['default']['CONN_MAX_AGE'], 300)
+
+    def test_last_seen_middleware_authenticated(self):
+        from django.contrib.sessions.backends.db import SessionStore
+        from django.http import HttpResponse
+        from users.middleware import LastSeenMiddleware
+        
+        request = self.factory.get('/api/users/me/')
+        request.user = self.user
+        request.session = SessionStore()
+        
+        middleware = LastSeenMiddleware(lambda req: HttpResponse("OK"))
+        
+        # Profile last_seen is initially None
+        self.assertIsNone(self.profile.last_seen)
+        
+        # First call updates last_seen
+        response = middleware(request)
+        self.assertEqual(response.content, b"OK")
+        
+        self.profile.refresh_from_db()
+        self.assertIsNotNone(self.profile.last_seen)
+        first_last_seen = self.profile.last_seen
+        
+        # Second call immediately should not update last_seen (throttled)
+        from django.utils import timezone
+        from datetime import timedelta
+        fake_time = timezone.now() - timedelta(hours=1)
+        self.profile.last_seen = fake_time
+        self.profile.save()
+        
+        response = middleware(request)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.last_seen, fake_time)
+        
+        # Set session cache updated timestamp to > 5 mins ago
+        request.session['last_seen_updated'] = (timezone.now() - timedelta(minutes=6)).isoformat()
+        response = middleware(request)
+        self.profile.refresh_from_db()
+        self.assertNotEqual(self.profile.last_seen, fake_time)
+
+    def test_last_seen_middleware_anonymous(self):
+        from django.contrib.auth.models import AnonymousUser
+        from django.http import HttpResponse
+        from users.middleware import LastSeenMiddleware
+        
+        request = self.factory.get('/api/users/me/')
+        request.user = AnonymousUser()
+        request.session = {}
+        
+        middleware = LastSeenMiddleware(lambda req: HttpResponse("OK"))
+        response = middleware(request)
+        self.assertEqual(response.content, b"OK")
+

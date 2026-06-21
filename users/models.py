@@ -20,6 +20,7 @@ class Profile(models.Model):
     profile_image = models.ImageField(upload_to='profiles/', blank=True, null=True)
     public_search = models.BooleanField(default=True)
     tags = models.CharField(max_length=255, blank=True, help_text="Comma-separated tags")
+    last_seen = models.DateTimeField(null=True, blank=True)
     
     PRIVACY_CHOICES = (
         ('PUBLIC', 'Public'),
