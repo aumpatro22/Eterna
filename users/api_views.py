@@ -41,6 +41,7 @@ def register_view(request):
     return Response({
         'status': 'ok',
         'user': UserSerializer(user).data,
+        'csrfToken': get_token(request)
     }, status=status.HTTP_201_CREATED)
 
 
@@ -65,6 +66,7 @@ def login_view(request):
     return Response({
         'status': 'ok',
         'user': UserSerializer(user).data,
+        'csrfToken': get_token(request)
     })
 
 
@@ -81,10 +83,14 @@ def logout_view(request):
 def me_view(request):
     """GET /api/auth/me/ — current user info."""
     if not request.user.is_authenticated:
-        return Response({'authenticated': False})
+        return Response({
+            'authenticated': False,
+            'csrfToken': get_token(request)
+        })
     return Response({
         'authenticated': True,
         'user': UserSerializer(request.user).data,
+        'csrfToken': get_token(request)
     })
 
 

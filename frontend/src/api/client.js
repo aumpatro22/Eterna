@@ -9,6 +9,12 @@ function getCookie(name) {
   return null;
 }
 
+let csrfTokenInMemory = '';
+
+export function setCsrfToken(token) {
+  csrfTokenInMemory = token;
+}
+
 async function request(url, options = {}) {
   const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
   let targetUrl = url;
@@ -19,7 +25,7 @@ async function request(url, options = {}) {
   const defaults = {
     credentials: 'include',
     headers: {
-      'X-CSRFToken': getCookie('csrftoken') || '',
+      'X-CSRFToken': csrfTokenInMemory || getCookie('csrftoken') || '',
     },
   };
 

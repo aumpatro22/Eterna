@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import api from '../api/client';
+import api, { setCsrfToken } from '../api/client';
 
 const AuthContext = createContext(null);
 
@@ -10,6 +10,9 @@ export function AuthProvider({ children }) {
   const checkAuth = async () => {
     try {
       const data = await api.get('/api/auth/me/');
+      if (data.csrfToken) {
+        setCsrfToken(data.csrfToken);
+      }
       if (data.authenticated) {
         setUser(data.user);
       } else {
@@ -28,12 +31,18 @@ export function AuthProvider({ children }) {
 
   const login = async (username, password) => {
     const data = await api.post('/api/auth/login/', { username, password });
+    if (data.csrfToken) {
+      setCsrfToken(data.csrfToken);
+    }
     setUser(data.user);
     return data;
   };
 
   const register = async (formData) => {
     const data = await api.post('/api/auth/register/', formData);
+    if (data.csrfToken) {
+      setCsrfToken(data.csrfToken);
+    }
     setUser(data.user);
     return data;
   };
