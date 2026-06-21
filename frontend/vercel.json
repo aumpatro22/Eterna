@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/((?!assets/|static/|favicon.svg|icons.svg|eterna-logo.png).*)$",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
