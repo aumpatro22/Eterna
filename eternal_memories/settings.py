@@ -137,8 +137,7 @@ if (BASE_DIR / 'static').exists():
 if (BASE_DIR / 'frontend' / 'dist').exists():
     _static_dirs.append(BASE_DIR / 'frontend' / 'dist')
 STATICFILES_DIRS = _static_dirs
-# Commented out to prevent build failures on Render due to broken CSS references in Django Admin
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # Cloudinary Integration
 CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
