@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.dateparse import parse_datetime
 
 from rest_framework import status, permissions
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes, authentication_classes
 from rest_framework.response import Response
 
 from .models import Profile, Reaction, DirectMessage, Conversation, CircleConnection, ProfileTimelineEvent, Report
@@ -29,6 +29,7 @@ from tales.serializers import TaleListSerializer
 
 
 @api_view(['POST'])
+@authentication_classes([])
 @permission_classes([permissions.AllowAny])
 @throttle_classes([AuthThrottle])
 def register_view(request):
@@ -46,6 +47,7 @@ def register_view(request):
 
 
 @api_view(['POST'])
+@authentication_classes([])
 @permission_classes([permissions.AllowAny])
 @throttle_classes([AuthThrottle])
 def login_view(request):
