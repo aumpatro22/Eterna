@@ -89,7 +89,7 @@ function App() {
 
   return (
     <AuthProvider>
-      <Router>
+      <Router basename={import.meta.env.BASE_URL}>
         <ScrollToTop />
         <div className={`flex flex-col min-h-screen ${sketchMode ? 'cursor-pencil' : ''}`}>
           <Navbar sketchMode={sketchMode} setSketchMode={setSketchMode} />

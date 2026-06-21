@@ -363,12 +363,19 @@ def send_direct_message(request, pk):
     if not content and not image:
         return Response({'error': 'Message content or image is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    dm = DirectMessage.objects.create(
-        conversation=conv,
-        sender=request.user,
-        content=content,
-        image=image
-    )
+    try:
+        dm = DirectMessage.objects.create(
+            conversation=conv,
+            sender=request.user,
+            content=content,
+            image=image
+        )
+    except Exception as e:
+        from django.core.exceptions import ValidationError
+        if isinstance(e, ValidationError):
+            return Response({'error': str(e.messages[0] if hasattr(e, 'messages') else e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Failed to send message. Ensure the image is valid.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     return Response(DirectMessageSerializer(dm, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
 

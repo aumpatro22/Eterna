@@ -292,7 +292,14 @@ def post_message(request, slug):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    serializer.save(community=community, author=request.user)
+    try:
+        serializer.save(community=community, author=request.user)
+    except Exception as e:
+        from django.core.exceptions import ValidationError
+        if isinstance(e, ValidationError):
+            return Response({'error': str(e.messages[0] if hasattr(e, 'messages') else e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Failed to post message. Ensure the image is valid.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
