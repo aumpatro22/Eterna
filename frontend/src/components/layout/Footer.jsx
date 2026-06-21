@@ -32,7 +32,6 @@ export default function Footer() {
             
             <div className="flex flex-col gap-3 font-patrick text-xl">
               <h4 className="font-kalam font-bold text-2xl decoration-wavy underline mb-2">Links</h4>
-              <a href="https://github.com/aumpatro22/Eterna" target="_blank" rel="noopener noreferrer" className="hover:text-pen hover:line-through w-fit transition-colors">GitHub</a>
               <Link to="/about" className="hover:text-pen hover:line-through w-fit transition-colors">About</Link>
               <Link to="/privacy" className="hover:text-pen hover:line-through w-fit transition-colors">Privacy</Link>
             </div>

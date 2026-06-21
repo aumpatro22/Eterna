@@ -153,20 +153,24 @@ def join_community(request, slug):
     if role:
         return Response({'status': 'already_member'})
 
-    # Create join request
-    join_req, created = CommunityJoinRequest.objects.get_or_create(
-        community=community,
-        user=request.user,
-        is_invite=False,
-        defaults={'status': 'PENDING'}
-    )
-    
-    if not created and join_req.status == 'REJECTED':
-        # Re-request if previously rejected
-        join_req.status = 'PENDING'
-        join_req.save()
-
-    return Response({'status': 'request_sent', 'request_id': join_req.id})
+    # For PUBLIC communities, join instantly (auto-approve)
+    if community.community_type == 'PUBLIC':
+        join_req, created = CommunityJoinRequest.objects.get_or_create(
+            community=community,
+            user=request.user,
+            is_invite=False,
+            defaults={'status': 'APPROVED'}
+        )
+        if not created and join_req.status != 'APPROVED':
+            join_req.status = 'APPROVED'
+            join_req.save()
+            
+        Membership.objects.get_or_create(
+            community=community,
+            user=request.user,
+            defaults={'role': 'MEMBER'}
+        )
+        return Response({'status': 'joined'})
 
 
 @api_view(['POST'])
@@ -298,18 +302,18 @@ def post_message(request, slug):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])
+@permission_classes([permissions.IsAuthenticated])
 def messages_feed(request, slug):
-    """GET /api/communities/<slug>/feed/ — get chat message history."""
+    """GET /api/communities/<slug>/feed/ — get chat message history (members only)."""
     community = get_object_or_404(Community, slug=slug)
     user = request.user
 
     role = get_user_role(community, user)
     is_member = role is not None
 
-    # Public community chat is viewable by anyone, Private community is restricted to members
-    if community.community_type == 'PRIVATE' and not is_member:
-        return Response({'error': 'Access denied.'}, status=status.HTTP_403_FORBIDDEN)
+    # Only members of the community can view the chat feed
+    if not is_member:
+        return Response({'error': 'Access denied. You must join this community to view the chat.'}, status=status.HTTP_403_FORBIDDEN)
 
     since = request.query_params.get('since')
     qs = community.messages.select_related('author').order_by('created_at')

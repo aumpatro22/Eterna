@@ -48,7 +48,7 @@ export default function CommunityDetail() {
   }, [slug]);
 
   useEffect(() => {
-    if (community && (community.is_member || community.community_type === 'PUBLIC')) {
+    if (community && community.is_member) {
       fetchMessages();
       const interval = setInterval(fetchMessages, 5000);
       return () => clearInterval(interval);
@@ -489,151 +489,182 @@ export default function CommunityDetail() {
 
           {/* Right Panel: Chat Area */}
           <div className="md:col-span-3 paper-card bg-white flex flex-col min-h-0 rotate-0.5">
-            {/* Messages Feed */}
-            <div 
-              ref={scrollContainerRef}
-              className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-erased" 
-              style={{ backgroundImage: 'radial-gradient(#e5e0d8 1.5px, transparent 1.5px)', backgroundSize: '24px 24px' }}
-            >
-              {messages.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 font-patrick">
-                  <span className="text-5xl mb-2">✏️</span>
-                  <p className="text-2xl font-bold text-ink/60">The noticeboard is currently blank.</p>
-                  <p className="text-lg text-ink/50">Write the first note to start the circle.</p>
-                </div>
-              ) : (
-                messages.map((m, idx) => {
-                  const isDeleted = m.is_deleted;
-                  const isAuthor = user && m.author_username === user.username;
-                  const isMod = community.is_member && community.is_admin;
-                  const showDelete = !isDeleted && user && (isAuthor || isMod);
-                  
-                  return (
-                    <div key={m.id} className="flex flex-col gap-1 align-start max-w-[85%] self-start relative">
-                      <div className="flex items-baseline gap-2 pl-2">
-                        <span className="font-kalam text-xl font-bold">{m.author_username}</span>
-                        <span className="font-patrick text-base text-ink/60">
-                          {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
-                        </span>
-                        
-                        {/* Report Button */}
-                        {!isDeleted && user && !isAuthor && (
-                          <button
-                            onClick={() => {
-                              setReportTargetType('MESSAGE');
-                              setReportTargetId(m.id);
-                              setShowReportModal(true);
-                            }}
-                            className="ml-2 text-ink/30 hover:text-marker text-xs"
-                            title="Report Message"
-                          >
-                            🛡️
-                          </button>
-                        )}
-                        {/* Delete Button */}
-                        {showDelete && (
-                          <button
-                            onClick={() => handleDeleteMessage(m.id)}
-                            className="ml-2 text-ink/30 hover:text-marker font-bold text-xs"
-                            title="Delete Message"
-                          >
-                            ✖
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Message Content Bubble */}
-                      <div className={`p-4 border-[3px] border-ink wobbly-sm font-patrick text-xl shadow-sm ${
-                        isDeleted 
-                          ? 'bg-paper/40 text-ink/40 border-dashed italic' 
-                          : idx % 2 === 0 ? 'bg-white -rotate-0.5' : 'bg-postit rotate-0.5'
-                      }`}>
-                        {isDeleted ? (
-                          '[This message was deleted]'
-                        ) : (
-                          <>
-                            {m.content && <p className="whitespace-pre-wrap">{m.content}</p>}
-                            {m.image && (
-                              <div className="mt-3 border-2 border-ink wobbly-xs rounded overflow-hidden max-w-sm bg-white shadow-sm rotate-0.5">
-                                <img src={m.image} alt="Upload" className="w-full object-contain max-h-60" />
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input Form at Bottom */}
             {community.is_member ? (
-              <form onSubmit={handleSend} className="p-4 border-t-[3px] border-ink bg-white flex flex-col gap-2">
-                {community.is_archived ? (
-                  <div className="text-center font-patrick text-xl font-bold text-ink/50 py-2">
-                    🚫 This circle has been archived. Writing is disabled.
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex gap-4">
-                      <input
-                        type="text"
-                        className="input flex-1"
-                        value={inputText}
-                        onChange={e => setInputText(e.target.value)}
-                        placeholder="Scribble a message on the board..."
-                        disabled={postLoading}
-                      />
-                      <button 
-                        type="submit" 
-                        disabled={postLoading || (!inputText.trim() && !inputImage)}
-                        className="btn btn-primary text-xl"
-                      >
-                        {postLoading ? '...' : 'Post'}
-                      </button>
+              <>
+                {/* Messages Feed */}
+                <div 
+                  ref={scrollContainerRef}
+                  className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-erased" 
+                  style={{ backgroundImage: 'radial-gradient(#e5e0d8 1.5px, transparent 1.5px)', backgroundSize: '24px 24px' }}
+                >
+                  {messages.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-center p-8 font-patrick">
+                      <span className="text-5xl mb-2">✏️</span>
+                      <p className="text-2xl font-bold text-ink/60">The noticeboard is currently blank.</p>
+                      <p className="text-lg text-ink/50">Write the first note to start the circle.</p>
                     </div>
+                  ) : (
+                    messages.map((m, idx) => {
+                      const isDeleted = m.is_deleted;
+                      const isAuthor = user && m.author_username === user.username;
+                      const isMod = community.is_member && community.is_admin;
+                      const showDelete = !isDeleted && user && (isAuthor || isMod);
+                      
+                      return (
+                        <div key={m.id} className="flex flex-col gap-1 align-start max-w-[85%] self-start relative">
+                          <div className="flex items-baseline gap-2 pl-2">
+                            <span className="font-kalam text-xl font-bold">{m.author_username}</span>
+                            <span className="font-patrick text-base text-ink/60">
+                              {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                            </span>
+                            
+                            {/* Report Button */}
+                            {!isDeleted && user && !isAuthor && (
+                              <button
+                                onClick={() => {
+                                  setReportTargetType('MESSAGE');
+                                  setReportTargetId(m.id);
+                                  setShowReportModal(true);
+                                }}
+                                className="ml-2 text-ink/30 hover:text-marker text-xs"
+                                title="Report Message"
+                              >
+                                🛡️
+                              </button>
+                            )}
+                            {/* Delete Button */}
+                            {showDelete && (
+                              <button
+                                onClick={() => handleDeleteMessage(m.id)}
+                                className="ml-2 text-ink/30 hover:text-marker font-bold text-xs"
+                                title="Delete Message"
+                              >
+                                ✖
+                              </button>
+                            )}
+                          </div>
 
-                    {/* Image Attachment Input */}
-                    <div className="flex items-center gap-4 text-sm font-patrick">
-                      <label className="cursor-pointer bg-erased hover:bg-paper border-2 border-ink px-2 py-0.5 rounded wobbly-sm flex items-center gap-1 select-none">
-                        📸 Attach Image
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={async (e) => {
-                            const file = e.target.files[0];
-                            if (file) {
-                              const compressed = await compressImage(file);
-                              setInputImage(compressed);
-                            } else {
-                              setInputImage(null);
-                            }
-                          }}
-                        />
-                      </label>
-                      {inputImage && (
-                        <span className="text-ink/60 truncate flex items-center gap-1">
-                          📎 {inputImage.name}
-                          <button 
-                            type="button" 
-                            onClick={() => { setInputImage(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                            className="text-marker font-bold"
-                          >
-                            [remove]
-                          </button>
-                        </span>
-                      )}
+                          {/* Message Content Bubble */}
+                          <div className={`p-4 border-[3px] border-ink wobbly-sm font-patrick text-xl shadow-sm ${
+                            isDeleted 
+                              ? 'bg-paper/40 text-ink/40 border-dashed italic' 
+                              : idx % 2 === 0 ? 'bg-white -rotate-0.5' : 'bg-postit rotate-0.5'
+                          }`}>
+                            {isDeleted ? (
+                              '[This message was deleted]'
+                            ) : (
+                              <>
+                                {m.content && <p className="whitespace-pre-wrap">{m.content}</p>}
+                                {m.image && (
+                                  <div className="mt-3 border-2 border-ink wobbly-xs rounded overflow-hidden max-w-sm bg-white shadow-sm rotate-0.5">
+                                    <img src={m.image} alt="Upload" className="w-full object-contain max-h-60" />
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input Form at Bottom */}
+                <form onSubmit={handleSend} className="p-4 border-t-[3px] border-ink bg-white flex flex-col gap-2">
+                  {community.is_archived ? (
+                    <div className="text-center font-patrick text-xl font-bold text-ink/50 py-2">
+                      🚫 This circle has been archived. Writing is disabled.
                     </div>
-                  </>
-                )}
-              </form>
+                  ) : (
+                    <>
+                      <div className="flex gap-4">
+                        <input
+                          type="text"
+                          className="input flex-1"
+                          value={inputText}
+                          onChange={e => setInputText(e.target.value)}
+                          placeholder="Scribble a message on the board..."
+                          disabled={postLoading}
+                        />
+                        <button 
+                          type="submit" 
+                          disabled={postLoading || (!inputText.trim() && !inputImage)}
+                          className="btn btn-primary text-xl"
+                        >
+                          {postLoading ? '...' : 'Post'}
+                        </button>
+                      </div>
+
+                      {/* Image Attachment Input */}
+                      <div className="flex items-center gap-4 text-sm font-patrick">
+                        <label className="cursor-pointer bg-erased hover:bg-paper border-2 border-ink px-2 py-0.5 rounded wobbly-sm flex items-center gap-1 select-none">
+                          📸 Attach Image
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                const compressed = await compressImage(file);
+                                setInputImage(compressed);
+                              } else {
+                                setInputImage(null);
+                              }
+                            }}
+                          />
+                        </label>
+                        {inputImage && (
+                          <span className="text-ink/60 truncate flex items-center gap-1">
+                            📎 {inputImage.name}
+                            <button 
+                              type="button" 
+                              onClick={() => { setInputImage(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                              className="text-marker font-bold"
+                            >
+                              [remove]
+                            </button>
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </form>
+              </>
             ) : (
-              <div className="p-6 text-center font-patrick text-xl font-bold border-t-[3px] border-ink bg-erased">
-                You must join this support circle to post.
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 font-patrick bg-erased gap-6">
+                <span className="text-6xl mb-2">💬</span>
+                <h3 className="font-kalam text-3xl font-bold text-ink">Join the Circle</h3>
+                <p className="text-xl max-w-md text-ink/75 leading-relaxed">
+                  {user 
+                    ? "This chat feed is private to members of this community. Join this support circle to view the board, see notifications, and post your own messages."
+                    : "You must be logged in and a member of this community to view the chat and post messages."}
+                </p>
+                {user ? (
+                  <button
+                    onClick={handleJoin}
+                    className="btn btn-primary text-xl px-8 py-3 shadow-hard hover:scale-105 transition-transform w-fit"
+                  >
+                    Join Support Circle
+                  </button>
+                ) : (
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => navigate('/login')}
+                      className="btn btn-primary text-xl px-6 py-2 shadow-hard hover:scale-105 transition-transform"
+                    >
+                      Login
+                    </button>
+                    <button
+                      onClick={() => navigate('/register')}
+                      className="btn btn-secondary text-xl px-6 py-2 shadow-hard hover:scale-105 transition-transform"
+                    >
+                      Register
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
