@@ -34,6 +34,14 @@ export default function Footer() {
               <h4 className="font-kalam font-bold text-2xl decoration-wavy underline mb-2">Links</h4>
               <Link to="/about" className="hover:text-pen hover:line-through w-fit transition-colors">About</Link>
               <Link to="/privacy" className="hover:text-pen hover:line-through w-fit transition-colors">Privacy</Link>
+              <a 
+                href="https://forms.gle/jPHUuWkMbHNGPahPA" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="hover:text-marker hover:line-through w-fit transition-colors"
+              >
+                Report a Bug 🐞
+              </a>
             </div>
           </div>
         </div>

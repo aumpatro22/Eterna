@@ -139,6 +139,29 @@ export default function About() {
           </div>
         </div>
       </motion.div>
+
+      {/* Bug Report Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="bg-postit/40 border-[3px] border-ink p-8 shadow-hard wobbly-sm max-w-3xl mx-auto w-full text-center relative -rotate-0.5"
+      >
+        <span className="text-4xl block mb-4">🐞</span>
+        <h2 className="font-kalam text-3xl font-bold mb-3 text-ink">Found a Bug or Have Feedback?</h2>
+        <p className="font-patrick text-xl max-w-md mx-auto mb-6 text-ink/80">
+          Eterna is crafted with care to preserve your memories. If something isn't working as expected or if you have ideas on how we can improve, we'd love to hear from you.
+        </p>
+        <a 
+          href="https://forms.gle/jPHUuWkMbHNGPahPA" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="btn btn-primary bg-marker text-white font-bold py-2.5 px-8 hover:-rotate-1 inline-flex items-center gap-2"
+        >
+          📝 Report Bug / Share Feedback
+        </a>
+      </motion.div>
+
     </div>
   );
 }
