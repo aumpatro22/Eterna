@@ -153,24 +153,19 @@ def join_community(request, slug):
     if role:
         return Response({'status': 'already_member'})
 
-    # For PUBLIC communities, join instantly (auto-approve)
+    # For PUBLIC communities, request to join (requires approval)
     if community.community_type == 'PUBLIC':
         join_req, created = CommunityJoinRequest.objects.get_or_create(
             community=community,
             user=request.user,
             is_invite=False,
-            defaults={'status': 'APPROVED'}
+            defaults={'status': 'PENDING'}
         )
-        if not created and join_req.status != 'APPROVED':
-            join_req.status = 'APPROVED'
+        if not created and join_req.status != 'PENDING':
+            join_req.status = 'PENDING'
             join_req.save()
             
-        Membership.objects.get_or_create(
-            community=community,
-            user=request.user,
-            defaults={'role': 'MEMBER'}
-        )
-        return Response({'status': 'joined'})
+        return Response({'status': 'request_sent'})
 
 
 @api_view(['POST'])
