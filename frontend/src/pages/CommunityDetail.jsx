@@ -466,6 +466,7 @@ export default function CommunityDetail() {
                                   onClick={() => handleRemoveMember(m.username)}
                                   className="text-xs bg-white text-marker border border-marker/40 px-1.5 py-0.5 rounded hover:bg-marker hover:text-white font-bold"
                                   title="Remove from community"
+                                  aria-label="Remove from community"
                                 >
                                   ✖
                                 </button>
@@ -567,6 +568,7 @@ export default function CommunityDetail() {
                                 onClick={() => handleDeleteMessage(m.id)}
                                 className="ml-2 text-ink/30 hover:text-marker font-bold text-xs"
                                 title="Delete Message"
+                                aria-label="Delete Message"
                               >
                                 ✖
                               </button>
