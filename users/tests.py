@@ -382,3 +382,40 @@ class EternaSessionAndIdleTests(TestCase):
         response = middleware(request)
         self.assertEqual(response.content, b"OK")
 
+
+class LoginApiTests(APITestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
+        self.user = User.objects.create_user(username='testloginuser', password='Password123!', email='login@example.com')
+
+    def test_successful_login(self):
+        response = self.client.post('/api/auth/login/', {
+            'username': 'testloginuser',
+            'password': 'Password123!'
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'ok')
+        self.assertEqual(response.data['user']['username'], 'testloginuser')
+        self.assertIn('csrfToken', response.data)
+
+    def test_invalid_login(self):
+        response = self.client.post('/api/auth/login/', {
+            'username': 'testloginuser',
+            'password': 'WrongPassword123!'
+        })
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn('error', response.data)
+
+    def test_banned_user_login(self):
+        self.user.is_banned = True
+        self.user.ban_reason = "Spamming"
+        self.user.save()
+
+        response = self.client.post('/api/auth/login/', {
+            'username': 'testloginuser',
+            'password': 'Password123!'
+        })
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn('banned', response.data['error'])
