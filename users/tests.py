@@ -316,6 +316,69 @@ class EternaSocialApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('banned', response.data['error'])
 
+    def test_join_community(self):
+        from communities.models import Community, Membership, CommunityBan, CommunityJoinRequest
+        # Create a private community owned by user1
+        private_community = Community.objects.create(
+            title='Private Community',
+            slug='private-community',
+            community_type='PRIVATE',
+            owner=self.user1
+        )
+        Membership.objects.create(community=private_community, user=self.user1, role='ADMIN')
+
+        # Create a public community owned by user1
+        public_community = Community.objects.create(
+            title='Public Community',
+            slug='public-community',
+            community_type='PUBLIC',
+            owner=self.user1
+        )
+        Membership.objects.create(community=public_community, user=self.user1, role='ADMIN')
+
+        # Banned user (user2) in public community
+        CommunityBan.objects.create(community=public_community, user=self.user2, banned_by=self.user1, reason="Spam")
+
+        # 1. Banned user attempts to join
+        self.client.force_authenticate(user=self.user2)
+        response = self.client.post(f'/api/communities/{public_community.slug}/join/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['error'], 'You are banned from this community.')
+
+        # 2. User attempts to join private community
+        self.client.force_authenticate(user=self.user3)
+        response = self.client.post(f'/api/communities/{private_community.slug}/join/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data['error'], 'Private communities are invitation only.')
+
+        # 3. User attempts to join public community and already a member
+        self.client.force_authenticate(user=self.user1)
+        response = self.client.post(f'/api/communities/{public_community.slug}/join/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'already_member')
+
+        # 4. Successful join request for public community
+        self.client.force_authenticate(user=self.user4)
+        response = self.client.post(f'/api/communities/{public_community.slug}/join/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'request_sent')
+
+        # Verify CommunityJoinRequest is created
+        self.assertTrue(CommunityJoinRequest.objects.filter(community=public_community, user=self.user4, status='PENDING').exists())
+
+        # 5. Subsequent join request should update status back to PENDING if not pending
+        join_req = CommunityJoinRequest.objects.get(community=public_community, user=self.user4)
+        join_req.status = 'DECLINED'
+        join_req.save()
+
+        response = self.client.post(f'/api/communities/{public_community.slug}/join/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'request_sent')
+
+        # Verify CommunityJoinRequest is updated to PENDING
+        join_req.refresh_from_db()
+        self.assertEqual(join_req.status, 'PENDING')
+
 
 class EternaSessionAndIdleTests(TestCase):
     def setUp(self):
