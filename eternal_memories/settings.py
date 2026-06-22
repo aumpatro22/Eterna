@@ -15,15 +15,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-key-for-dev')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = [h for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h]
-# Allow Render's external hostname if provided by platform
-RENDER_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')  # CHANGED
-if RENDER_HOSTNAME and RENDER_HOSTNAME not in ALLOWED_HOSTS:  # FIX block
-    ALLOWED_HOSTS.append(RENDER_HOSTNAME)
 
-# NEW: CSRF trusted origins (from Render hostname or env)
+# NEW: CSRF trusted origins (from env)
 _env_csrf = [o for o in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if o]
-if RENDER_HOSTNAME:  # FIX block
-    _env_csrf.append(f"https://{RENDER_HOSTNAME}")
 CSRF_TRUSTED_ORIGINS = _env_csrf or []
 
 # Application definition
@@ -37,12 +31,12 @@ INSTALLED_APPS = [
     'cloudinary_storage',
     'django.contrib.staticfiles',
     'cloudinary',
-    
+
     # Third-party
     'rest_framework',
     'corsheaders',
     'django_bleach',
-    
+
     # Local apps
     'memorials',
     'users',
