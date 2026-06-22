@@ -463,33 +463,33 @@ export default function ProfileDetail() {
       </div>
 
       {/* Tabs Menu */}
-      <div className="flex justify-center gap-4 border-b-[3px] border-ink pb-2 flex-wrap">
+      <div className="flex justify-center gap-2 md:gap-4 border-b-[3px] border-ink pb-2 flex-wrap">
         <button
           onClick={() => setActiveTab('content')}
-          className={`font-kalam text-2xl py-1 px-4 transition-all ${
+          className={`font-kalam text-lg md:text-2xl py-1 px-2 md:px-4 transition-all ${
             activeTab === 'content'
               ? 'bg-postit border-[3px] border-ink wobbly-sm font-bold -rotate-1'
-              : 'hover:underline text-ink/70'
+              : 'md:hover:underline text-ink/70'
           }`}
         >
           Memories & Tales 📝
         </button>
         <button
           onClick={() => setActiveTab('timeline')}
-          className={`font-kalam text-2xl py-1 px-4 transition-all ${
+          className={`font-kalam text-lg md:text-2xl py-1 px-2 md:px-4 transition-all ${
             activeTab === 'timeline'
               ? 'bg-postit border-[3px] border-ink wobbly-sm font-bold rotate-1'
-              : 'hover:underline text-ink/70'
+              : 'md:hover:underline text-ink/70'
           }`}
         >
           Milestones Timeline 🗓️
         </button>
         <button
           onClick={() => setActiveTab('circles')}
-          className={`font-kalam text-2xl py-1 px-4 transition-all ${
+          className={`font-kalam text-lg md:text-2xl py-1 px-2 md:px-4 transition-all ${
             activeTab === 'circles'
               ? 'bg-postit border-[3px] border-ink wobbly-sm font-bold -rotate-1'
-              : 'hover:underline text-ink/70'
+              : 'md:hover:underline text-ink/70'
           }`}
         >
           Circles 👥
@@ -497,10 +497,10 @@ export default function ProfileDetail() {
         {isOwner && (
           <button
             onClick={() => setActiveTab('connections')}
-            className={`font-kalam text-2xl py-1 px-4 transition-all ${
+            className={`font-kalam text-lg md:text-2xl py-1 px-2 md:px-4 transition-all ${
               activeTab === 'connections'
                 ? 'bg-postit border-[3px] border-ink wobbly-sm font-bold rotate-1'
-                : 'hover:underline text-ink/70'
+                : 'md:hover:underline text-ink/70'
             }`}
           >
             My Connections 🤝
@@ -846,10 +846,10 @@ export default function ProfileDetail() {
       {/* Edit Profile Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-ink/60 z-[999999] flex items-center justify-center p-6 backdrop-blur-[2px]">
-          <div className="paper-card bg-white p-8 max-w-md w-full relative rotate-1 tack-decoration shadow-hard">
+          <div className="paper-card bg-white p-5 sm:p-6 md:p-8 max-w-md w-full relative rotate-1 tack-decoration shadow-hard">
             <button
               onClick={() => { setShowEditModal(false); setEditProfileImage(null); }}
-              className="absolute top-4 right-4 font-kalam text-3xl hover:text-marker transition-colors"
+              className="absolute top-4 right-4 font-kalam text-3xl md:hover:text-marker transition-colors"
               aria-label="Close"
             >
               ✖

@@ -57,6 +57,41 @@ export default function DoodleCorkboard() {
     }
   }, []);
 
+  // Clamping note positions inside container bounds on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (!boardRef.current) return;
+      const boardRect = boardRef.current.getBoundingClientRect();
+      setNotes((prevNotes) => {
+        let changed = false;
+        const clamped = prevNotes.map((note) => {
+          const maxX = Math.max(0, boardRect.width - 180);
+          const maxY = Math.max(0, boardRect.height - 180);
+          const newX = Math.max(0, Math.min(note.x, maxX));
+          const newY = Math.max(0, Math.min(note.y, maxY));
+          if (newX !== note.x || newY !== note.y) {
+            changed = true;
+            return { ...note, x: newX, y: newY };
+          }
+          return note;
+        });
+        if (changed) {
+          localStorage.setItem('eterna_corkboard_notes', JSON.stringify(clamped));
+          return clamped;
+        }
+        return prevNotes;
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    const timer = setTimeout(handleResize, 150);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timer);
+    };
+  }, [notes.length]);
+
   const saveNotes = (updated) => {
     setNotes(updated);
     localStorage.setItem('eterna_corkboard_notes', JSON.stringify(updated));
@@ -256,7 +291,7 @@ export default function DoodleCorkboard() {
                   ref={canvasRef}
                   width={280}
                   height={180}
-                  className="absolute inset-0 cursor-pencil bg-white"
+                  className="absolute inset-0 cursor-pencil bg-white touch-none"
                   onMouseDown={startDrawing}
                   onMouseMove={draw}
                   onMouseUp={stopDrawing}
@@ -317,7 +352,7 @@ export default function DoodleCorkboard() {
             key={note.id}
             onMouseDown={(e) => handleMouseDown(e, note)}
             onTouchStart={(e) => handleMouseDown(e, note)}
-            className={`absolute w-44 p-4 border-[3px] border-ink wobbly-sm shadow-hard transition-transform duration-75 select-none ${note.color}`}
+            className={`absolute w-44 p-4 border-[3px] border-ink wobbly-sm shadow-hard transition-transform duration-75 select-none touch-none ${note.color}`}
             style={{
               left: note.x,
               top: note.y,

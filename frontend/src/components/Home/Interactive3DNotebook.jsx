@@ -76,7 +76,7 @@ export default function Interactive3DNotebook() {
         ref={containerRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className="w-full max-w-2xl h-[380px] perspective-1000 cursor-pointer"
+        className="w-full max-w-2xl h-[700px] md:h-[380px] perspective-1000 cursor-pointer"
       >
         <div 
           className="w-full h-full preserve-3d transition-transform duration-200 ease-out"
@@ -85,10 +85,10 @@ export default function Interactive3DNotebook() {
           }}
         >
           {/* Main Notebook Base */}
-          <div className="w-full h-full bg-white border-[4px] border-ink wobbly-md shadow-hard relative overflow-hidden flex">
+          <div className="w-full h-full bg-white border-[4px] border-ink wobbly-md shadow-hard relative overflow-hidden flex flex-col md:flex-row">
             
             {/* Left Page */}
-            <div className="w-1/2 h-full bg-paper border-r-[2px] border-ink/30 p-6 flex flex-col justify-between relative">
+            <div className="w-full md:w-1/2 h-full bg-paper border-b-[2px] md:border-b-0 md:border-r-[2px] border-ink/30 p-6 flex flex-col justify-between relative">
               {/* Notebook Lines */}
               <div 
                 className="absolute inset-0 opacity-10 pointer-events-none"
@@ -100,7 +100,7 @@ export default function Interactive3DNotebook() {
               />
               
               {/* Spiral wire down the middle */}
-              <div className="absolute right-[-8px] top-0 bottom-0 w-4 flex flex-col justify-around items-center z-20 pointer-events-none">
+              <div className="absolute right-[-8px] top-0 bottom-0 w-4 hidden md:flex flex-col justify-around items-center z-20 pointer-events-none">
                 {Array.from({ length: 14 }).map((_, i) => (
                   <div key={i} className="w-6 h-3 bg-erased border-2 border-ink rounded-full -rotate-12" />
                 ))}
@@ -143,7 +143,7 @@ export default function Interactive3DNotebook() {
                   <div className="mt-8 flex gap-2">
                     <button 
                       onClick={clearCanvas} 
-                      className="wobbly-sm bg-erased border-[3px] border-ink px-3 py-1 font-patrick font-bold text-base hover:bg-marker hover:text-white transition-colors"
+                      className="wobbly-sm bg-erased border-[3px] border-ink px-3 py-1 font-patrick font-bold text-base md:hover:bg-marker md:hover:text-white transition-colors"
                     >
                       Erase Page
                     </button>
@@ -158,7 +158,7 @@ export default function Interactive3DNotebook() {
             </div>
 
             {/* Right Page */}
-            <div className="w-1/2 h-full bg-paper p-6 flex flex-col justify-between relative">
+            <div className="w-full md:w-1/2 h-full bg-paper p-6 flex flex-col justify-between relative">
               {/* Notebook Lines */}
               <div 
                 className="absolute inset-0 opacity-10 pointer-events-none"
@@ -172,7 +172,7 @@ export default function Interactive3DNotebook() {
               {page === 0 && (
                 <div className="relative z-10 flex flex-col items-center justify-center h-full gap-4 text-center animate-[fadeIn_0.4s_ease]">
                   {/* Visual Doodle Drawing of a star/heart */}
-                  <div className="w-32 h-32 border-2 border-dashed border-ink/30 flex items-center justify-center wobbly-md bg-white -rotate-3 relative group-hover:rotate-3 transition-transform">
+                  <div className="w-32 h-32 border-2 border-dashed border-ink/30 flex items-center justify-center wobbly-md bg-white -rotate-3 relative md:group-hover:rotate-3 transition-transform">
                     <span className="text-5xl text-marker animate-pulse">❤️</span>
                   </div>
                   <span className="font-patrick text-lg text-ink/70">"Love is how you stay alive, even after you are gone."</span>
@@ -199,7 +199,7 @@ export default function Interactive3DNotebook() {
                       ref={canvasRef}
                       width={280}
                       height={210}
-                      className="absolute inset-0 w-full h-full cursor-pencil"
+                      className="absolute inset-0 w-full h-full cursor-pencil touch-none"
                       onMouseDown={startDrawing}
                       onMouseMove={draw}
                       onMouseUp={stopDrawing}

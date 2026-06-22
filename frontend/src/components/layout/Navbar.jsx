@@ -14,7 +14,7 @@ export default function Navbar({ sketchMode, setSketchMode }) {
 
   return (
     <header className={`sticky top-0 bg-paper/90 backdrop-blur-sm border-b-[3px] border-ink shadow-hard ${sketchMode ? 'z-[10000]' : 'z-50'}`}>
-      <nav className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         
         {/* Logo */}
         <Link to="/" className="flex items-center group">
@@ -27,13 +27,13 @@ export default function Navbar({ sketchMode, setSketchMode }) {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-6">
-          <Link to="/" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Home</Link>
-          <Link to="/memorials" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Memorials</Link>
-          <Link to="/communities" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Communities</Link>
-          <Link to="/tales" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Tales</Link>
-          <Link to="/about" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">About</Link>
+          <Link to="/" className="font-patrick text-xl font-bold md:hover:-rotate-2 transition-transform decoration-wavy md:hover:underline">Home</Link>
+          <Link to="/memorials" className="font-patrick text-xl font-bold md:hover:-rotate-2 transition-transform decoration-wavy md:hover:underline">Memorials</Link>
+          <Link to="/communities" className="font-patrick text-xl font-bold md:hover:-rotate-2 transition-transform decoration-wavy md:hover:underline">Communities</Link>
+          <Link to="/tales" className="font-patrick text-xl font-bold md:hover:-rotate-2 transition-transform decoration-wavy md:hover:underline">Tales</Link>
+          <Link to="/about" className="font-patrick text-xl font-bold md:hover:-rotate-2 transition-transform decoration-wavy md:hover:underline">About</Link>
           {user && (
-            <Link to="/messages" className="font-patrick text-xl font-bold hover:-rotate-2 transition-transform decoration-wavy hover:underline">Messages</Link>
+            <Link to="/messages" className="font-patrick text-xl font-bold md:hover:-rotate-2 transition-transform decoration-wavy md:hover:underline">Messages</Link>
           )}
 
           {/* Sketch Mode Toggler */}
@@ -42,7 +42,7 @@ export default function Navbar({ sketchMode, setSketchMode }) {
             className={`wobbly-sm border-[3px] border-ink px-3 py-1 font-patrick font-bold text-lg transition-all select-none ${
               sketchMode 
                 ? 'bg-marker text-white rotate-2 animate-pulse shadow-none translate-y-0.5' 
-                : 'bg-postit text-ink hover:-rotate-2 hover:bg-postit/80 shadow-hard-hover'
+                : 'bg-postit text-ink md:hover:-rotate-2 md:hover:bg-postit/80 shadow-hard-hover'
             }`}
           >
             {sketchMode ? 'Drawing Active ✏️' : 'Sketch Mode ✏️'}
@@ -54,17 +54,17 @@ export default function Navbar({ sketchMode, setSketchMode }) {
                 Create Memorial
               </Link>
               <div className="flex items-center gap-2">
-                <Link to={`/profile/${user.username}`} className="wobbly-sm bg-erased border-[3px] border-ink px-3 py-1 font-patrick font-bold hover:bg-postit hover:-rotate-2 transition-transform">
+                <Link to={`/profile/${user.username}`} className="wobbly-sm bg-erased border-[3px] border-ink px-3 py-1 font-patrick font-bold md:hover:bg-postit md:hover:-rotate-2 transition-transform">
                   {user.username}
                 </Link>
-                <button onClick={handleLogout} className="wobbly-sm bg-white border-[3px] border-ink px-3 py-1 font-patrick font-bold hover:bg-marker hover:text-white transition-colors">
+                <button onClick={handleLogout} className="wobbly-sm bg-white border-[3px] border-ink px-3 py-1 font-patrick font-bold md:hover:bg-marker md:hover:text-white transition-colors">
                   Out
                 </button>
               </div>
             </div>
           ) : (
             <div className="flex items-center gap-4 ml-4 pl-4 border-l-[3px] border-ink border-dashed">
-              <Link to="/login" className="font-patrick text-xl font-bold hover:text-pen hover:underline decoration-wavy">Login</Link>
+              <Link to="/login" className="font-patrick text-xl font-bold md:hover:text-pen md:hover:underline decoration-wavy">Login</Link>
               <Link to="/register" className="btn btn-primary px-4 py-2 text-base">Sign Up</Link>
             </div>
           )}
@@ -82,13 +82,13 @@ export default function Navbar({ sketchMode, setSketchMode }) {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div className="md:hidden border-t-[3px] border-ink bg-white p-6 flex flex-col gap-4 font-kalam text-xl">
-          <Link to="/" onClick={() => setMobileOpen(false)} className="hover:text-marker">Home</Link>
-          <Link to="/memorials" onClick={() => setMobileOpen(false)} className="hover:text-marker">Memorials</Link>
-          <Link to="/communities" onClick={() => setMobileOpen(false)} className="hover:text-marker">Communities</Link>
-          <Link to="/tales" onClick={() => setMobileOpen(false)} className="hover:text-marker">Tales</Link>
-          <Link to="/about" onClick={() => setMobileOpen(false)} className="hover:text-marker">About</Link>
+          <Link to="/" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-marker">Home</Link>
+          <Link to="/memorials" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-marker">Memorials</Link>
+          <Link to="/communities" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-marker">Communities</Link>
+          <Link to="/tales" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-marker">Tales</Link>
+          <Link to="/about" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-marker">About</Link>
           {user && (
-            <Link to="/messages" onClick={() => setMobileOpen(false)} className="hover:text-marker">Messages</Link>
+            <Link to="/messages" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-marker">Messages</Link>
           )}
           
           <button
@@ -104,12 +104,12 @@ export default function Navbar({ sketchMode, setSketchMode }) {
             {user ? (
               <>
                 <Link to="/memorials/create" onClick={() => setMobileOpen(false)} className="btn btn-primary">Create Memorial</Link>
-                <Link to={`/profile/${user.username}`} onClick={() => setMobileOpen(false)} className="hover:text-pen">My Profile</Link>
-                <button onClick={() => { handleLogout(); setMobileOpen(false); }} className="text-left hover:text-marker">Sign Out</button>
+                <Link to={`/profile/${user.username}`} onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-pen">My Profile</Link>
+                <button onClick={() => { handleLogout(); setMobileOpen(false); }} className="text-left w-full block py-2.5 min-h-[44px] flex items-center md:hover:text-marker">Sign Out</button>
               </>
             ) : (
               <>
-                <Link to="/login" onClick={() => setMobileOpen(false)} className="hover:text-pen">Login</Link>
+                <Link to="/login" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-pen">Login</Link>
                 <Link to="/register" onClick={() => setMobileOpen(false)} className="btn btn-primary">Sign Up</Link>
               </>
             )}

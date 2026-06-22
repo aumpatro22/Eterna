@@ -115,7 +115,7 @@ export default function MemorialCreate() {
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
-      <div className="paper-card p-6 md:p-12 -rotate-1 tape-decoration">
+      <div className="paper-card p-5 sm:p-6 md:p-12 -rotate-1 tape-decoration">
         <div className="text-center mb-10 border-b-[3px] border-dashed border-ink pb-6">
           <h1 className="font-kalam text-5xl mb-4">Start a New Sketchbook</h1>
           <p className="font-patrick text-2xl text-ink/75">Record the life, timeline, and stories of someone special.</p>
@@ -193,7 +193,7 @@ export default function MemorialCreate() {
             <section className="bg-postit p-6 border-[3px] border-ink wobbly-sm -rotate-1">
               <h3 className="font-kalam text-3xl mb-4">2. Share Journeys</h3>
               <p className="font-patrick text-xl mb-6 text-ink/75">Select one or more life experience tags to connect with others who understand:</p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-2 md:gap-4">
                 {availableTags.map(tag => {
                   const selected = selectedTags.includes(tag.id);
                   return (
@@ -202,7 +202,7 @@ export default function MemorialCreate() {
                       type="button"
                       onClick={() => handleTagToggle(tag.id)}
                       className={`px-4 py-2 border-[3px] border-ink font-patrick text-xl transition-all wobbly-xs ${
-                        selected ? 'bg-marker text-white rotate-2 scale-105' : 'bg-white hover:bg-erased -rotate-1'
+                        selected ? 'bg-marker text-white rotate-2 scale-105' : 'bg-white md:hover:bg-erased -rotate-1'
                       }`}
                     >
                       {tag.name}

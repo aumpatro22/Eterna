@@ -39,7 +39,7 @@ export default function Register() {
 
   return (
     <div className="flex items-center justify-center min-h-[70vh] py-12">
-      <div className="paper-card p-8 md:p-12 max-w-xl w-full rotate-1 tack-decoration">
+      <div className="paper-card p-5 sm:p-6 md:p-12 max-w-xl w-full rotate-1 tack-decoration">
         <div className="text-center mb-10 border-b-[3px] border-dashed border-ink pb-6">
           <h1 className="font-kalam text-5xl mb-2">Join Eterna</h1>
           <p className="font-patrick text-2xl">Start your sketchbook of memories.</p>
@@ -97,7 +97,7 @@ export default function Register() {
 
         <p className="text-center font-patrick text-xl mt-8">
           Already have an account?{' '}
-          <Link to="/login" className="font-bold hover:text-pen hover:underline decoration-wavy">Sign in</Link>
+          <Link to="/login" className="font-bold md:hover:text-pen md:hover:underline decoration-wavy">Sign in</Link>
         </p>
       </div>
     </div>

@@ -72,7 +72,7 @@ export default function Home() {
       />
       
       {/* Hero Section */}
-      <section className="relative paper-card bg-postit p-8 md:p-12 rotate-1 max-w-5xl mx-auto w-full tape-decoration mt-8 select-none">
+      <section className="relative paper-card bg-postit p-5 sm:p-6 md:p-12 rotate-1 max-w-5xl mx-auto w-full tape-decoration mt-4 md:mt-8 select-none">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
           <div className="lg:col-span-6 text-center lg:text-left">
@@ -180,7 +180,7 @@ export default function Home() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {memorials.map((m, idx) => {
-                const rotation = idx % 2 === 0 ? 'hover:-rotate-2' : 'hover:rotate-2';
+                const rotation = idx % 2 === 0 ? 'md:hover:-rotate-2' : 'md:hover:rotate-2';
                 const tackOrTape = idx % 3 === 0 ? 'tack-decoration' : (idx % 2 === 0 ? 'tape-decoration' : '');
                 
                 return (

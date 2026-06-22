@@ -29,7 +29,7 @@ export default function About() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1 }}
-        className="bg-white border-[3px] border-ink p-8 md:p-12 shadow-hard wobbly-md relative max-w-3xl mx-auto w-full"
+        className="bg-white border-[3px] border-ink p-5 sm:p-6 md:p-12 shadow-hard wobbly-md relative max-w-3xl mx-auto w-full"
       >
         <div className="paper-clip" />
         <h2 className="font-kalam text-3xl font-bold mb-6 text-marker">Why Eterna Exists</h2>
@@ -97,7 +97,7 @@ export default function About() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-white border-[3px] border-ink p-8 md:p-12 shadow-hard wobbly-lg max-w-4xl mx-auto w-full relative"
+        className="bg-white border-[3px] border-ink p-5 sm:p-6 md:p-12 shadow-hard wobbly-lg max-w-4xl mx-auto w-full relative"
       >
         <div className="absolute top-4 right-6 opacity-35 font-kalam text-4xl">*</div>
         <div className="grid md:grid-cols-3 gap-8 items-start">

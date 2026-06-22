@@ -348,7 +348,7 @@ export default function MemorialDetail() {
                 )}
 
                 <p className="font-patrick text-lg border-t-[2px] border-dashed border-ink/20 pt-3 text-ink/70">
-                  Preserved by <Link to={`/profile/${memorial.owner_username}`} className="font-bold hover:underline hover:text-marker">{memorial.owner_username}</Link>
+                  Preserved by <Link to={`/profile/${memorial.owner_username}`} className="font-bold md:hover:underline md:hover:text-marker">{memorial.owner_username}</Link>
                   {memorial.visibility !== 'PUBLIC' && (
                     <span className="ml-3 px-2 py-0.5 bg-marker text-white text-xs font-bold rounded">
                       🔒 {memorial.visibility}
@@ -361,7 +361,7 @@ export default function MemorialDetail() {
                         setReportTargetId(memorial.id);
                         setShowReportModal(true);
                       }}
-                      className="ml-3 hover:text-marker text-sm font-bold underline cursor-pointer"
+                      className="ml-3 md:hover:text-marker text-sm font-bold underline cursor-pointer"
                     >
                       🛡️ Report Memorial
                     </button>
@@ -372,35 +372,35 @@ export default function MemorialDetail() {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex border-b-[3px] border-ink font-kalam text-xl gap-2 md:gap-4 flex-wrap">
+          <div className="flex border-b-[3px] border-ink font-kalam text-base md:text-xl gap-1.5 md:gap-4 flex-wrap">
             <button 
               onClick={() => setActiveTab('overview')} 
-              className={`px-4 py-2 border-[3px] border-b-0 border-ink rounded-t-lg transition-colors ${activeTab === 'overview' ? 'bg-white font-bold -translate-y-1' : 'bg-erased hover:bg-white'}`}
+              className={`px-2.5 md:px-4 py-1.5 md:py-2 border-[3px] border-b-0 border-ink rounded-t-lg transition-colors ${activeTab === 'overview' ? 'bg-white font-bold -translate-y-1' : 'bg-erased md:hover:bg-white'}`}
             >
               Overview
             </button>
             <button 
               onClick={() => setActiveTab('memories')} 
-              className={`px-4 py-2 border-[3px] border-b-0 border-ink rounded-t-lg transition-colors ${activeTab === 'memories' ? 'bg-white font-bold -translate-y-1' : 'bg-erased hover:bg-white'}`}
+              className={`px-2.5 md:px-4 py-1.5 md:py-2 border-[3px] border-b-0 border-ink rounded-t-lg transition-colors ${activeTab === 'memories' ? 'bg-white font-bold -translate-y-1' : 'bg-erased md:hover:bg-white'}`}
             >
               Memory Lane ({memorial.memories?.length || 0})
             </button>
             <button 
               onClick={() => setActiveTab('timeline')} 
-              className={`px-4 py-2 border-[3px] border-b-0 border-ink rounded-t-lg transition-colors ${activeTab === 'timeline' ? 'bg-white font-bold -translate-y-1' : 'bg-erased hover:bg-white'}`}
+              className={`px-2.5 md:px-4 py-1.5 md:py-2 border-[3px] border-b-0 border-ink rounded-t-lg transition-colors ${activeTab === 'timeline' ? 'bg-white font-bold -translate-y-1' : 'bg-erased md:hover:bg-white'}`}
             >
               Timeline ({memorial.timeline_events?.length || 0})
             </button>
             <button 
               onClick={() => setActiveTab('photos')} 
-              className={`px-4 py-2 border-[3px] border-b-0 border-ink rounded-t-lg transition-colors ${activeTab === 'photos' ? 'bg-white font-bold -translate-y-1' : 'bg-erased hover:bg-white'}`}
+              className={`px-2.5 md:px-4 py-1.5 md:py-2 border-[3px] border-b-0 border-ink rounded-t-lg transition-colors ${activeTab === 'photos' ? 'bg-white font-bold -translate-y-1' : 'bg-erased md:hover:bg-white'}`}
             >
               Gallery ({((memorial.profile_image_url ? 1 : 0) + (memorial.photos?.length || 0))})
             </button>
             {isOwner && (
               <button 
                 onClick={() => setActiveTab('contributors')} 
-                className={`px-4 py-2 border-[3px] border-b-0 border-ink rounded-t-lg transition-colors ${activeTab === 'contributors' ? 'bg-white font-bold -translate-y-1' : 'bg-erased hover:bg-white'}`}
+                className={`px-2.5 md:px-4 py-1.5 md:py-2 border-[3px] border-b-0 border-ink rounded-t-lg transition-colors ${activeTab === 'contributors' ? 'bg-white font-bold -translate-y-1' : 'bg-erased md:hover:bg-white'}`}
               >
                 Contributors
               </button>
@@ -771,7 +771,7 @@ export default function MemorialDetail() {
                         <span className="w-2 h-2 rounded-full bg-white"></span>
                       </div>
 
-                      <div className={`p-4 border-[3px] border-ink wobbly-sm bg-white shadow-md inline-block max-w-lg ${idx % 2 === 0 ? 'rotate-0.5' : '-rotate-0.5'} relative`}>
+                      <div className={`p-4 border-[3px] border-ink wobbly-sm bg-white shadow-md w-full max-w-lg ${idx % 2 === 0 ? 'rotate-0.5' : '-rotate-0.5'} relative`}>
                         {isContributor && (
                           <button
                             onClick={() => handleDeleteTimeline(ev.id)}

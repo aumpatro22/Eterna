@@ -33,12 +33,12 @@ export default function ReportModal({ targetType, targetId, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-ink/60 z-[999999] flex items-center justify-center p-6 backdrop-blur-[2px] font-patrick">
-      <div className="paper-card bg-white p-8 max-w-md w-full relative rotate-1 tack-decoration shadow-hard">
+      <div className="paper-card bg-white p-5 sm:p-6 md:p-8 max-w-md w-full relative rotate-1 tack-decoration shadow-hard">
         
         {!success && (
           <button 
             onClick={onClose} 
-            className="absolute top-4 right-4 font-kalam text-3xl hover:text-marker transition-colors"
+            className="absolute top-4 right-4 font-kalam text-3xl md:hover:text-marker transition-colors"
             aria-label="Close"
           >
             ✖

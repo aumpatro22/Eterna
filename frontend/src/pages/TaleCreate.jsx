@@ -30,7 +30,7 @@ export default function TaleCreate() {
 
   return (
     <div className="max-w-3xl mx-auto py-8 select-none">
-      <div className="paper-card p-8 md:p-12 -rotate-1 tape-decoration">
+      <div className="paper-card p-5 sm:p-6 md:p-12 -rotate-1 tape-decoration">
         <div className="text-center mb-10 border-b-[3px] border-dashed border-ink pb-6">
           <h1 className="font-kalam text-5xl mb-4">Write a New Tale</h1>
           <p className="font-patrick text-2xl">Pen down a narrative, memory, or tribute to share.</p>
@@ -95,7 +95,7 @@ export default function TaleCreate() {
                 checked={form.is_public}
                 onChange={(e) => setForm({ ...form, is_public: e.target.checked })}
               />
-              <span className="group-hover:underline decoration-wavy">Make this story public for everyone</span>
+              <span className="md:group-hover:underline decoration-wavy">Make this story public for everyone</span>
             </label>
           </div>
 

@@ -168,7 +168,7 @@ export default function TaleDetail() {
       />
       
       {/* Title Header */}
-      <div className="paper-card p-8 text-center bg-white rotate-1 tack-decoration">
+      <div className="paper-card p-5 sm:p-6 md:p-8 text-center bg-white rotate-1 tack-decoration">
         <h1 className="font-kalam text-4xl md:text-5xl mb-3">{tale.title}</h1>
         {tale.subtitle && <h2 className="font-patrick text-2xl text-ink/70 mb-4">{tale.subtitle}</h2>}
         <p className="font-patrick text-lg font-bold border-t-[3px] border-dashed border-ink inline-block pt-3">
@@ -180,7 +180,7 @@ export default function TaleDetail() {
                 setReportTargetId(tale.id);
                 setShowReportModal(true);
               }}
-              className="ml-3 hover:text-marker text-sm font-bold underline cursor-pointer"
+              className="ml-3 md:hover:text-marker text-sm font-bold underline cursor-pointer"
             >
               🛡️ Report Tale
             </button>
@@ -204,7 +204,7 @@ export default function TaleDetail() {
                   className={`w-full text-left p-3 border-[3px] border-ink wobbly-sm transition-transform ${
                     !isAddingChapter && activeChapter?.id === ch.id 
                       ? 'bg-marker text-white rotate-2' 
-                      : 'bg-white hover:-rotate-1 hover:bg-erased'
+                      : 'bg-white md:hover:-rotate-1 md:hover:bg-erased'
                   }`}
                 >
                   <span className="font-bold mr-2">{idx + 1}.</span>
@@ -221,7 +221,7 @@ export default function TaleDetail() {
                 setActiveChapter(null);
               }}
               className={`btn btn-primary w-full text-lg mt-4 -rotate-1 transition-transform ${
-                isAddingChapter ? 'scale-95 opacity-80' : 'hover:-rotate-2'
+                isAddingChapter ? 'scale-95 opacity-80' : 'md:hover:-rotate-2'
               }`}
             >
               ➕ Add Chapter
@@ -271,7 +271,7 @@ export default function TaleDetail() {
 
           {/* Notebook open view or Add Chapter form */}
           {isAddingChapter ? (
-            <div className="paper-card bg-white p-8 md:p-12 rotate-1 tape-decoration border-[4px] border-ink wobbly-md">
+            <div className="paper-card bg-white p-5 sm:p-6 md:p-12 rotate-1 tape-decoration border-[4px] border-ink wobbly-md">
               <div className="text-center mb-6 border-b-[3px] border-dashed border-ink pb-4">
                 <h3 className="font-kalam text-4xl">Add New Chapter</h3>
                 <p className="font-patrick text-xl mt-2">Introduce a new page to the story.</p>
@@ -356,17 +356,17 @@ export default function TaleDetail() {
               </div>
 
               {/* Physical Book Container */}
-              <div className="paper-card bg-white border-[4px] border-ink wobbly-md shadow-hard relative overflow-hidden flex min-h-[500px]">
+              <div className="paper-card bg-white border-[4px] border-ink wobbly-md shadow-hard relative overflow-hidden flex flex-col md:flex-row min-h-[500px]">
                 
                 {/* Spiral wire down the middle */}
-                <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-4 flex flex-col justify-around items-center z-20 pointer-events-none">
+                <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-4 hidden md:flex flex-col justify-around items-center z-20 pointer-events-none">
                   {Array.from({ length: 18 }).map((_, i) => (
                     <div key={i} className="w-6 h-3.5 bg-erased border-2 border-ink rounded-full -rotate-12" />
                   ))}
                 </div>
 
                 {/* Left Page */}
-                <div className="w-1/2 h-full bg-paper border-r-[2px] border-ink/30 p-8 flex flex-col justify-between relative min-h-[500px]">
+                <div className="w-full md:w-1/2 h-full bg-paper border-b-[2px] md:border-b-0 md:border-r-[2px] border-ink/30 p-8 flex flex-col justify-between relative min-h-[500px]">
                   {/* Lined notebook lines */}
                   <div 
                     className="absolute inset-0 opacity-10 pointer-events-none"
@@ -408,7 +408,7 @@ export default function TaleDetail() {
                 </div>
 
                 {/* Right Page */}
-                <div className="w-1/2 h-full bg-paper p-8 flex flex-col justify-between relative min-h-[500px]">
+                <div className="w-full md:w-1/2 h-full bg-paper p-8 flex flex-col justify-between relative min-h-[500px]">
                   {/* Lined notebook lines */}
                   <div 
                     className="absolute inset-0 opacity-10 pointer-events-none"
@@ -472,7 +472,7 @@ export default function TaleDetail() {
                     <div key={comment.id} className="p-3 bg-postit border-2 border-ink wobbly-sm font-patrick text-left relative">
                       <button 
                         onClick={() => deleteComment(comment.id)}
-                        className="absolute top-2 right-2 text-xs font-bold text-ink/40 hover:text-marker"
+                        className="absolute top-2 right-2 text-xs font-bold text-ink/40 md:hover:text-marker"
                         title="Remove note"
                         aria-label="Remove note"
                       >

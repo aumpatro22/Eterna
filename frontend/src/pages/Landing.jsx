@@ -377,7 +377,7 @@ export default function Landing() {
               </span>
             </div>
 
-            <h1 className="font-kalam text-5xl md:text-6xl lg:text-7xl leading-[1.1] font-bold text-ink min-h-[2.8em] lg:min-h-[2.4em]">
+            <h1 className="font-kalam text-3xl sm:text-4xl md:text-6xl lg:text-7xl leading-[1.1] font-bold text-ink min-h-[2em] sm:min-h-[2.8em] lg:min-h-[2.4em]">
               <span className="text-marker block mb-2">Eterna</span>
               <span>{displayed}</span>
               <span
@@ -419,7 +419,7 @@ export default function Landing() {
               style={{ transformStyle: 'preserve-3d' }}
             >
               <div 
-                className="relative bg-white border-[4px] border-ink shadow-hard-lg p-6 w-80 md:w-96 preserve-3d"
+                className="relative bg-white border-[4px] border-ink shadow-hard-lg p-6 w-full max-w-[20rem] md:max-w-md preserve-3d"
                 style={{ 
                   borderRadius: '12px 30px 12px 30px / 30px 12px 30px 12px',
                   transform: 'translateZ(30px)' 
@@ -483,7 +483,7 @@ export default function Landing() {
       {/* ══════════════════════════════════════════
           SECTION 2 — WHY I BUILT ETERNA
          ══════════════════════════════════════════ */}
-      <section id="why-i-built" className="relative py-24 px-6 overflow-hidden">
+      <section id="why-i-built" className="relative py-12 md:py-24 px-6 overflow-hidden">
         
         {/* Decorative elements */}
         <div className="absolute left-[8%] bottom-[10%] border-[2px] border-ink bg-white p-2 shadow-hard rotate-6 hidden md:block select-none pointer-events-none">
@@ -527,7 +527,7 @@ export default function Landing() {
       {/* ══════════════════════════════════════════
           SECTION 3 — SARAH'S STORY (Scrollytelling)
          ══════════════════════════════════════════ */}
-      <section ref={storyRef} className="relative bg-postit border-y-[4px] border-ink py-28 px-6 overflow-hidden">
+      <section ref={storyRef} className="relative bg-postit border-y-[4px] border-ink py-14 md:py-28 px-6 overflow-hidden">
         {/* Lined paper lines background */}
         <div className="absolute inset-0 opacity-5 pointer-events-none"
           style={{
@@ -569,7 +569,7 @@ export default function Landing() {
               <PressedFlower className="absolute right-[-10%] top-[-20%] w-16 h-36 opacity-30 select-none pointer-events-none" />
               
               <motion.div 
-                className="bg-white border-[3px] border-ink p-4 shadow-hard -rotate-3 hover:rotate-0 transition-transform duration-300 polaroid-shine max-w-[200px]"
+                className="bg-white border-[3px] border-ink p-4 shadow-hard -rotate-3 md:hover:rotate-0 transition-transform duration-300 polaroid-shine max-w-[200px]"
                 whileHover={{ scale: 1.05 }}
               >
                 <div className="bg-[#f0ece3] w-40 h-40 flex items-center justify-center font-kalam text-5xl">👵</div>
@@ -596,7 +596,7 @@ export default function Landing() {
       {/* ══════════════════════════════════════════
           SECTION 4 — HOW MEMORIES COME ALIVE
          ══════════════════════════════════════════ */}
-      <section className="py-24 px-6">
+      <section className="py-12 md:py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <SectionTitle 
             label="✏️ how it works" 
@@ -644,7 +644,7 @@ export default function Landing() {
       {/* ══════════════════════════════════════════
           SECTION 5 — WHO IS ETERNA FOR?
          ══════════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-erased border-y-[4px] border-ink relative overflow-hidden">
+      <section className="py-12 md:py-24 px-6 bg-erased border-y-[4px] border-ink relative overflow-hidden">
         
         {/* Background dried leaf drawing */}
         <div className="absolute right-[4%] top-[10%] w-24 h-48 opacity-10 pointer-events-none select-none">🍂</div>
@@ -706,7 +706,7 @@ export default function Landing() {
       {/* ══════════════════════════════════════════
           SECTION 6 — EVERYTHING YOU NEED
          ══════════════════════════════════════════ */}
-      <section className="py-24 px-6">
+      <section className="py-12 md:py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <SectionTitle 
             label="🛠️ complete capabilities" 
@@ -754,7 +754,7 @@ export default function Landing() {
       {/* ══════════════════════════════════════════
           SECTION 7 — GRANDMA'S VOICE (Interactive Cassette)
          ══════════════════════════════════════════ */}
-      <section className="relative py-24 px-6 bg-white border-y-[4px] border-ink overflow-hidden">
+      <section className="relative py-12 md:py-24 px-6 bg-white border-y-[4px] border-ink overflow-hidden">
         
         {/* Background dried branch decoration */}
         <PressedFlower className="absolute left-[2%] top-[10%] w-24 h-48 opacity-10 pointer-events-none select-none" />
@@ -837,7 +837,7 @@ export default function Landing() {
               <div className="flex justify-center gap-4 mt-5">
                 <button
                   onClick={() => setIsCassettePlaying(!isCassettePlaying)}
-                  className="btn px-6 py-2 hover:bg-marker hover:text-white font-kalam font-bold text-base flex items-center gap-2"
+                  className="btn px-6 py-2 md:hover:bg-marker md:hover:text-white font-kalam font-bold text-base flex items-center gap-2"
                 >
                   {isCassettePlaying ? '⏸ Pause' : '▶ Listen (00:14)'}
                 </button>
@@ -852,7 +852,7 @@ export default function Landing() {
       {/* ══════════════════════════════════════════
           SECTION 8 — TESTIMONIALS
          ══════════════════════════════════════════ */}
-      <section className="py-24 px-6 relative">
+      <section className="py-12 md:py-24 px-6 relative">
         <div className="max-w-5xl mx-auto">
           <SectionTitle 
             label="💬 comfort found here" 
@@ -913,7 +913,7 @@ export default function Landing() {
       {/* ══════════════════════════════════════════
           SECTION 9 — WHAT WE WILL NEVER BUILD
          ══════════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-erased border-y-[4px] border-ink relative overflow-hidden">
+      <section className="py-12 md:py-24 px-6 bg-erased border-y-[4px] border-ink relative overflow-hidden">
         
         {/* Ink splash vector */}
         <InkSplash className="absolute left-[3%] bottom-[5%] w-32 h-32 opacity-25 pointer-events-none select-none" />
@@ -966,7 +966,7 @@ export default function Landing() {
       {/* ══════════════════════════════════════════
           SECTION 10 — WHY ETERNA IS DIFFERENT
          ══════════════════════════════════════════ */}
-      <section className="py-24 px-6 relative">
+      <section className="py-12 md:py-24 px-6 relative">
         <div className="max-w-5xl mx-auto">
           
           <SectionTitle 
@@ -1049,14 +1049,14 @@ export default function Landing() {
       {/* ══════════════════════════════════════════
           FINAL CTA
          ══════════════════════════════════════════ */}
-      <section className="relative py-28 px-6 bg-marker text-white overflow-hidden text-center">
+      <section className="relative py-14 md:py-28 px-6 bg-marker text-white overflow-hidden text-center">
         
         {/* Torn paper transitions top and bottom */}
         <div className="absolute top-0 left-0 right-0 h-8 bg-paper clip-torn-top" />
         <div className="absolute bottom-0 left-0 right-0 h-8 bg-paper clip-torn-bottom" />
 
         <div className="max-w-4xl mx-auto flex flex-col gap-6 relative z-10 py-8">
-          <h2 className="font-kalam text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
+          <h2 className="font-kalam text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
             Someone deserves<br/>to be remembered.
           </h2>
           <p className="font-patrick text-xl md:text-2xl text-white/85 max-w-xl mx-auto">
@@ -1066,7 +1066,7 @@ export default function Landing() {
           <div className="flex flex-wrap justify-center gap-6 mt-6">
             <MagneticButton 
               to={user ? "/memorials/create" : "/register"} 
-              className="inline-flex items-center gap-2 px-10 py-5 bg-white border-[3px] border-ink text-ink font-kalam text-2xl shadow-hard hover:shadow-hard-hover -rotate-1"
+              className="inline-flex items-center gap-2 px-10 py-5 bg-white border-[3px] border-ink text-ink font-kalam text-2xl shadow-hard md:hover:shadow-hard-hover -rotate-1"
               style={{ borderRadius: '15px 25px 15px 25px / 25px 15px 25px 15px' }}
             >
               Create a Memorial — Free ❤️

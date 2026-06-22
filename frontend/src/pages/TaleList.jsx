@@ -44,9 +44,9 @@ export default function TaleList() {
         <div className="flex flex-col gap-8">
           {tales.map((tale, idx) => (
             <Link to={`/tales/${tale.slug}`} key={tale.id} className="group">
-              <div className={`paper-card p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center ${idx % 2 === 0 ? 'rotate-1' : '-rotate-1'} group-hover:rotate-0 transition-transform`}>
+              <div className={`paper-card p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center ${idx % 2 === 0 ? 'rotate-1' : '-rotate-1'} md:group-hover:rotate-0 transition-transform`}>
                 <div className="flex-1">
-                  <h2 className="font-kalam text-4xl mb-2 group-hover:underline decoration-wavy decoration-pen">{tale.title}</h2>
+                  <h2 className="font-kalam text-4xl mb-2 md:group-hover:underline decoration-wavy decoration-pen">{tale.title}</h2>
                   {tale.subtitle && <h3 className="font-patrick text-2xl text-ink/70 mb-4">{tale.subtitle}</h3>}
                   <p className="font-patrick text-xl line-clamp-2 mb-6">{tale.description}</p>
                   <div className="flex items-center gap-6 font-patrick text-lg font-bold border-t-[3px] border-dashed border-ink/20 pt-4">
@@ -54,7 +54,7 @@ export default function TaleList() {
                     <span>📖 {tale.chapter_count} chapters</span>
                   </div>
                 </div>
-                <div className="hidden md:flex w-24 h-24 border-[3px] border-ink bg-postit wobbly-sm items-center justify-center text-5xl font-kalam -rotate-12 group-hover:rotate-12 transition-transform">
+                <div className="hidden md:flex w-24 h-24 border-[3px] border-ink bg-postit wobbly-sm items-center justify-center text-5xl font-kalam -rotate-12 md:group-hover:rotate-12 transition-transform">
                   ?
                 </div>
               </div>

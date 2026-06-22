@@ -606,7 +606,7 @@ export default function CommunityDetail() {
                               <>
                                 {m.content && <p className="whitespace-pre-wrap">{m.content}</p>}
                                 {m.image && (
-                                  <div className="mt-3 border-2 border-ink wobbly-xs rounded overflow-hidden max-w-sm bg-white shadow-sm rotate-0.5">
+                                  <div className="mt-3 border-2 border-ink wobbly-xs rounded overflow-hidden w-full max-w-[260px] sm:max-w-sm bg-white shadow-sm rotate-0.5">
                                     <img src={m.image} alt="Upload" className="w-full object-contain max-h-60" />
                                   </div>
                                 )}
@@ -695,7 +695,7 @@ export default function CommunityDetail() {
                 {user ? (
                   <button
                     onClick={handleJoin}
-                    className="btn btn-primary text-xl px-8 py-3 shadow-hard hover:scale-105 transition-transform w-fit"
+                    className="btn btn-primary text-xl px-8 py-3 shadow-hard md:hover:scale-105 transition-transform w-fit"
                   >
                     Join Support Circle
                   </button>
@@ -703,13 +703,13 @@ export default function CommunityDetail() {
                   <div className="flex gap-4">
                     <button
                       onClick={() => navigate('/login')}
-                      className="btn btn-primary text-xl px-6 py-2 shadow-hard hover:scale-105 transition-transform"
+                      className="btn btn-primary text-xl px-6 py-2 shadow-hard md:hover:scale-105 transition-transform"
                     >
                       Login
                     </button>
                     <button
                       onClick={() => navigate('/register')}
-                      className="btn btn-secondary text-xl px-6 py-2 shadow-hard hover:scale-105 transition-transform"
+                      className="btn btn-secondary text-xl px-6 py-2 shadow-hard md:hover:scale-105 transition-transform"
                     >
                       Register
                     </button>

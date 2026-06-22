@@ -111,7 +111,7 @@ export default function BlogDetail() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="bg-white border-[3px] border-ink p-8 md:p-12 shadow-hard wobbly-md flex flex-col gap-6"
+        className="bg-white border-[3px] border-ink p-5 sm:p-6 md:p-12 shadow-hard wobbly-md flex flex-col gap-6"
       >
         {/* Quote overlay */}
         <div className="border-l-4 border-marker pl-4 italic text-2xl text-ink/75 my-4 bg-erased/25 py-2">

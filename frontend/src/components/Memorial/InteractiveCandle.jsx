@@ -169,7 +169,7 @@ export default function InteractiveCandle({ onLight, candlesCount }) {
           onMouseLeave={endDrag}
           onTouchMove={onDrag}
           onTouchEnd={endDrag}
-          className="w-full h-72 border-2 border-dashed border-ink/30 relative overflow-hidden bg-paper rounded wobbly-sm"
+          className="w-full h-72 border-2 border-dashed border-ink/30 relative overflow-hidden bg-paper rounded wobbly-sm touch-none"
         >
           {/* Instructions */}
           <div className="absolute inset-x-0 top-3 text-center pointer-events-none px-4 select-none">
@@ -209,7 +209,7 @@ export default function InteractiveCandle({ onLight, candlesCount }) {
             ref={matchRef}
             onMouseDown={startDrag}
             onTouchStart={startDrag}
-            className={`absolute cursor-grab active:cursor-grabbing w-4 h-16 flex flex-col items-center select-none ${
+            className={`absolute cursor-grab active:cursor-grabbing w-4 h-16 flex flex-col items-center select-none touch-none ${
               isMatchDragging ? 'scale-105' : ''
             }`}
             style={{

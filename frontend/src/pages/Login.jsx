@@ -25,7 +25,7 @@ export default function Login() {
 
   return (
     <div className="flex items-center justify-center min-h-[70vh]">
-      <div className="paper-card p-8 md:p-12 max-w-md w-full -rotate-1 tape-decoration">
+      <div className="paper-card p-5 sm:p-6 md:p-12 max-w-md w-full -rotate-1 tape-decoration">
         <div className="text-center mb-8">
           <h1 className="font-kalam text-5xl mb-2 decoration-wavy underline">Sign In</h1>
           <p className="font-patrick text-xl">Welcome back to the sketchbook.</p>
@@ -59,7 +59,7 @@ export default function Login() {
 
         <p className="text-center font-patrick text-xl mt-8 pt-6 border-t-[3px] border-dashed border-ink/30">
           Don't have an account?{' '}
-          <Link to="/register" className="font-bold hover:text-pen hover:underline decoration-wavy">Sign Up</Link>
+          <Link to="/register" className="font-bold md:hover:text-pen md:hover:underline decoration-wavy">Sign Up</Link>
         </p>
       </div>
     </div>

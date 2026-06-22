@@ -490,7 +490,7 @@ export default function DirectMessages() {
                       }`}>
                         {m.content && <p className="whitespace-pre-wrap">{m.content}</p>}
                         {m.image && (
-                          <div className="mt-3 border-2 border-ink wobbly-xs rounded overflow-hidden max-w-sm bg-white shadow-sm rotate-0.5">
+                          <div className="mt-3 border-2 border-ink wobbly-xs rounded overflow-hidden w-full max-w-[260px] sm:max-w-sm bg-white shadow-sm rotate-0.5">
                             <img src={m.image} alt="Direct share" className="w-full object-contain max-h-60" />
                           </div>
                         )}

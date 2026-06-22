@@ -105,7 +105,7 @@ export default function CommunityList() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {communities.map((c, idx) => (
             <Link to={`/communities/${c.slug}`} key={c.id} className="group">
-              <div className={`paper-card p-6 h-full flex flex-col relative ${idx % 2 === 0 ? 'bg-postit rotate-2 tape-decoration' : 'bg-white -rotate-1 tack-decoration'} group-hover:rotate-0 transition-all shadow-md hover:shadow-hard`}>
+              <div className={`paper-card p-6 h-full flex flex-col relative ${idx % 2 === 0 ? 'bg-postit rotate-2 tape-decoration' : 'bg-white -rotate-1 tack-decoration'} md:group-hover:rotate-0 transition-all shadow-md md:hover:shadow-hard`}>
                 
                 {/* Community Icon if present */}
                 <div className="flex gap-4 items-start mb-4">
@@ -122,7 +122,7 @@ export default function CommunityList() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h2 className="font-kalam text-3xl group-hover:underline decoration-wavy truncate">{c.title}</h2>
+                    <h2 className="font-kalam text-3xl md:group-hover:underline decoration-wavy truncate">{c.title}</h2>
                   </div>
                 </div>
 
@@ -156,7 +156,7 @@ export default function CommunityList() {
       {/* Create Community Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-ink/60 z-[99999] flex items-center justify-center p-6 backdrop-blur-[2px]">
-          <div className="paper-card bg-white p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto relative rotate-1 tack-decoration shadow-hard">
+          <div className="paper-card bg-white p-5 sm:p-6 md:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto relative rotate-1 tack-decoration shadow-hard">
             <button 
               onClick={() => setShowCreateModal(false)} 
               className="absolute top-4 right-4 font-kalam text-3xl hover:text-marker transition-colors"
