@@ -14,9 +14,9 @@ from communities.models import Community, Membership, CommunityJoinRequest
 User = get_user_model()
 
 print("--- Memberships ---")
-for m in Membership.objects.all():
+for m in Membership.objects.select_related('user', 'community').all():
     print(f"User: {m.user.username}, Community: {m.community.slug}, Role: {m.role}")
 
 print("\n--- Join Requests ---")
-for r in CommunityJoinRequest.objects.all():
+for r in CommunityJoinRequest.objects.select_related('user', 'community').all():
     print(f"User: {r.user.username}, Community: {r.community.slug}, Status: {r.status}")

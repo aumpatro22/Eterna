@@ -850,6 +850,7 @@ export default function ProfileDetail() {
             <button
               onClick={() => { setShowEditModal(false); setEditProfileImage(null); }}
               className="absolute top-4 right-4 font-kalam text-3xl hover:text-marker transition-colors"
+              aria-label="Close"
             >
               ✖
             </button>

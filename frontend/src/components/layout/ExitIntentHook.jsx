@@ -83,6 +83,7 @@ export default function ExitIntentHook() {
           onClick={() => setShow(false)} 
           className="absolute top-4 right-4 font-kalam text-3xl hover:text-marker transition-colors"
           title="Close note"
+          aria-label="Close"
         >
           ✖
         </button>
