@@ -344,6 +344,7 @@ export default function TaleDetail() {
                       onClick={(e) => { e.stopPropagation(); deleteComment(comment.id); }}
                       className="absolute top-1 right-1 text-xs font-bold text-ink/40 hover:text-marker"
                       title="Remove note"
+                      aria-label="Remove note"
                     >
                       ✖
                     </button>
@@ -473,6 +474,7 @@ export default function TaleDetail() {
                         onClick={() => deleteComment(comment.id)}
                         className="absolute top-2 right-2 text-xs font-bold text-ink/40 hover:text-marker"
                         title="Remove note"
+                        aria-label="Remove note"
                       >
                         ✖
                       </button>

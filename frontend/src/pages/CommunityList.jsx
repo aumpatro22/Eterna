@@ -160,6 +160,7 @@ export default function CommunityList() {
             <button 
               onClick={() => setShowCreateModal(false)} 
               className="absolute top-4 right-4 font-kalam text-3xl hover:text-marker transition-colors"
+              aria-label="Close"
             >
               ✖
             </button>
