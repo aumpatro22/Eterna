@@ -316,6 +316,63 @@ class EternaSocialApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('banned', response.data['error'])
 
+    def test_file_report(self):
+        # Unauthenticated request
+        response = self.client.post('/api/reports/', {
+            'target_type': 'USER',
+            'target_id': self.user2.id,
+            'reason': 'SPAM'
+        })
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.client.force_authenticate(user=self.user1)
+
+        # Missing fields
+        response = self.client.post('/api/reports/', {
+            'target_id': self.user2.id,
+            'reason': 'SPAM'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+
+        # Invalid reason
+        response = self.client.post('/api/reports/', {
+            'target_type': 'USER',
+            'target_id': self.user2.id,
+            'reason': 'INVALID_REASON'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Invalid reason', response.data['error'])
+
+        # Invalid target type
+        response = self.client.post('/api/reports/', {
+            'target_type': 'INVALID_TYPE',
+            'target_id': self.user2.id,
+            'reason': 'SPAM'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Invalid target type', response.data['error'])
+
+        # Target object not found
+        response = self.client.post('/api/reports/', {
+            'target_type': 'USER',
+            'target_id': 99999,
+            'reason': 'SPAM'
+        })
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn('Target object not found', response.data['error'])
+
+        # Valid report
+        response = self.client.post('/api/reports/', {
+            'target_type': 'USER',
+            'target_id': self.user2.id,
+            'reason': 'SPAM',
+            'description': 'User is sending spam messages'
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['status'], 'reported')
+        self.assertIn('report_id', response.data)
+
 
 class EternaSessionAndIdleTests(TestCase):
     def setUp(self):
