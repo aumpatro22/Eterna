@@ -277,7 +277,7 @@ def react_toggle(request):
 @permission_classes([permissions.IsAuthenticated])
 def list_conversations(request):
     """GET /api/conversations/ — list conversations for current user."""
-    qs = Conversation.objects.filter(participants=request.user).order_by('-created_at')
+    qs = Conversation.objects.filter(participants=request.user).order_by('-created_at').prefetch_related('participants', 'messages', 'messages__sender')
     # Serialize conversations
     serializer = ConversationSerializer(qs, many=True, context={'request': request})
     return Response(serializer.data)
