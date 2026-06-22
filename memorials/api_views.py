@@ -56,7 +56,8 @@ class MemorialListView(generics.ListAPIView):
                 qs = Memorial.objects.filter(
                     Q(visibility='PUBLIC') | Q(owner=user) | Q(id__in=contrib_ids)
                 )
-            except Exception:
+            except Exception as e:
+                logger.warning("Error filtering memorials by contributor status: %s", e)
                 qs = Memorial.objects.filter(Q(visibility='PUBLIC') | Q(owner=user))
         else:
             qs = Memorial.objects.filter(visibility='PUBLIC')
@@ -104,8 +105,8 @@ class MemorialDetailView(generics.RetrieveAPIView):
                 from .models import Contributor
                 if Contributor.objects.filter(memorial=obj, user=user).exists():
                     return obj
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Error checking contributor status in MemorialDetailView: %s", e)
         raise PermissionDenied("This memorial is private.")
 
 
@@ -127,8 +128,8 @@ class MemorialByPublicIdView(generics.RetrieveAPIView):
                 from .models import Contributor
                 if Contributor.objects.filter(memorial=obj, user=user).exists():
                     return obj
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Error checking contributor status in MemorialByPublicIdView: %s", e)
         raise PermissionDenied("This memorial is private.")
 
 
@@ -263,8 +264,8 @@ def check_memorial_access(memorial, user):
             from .models import Contributor
             if Contributor.objects.filter(memorial=memorial, user=user).exists():
                 return True
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("Error checking contributor status in check_memorial_access: %s", e)
     return False
 
 
@@ -283,7 +284,8 @@ def add_message(request, pk):
             try:
                 display_name = request.user.profile.display_name
                 data['author_name'] = display_name if display_name else request.user.username
-            except Exception:
+            except Exception as e:
+                logger.warning("Error retrieving user profile for author_name: %s", e)
                 data['author_name'] = request.user.username
         if not data.get('author_email'):
             data['author_email'] = request.user.email
@@ -319,8 +321,8 @@ def add_memorial_photo(request, pk):
     try:
         from .models import Contributor
         is_contributor = Contributor.objects.filter(memorial=memorial, user=request.user).exists()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Error checking contributor status in add_memorial_photo: %s", e)
 
     if memorial.owner != request.user and not is_contributor:
         return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
@@ -348,8 +350,8 @@ def add_timeline_event(request, pk):
         is_contributor = Contributor.objects.filter(
             memorial=memorial, user=request.user, role__in=['OWNER', 'FAMILY_MEMBER', 'EDITOR']
         ).exists()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Error checking contributor status in add_timeline_event: %s", e)
 
     if memorial.owner != request.user and not is_contributor:
         return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
@@ -390,8 +392,8 @@ def memorial_memories(request, pk):
             try:
                 from .models import Contributor
                 is_contributor = Contributor.objects.filter(memorial=memorial, user=user).exists()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Error checking contributor status in memorial_memories (privacy check): %s", e)
             if not is_contributor:
                 raise PermissionDenied("This memorial is private.")
 
@@ -402,8 +404,8 @@ def memorial_memories(request, pk):
                 try:
                     from .models import Contributor
                     is_owner_or_contributor = Contributor.objects.filter(memorial=memorial, user=user).exists()
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning("Error checking contributor status in memorial_memories (GET): %s", e)
 
             if is_owner_or_contributor:
                 qs = memorial.memories.all()
@@ -424,8 +426,8 @@ def memorial_memories(request, pk):
             try:
                 from .models import Contributor
                 is_owner_or_contributor = Contributor.objects.filter(memorial=memorial, user=user).exists()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("Error checking contributor status in memorial_memories (POST): %s", e)
         if not is_owner_or_contributor:
             return Response({'detail': 'Only owner and contributors can add memories.'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -555,8 +557,8 @@ def delete_timeline_event(request, pk):
     try:
         from .models import Contributor
         is_contributor = Contributor.objects.filter(memorial=memorial, user=user).exists()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Error checking contributor status in delete_timeline_event: %s", e)
 
     if memorial.owner != user and not is_contributor:
         return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)
@@ -590,8 +592,8 @@ def delete_message(request, pk):
     try:
         from .models import Contributor
         is_contributor = Contributor.objects.filter(memorial=memorial, user=user).exists()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Error checking contributor status in delete_message: %s", e)
 
     if memorial.owner != user and not is_contributor:
         return Response({'detail': 'Not authorized.'}, status=status.HTTP_403_FORBIDDEN)

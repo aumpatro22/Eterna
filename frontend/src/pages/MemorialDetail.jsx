@@ -483,6 +483,7 @@ export default function MemorialDetail() {
                               onClick={() => handleDeleteMessage(msg.id)}
                               className="text-ink/40 hover:text-marker font-bold text-sm"
                               title="Delete Message"
+                              aria-label="Delete Message"
                             >
                               ✖
                             </button>
@@ -624,6 +625,7 @@ export default function MemorialDetail() {
                             onClick={() => handleDeleteMemory(mem.id)}
                             className="text-ink/40 hover:text-marker font-bold text-base"
                             title="Delete Memory"
+                            aria-label="Delete Memory"
                           >
                             ✖
                           </button>
@@ -775,6 +777,7 @@ export default function MemorialDetail() {
                             onClick={() => handleDeleteTimeline(ev.id)}
                             className="absolute top-2 right-2 text-ink/40 hover:text-marker font-bold text-sm"
                             title="Delete Milestone"
+                            aria-label="Delete Milestone"
                           >
                             ✖
                           </button>
