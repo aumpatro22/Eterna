@@ -176,6 +176,16 @@ Eterna uses a **hand-drawn sketchbook aesthetic** — wobbly borders, paper text
 | 📼 **Cassette Tape Player** | Hand-drawn SVG with spinning reels |
 | 🚪 **Exit Intent Hook** | Tear-off paper slip animation when leaving the page |
 | ✏️ **Sketch Mode** | Draw freehand doodles over any page |
+| 🐞 **Report a Bug** | Integrated direct support link (`https://forms.gle/jPHUuWkMbHNGPahPA`) in footer and about manifesto |
+
+### Session & Connection Management
+
+| Component | Description | Strategy |
+|---|---|---|
+| 🔐 **Safe Session Timeout** | Automatically logs out inactive users after 2 hours (`SESSION_COOKIE_AGE = 7200`) | Session cookies expire without deleting any user memorials, accounts, or media |
+| 📡 **Activity Tracking** | Updates user's `last_seen` timestamp in database via middleware | Throttled to once every 5 minutes using session caching to prevent write fatigue |
+| 🔋 **Connection Pooling** | Automatically closes idle database connections after 300 seconds | Prevents connection leakage (`CONN_MAX_AGE = 300` in Django settings) |
+
 
 ---
 
@@ -342,14 +352,15 @@ All endpoints are prefixed with `/api/`.
 | `GET` | `/memorials/invitations/` | My pending invitations | ✅ |
 | `POST` | `/memorials/invitations/<id>/respond/` | Accept or decline | ✅ |
 
-### Authentication
+### Authentication & System Health
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/auth/login/` | Login |
-| `POST` | `/api/auth/logout/` | Logout |
-| `GET` | `/api/auth/me/` | Get current user |
-| `POST` | `/api/auth/register/` | Register |
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| `POST` | `/api/auth/login/` | Login | — |
+| `POST` | `/api/auth/logout/` | Logout | — |
+| `GET` | `/api/auth/me/` | Get current user | ✅ |
+| `POST` | `/api/auth/register/` | Register | — |
+| `GET` | `/api/health/` | Health check endpoint for monitoring/uptime verification | — |
 
 ---
 

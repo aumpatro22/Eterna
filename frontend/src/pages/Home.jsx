@@ -4,6 +4,8 @@ import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import Interactive3DNotebook from '../components/Home/Interactive3DNotebook';
 import DoodleCorkboard from '../components/Home/DoodleCorkboard';
+import SEO from '../components/layout/SEO';
+import { slugify } from '../utils/slugify';
 
 export default function Home() {
   const { user } = useAuth();
@@ -63,6 +65,11 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-16">
+      <SEO 
+        title="Memorials – Explore Legacy Stories"
+        description="Browse through the living digital sketchbooks of memorials and tales preserved forever on Eterna."
+        keywords="explore, browse, memorials list, family scrapbooks, remembrance books, Eterna"
+      />
       
       {/* Hero Section */}
       <section className="relative paper-card bg-postit p-8 md:p-12 rotate-1 max-w-5xl mx-auto w-full tape-decoration mt-8 select-none">
@@ -177,14 +184,19 @@ export default function Home() {
                 const tackOrTape = idx % 3 === 0 ? 'tack-decoration' : (idx % 2 === 0 ? 'tape-decoration' : '');
                 
                 return (
-                  <Link to={`/memorial/${m.id}`} key={m.id} className="group">
+                  <Link to={`/memorial/${m.id}-${slugify(m.full_name)}`} key={m.id} className="group">
                     <div className={`paper-card h-full flex flex-col ${tackOrTape} ${rotation} transition-transform`}>
                       
                       {/* Image Frame */}
                       <div className="p-4 pb-0 flex-1">
                         <div className="border-[3px] border-ink wobbly-sm overflow-hidden bg-erased relative aspect-[4/3] flex items-center justify-center">
                           {m.profile_image_url ? (
-                            <img src={m.profile_image_url} alt={m.full_name} className="w-full h-full object-cover" />
+                            <img 
+                              src={m.profile_image_url} 
+                              alt={m.full_name} 
+                              className="w-full h-full object-cover" 
+                              loading="lazy"
+                            />
                           ) : (
                             <span className="font-kalam text-5xl opacity-20">No Photo</span>
                           )}

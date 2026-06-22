@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import ReportModal from '../components/layout/ReportModal';
+import SEO from '../components/layout/SEO';
 
 export default function CommunityDetail() {
   const { slug } = useParams();
@@ -262,19 +263,23 @@ export default function CommunityDetail() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-150px)] gap-6">
+      <SEO 
+        title={`${community.title} – Support Community | Eterna`}
+        description={community.description || "Join this Eterna circle to connect and share support."}
+      />
       
       {/* Cover / Header Polaroid Banner */}
       <div className="relative border-[3px] border-ink wobbly-sm overflow-hidden bg-white shadow-md flex flex-col md:flex-row gap-6 p-6 rotate-0.5">
         {community.cover_image && (
           <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">
-            <img src={community.cover_image} alt="" className="w-full h-full object-cover" />
+            <img src={community.cover_image} alt="" className="w-full h-full object-cover" loading="lazy" />
           </div>
         )}
         
         {/* Community Icon */}
         <div className="w-20 h-20 bg-erased border-[3px] border-ink rounded wobbly-sm flex items-center justify-center font-kalam text-5xl flex-shrink-0 z-10 shadow-sm">
           {community.icon_image ? (
-            <img src={community.icon_image} alt="" className="w-full h-full object-cover" />
+            <img src={community.icon_image} alt="" className="w-full h-full object-cover" loading="lazy" />
           ) : (
             '👥'
           )}

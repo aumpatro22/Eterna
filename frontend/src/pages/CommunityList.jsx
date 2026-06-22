@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import { compressImage } from '../utils/imageCompression';
+import SEO from '../components/layout/SEO';
 
 export default function CommunityList() {
   const { user } = useAuth();
@@ -77,6 +78,10 @@ export default function CommunityList() {
 
   return (
     <div className="flex flex-col gap-10">
+      <SEO 
+        title="Support Communities & Grief Circles – Eterna"
+        description="Connect with other families on similar paths (e.g. Lost Parent, Caregiver). Share comfort, messages, and stories."
+      />
       <div className="flex flex-col md:flex-row justify-between items-center gap-6 border-b-[3px] border-dashed border-ink pb-8">
         <div>
           <h1 className="font-kalam text-5xl mb-2">Support Communities</h1>
@@ -109,6 +114,7 @@ export default function CommunityList() {
                       src={c.icon_image} 
                       alt="" 
                       className="w-12 h-12 object-cover border-2 border-ink rounded wobbly-xs flex-shrink-0"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-12 h-12 bg-erased border-2 border-ink rounded flex items-center justify-center font-kalam font-bold text-2xl flex-shrink-0">

@@ -19,7 +19,7 @@ export default function Navbar({ sketchMode, setSketchMode }) {
         {/* Logo */}
         <Link to="/" className="flex items-center group">
           <img
-            src={`${import.meta.env.BASE_URL}eterna-logo.png`}
+            src={`${import.meta.env.BASE_URL}eterna-logo.webp`}
             alt="Eterna – Preserve Memories. Share Stories."
             className="h-14 w-auto transition-transform duration-200 group-hover:scale-105 group-active:scale-95"
           />

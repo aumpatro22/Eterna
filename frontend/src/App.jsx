@@ -22,6 +22,9 @@ import CommunityDetail from './pages/CommunityDetail';
 import ProfileDetail from './pages/ProfileDetail';
 import DirectMessages from './pages/DirectMessages';
 import About from './pages/About';
+import BlogList from './pages/BlogList';
+import BlogDetail from './pages/BlogDetail';
+import Contact from './pages/Contact';
 
 function NotFound() {
   return (
@@ -117,6 +120,9 @@ function App() {
                   <Route path="/profile/:username" element={<ProfileDetail />} />
                   <Route path="/messages" element={<DirectMessages />} />
                   <Route path="/about" element={<About />} />
+                  <Route path="/blog" element={<BlogList />} />
+                  <Route path="/blog/:slug" element={<BlogDetail />} />
+                  <Route path="/contact" element={<Contact />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>

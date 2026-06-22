@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import InteractiveCandle from '../components/Memorial/InteractiveCandle';
 import CassetteTapePlayer from '../components/Memorial/CassetteTapePlayer';
 import ReportModal from '../components/layout/ReportModal';
+import SEO from '../components/layout/SEO';
 
 const formatLocalTime = (isoString) => {
   if (!isoString) return '';
@@ -34,7 +35,8 @@ const formatCalendarDate = (dateString) => {
 };
 
 export default function MemorialDetail() {
-  const { id } = useParams();
+  const { id: rawId } = useParams();
+  const id = rawId && rawId.includes('-') ? rawId.split('-')[0] : rawId;
   const { user } = useAuth();
   const [memorial, setMemorial] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -277,13 +279,33 @@ export default function MemorialDetail() {
     contributors.some(c => c.username === user.username)
   );
 
+  const personSchema = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": memorial.full_name,
+    "birthDate": memorial.birth_date,
+    "deathDate": memorial.passing_date,
+    "description": memorial.biography,
+    "image": memorial.profile_image_url || 'https://eterna-five-phi.vercel.app/eterna-logo.webp',
+    "url": `https://eterna-five-phi.vercel.app/memorial/${rawId}`
+  };
+
   return (
     <div className="flex flex-col gap-8">
+      <SEO 
+        title={`${memorial.full_name} – Memorial & Life Timeline | Eterna`}
+        description={`In loving memory of ${memorial.full_name} (${memorial.birth_date ? new Date(memorial.birth_date).getFullYear() : ''} - ${memorial.passing_date ? new Date(memorial.passing_date).getFullYear() : ''}). Read biography, view timeline milestones, see photos, and share memories.`}
+        keywords={`${memorial.full_name}, memorial, timeline, biography, memory lane, family history, Eterna`}
+        canonicalUrl={`https://eterna-five-phi.vercel.app/memorial/${rawId}`}
+        ogType="profile"
+        ogImage={memorial.profile_image_url}
+        jsonLd={personSchema}
+      />
       
       {/* Cover Banner (Landscape Cover Image) */}
       {memorial.cover_image_url && (
         <div className="w-full h-64 md:h-80 border-[3px] border-ink wobbly-sm overflow-hidden bg-erased rotate-1 relative shadow-hard">
-          <img src={memorial.cover_image_url} alt="Cover Banner" className="w-full h-full object-cover" />
+          <img src={memorial.cover_image_url} alt="Cover Banner" className="w-full h-full object-cover" loading="lazy" />
           <div className="absolute inset-0 bg-ink/5 pointer-events-none"></div>
         </div>
       )}
@@ -299,7 +321,7 @@ export default function MemorialDetail() {
             <div className="flex flex-col md:flex-row gap-6 items-center">
               <div className="border-[3px] border-ink wobbly-sm overflow-hidden bg-erased w-48 h-48 flex-shrink-0 relative shadow-md">
                 {memorial.profile_image_url ? (
-                  <img src={memorial.profile_image_url} alt={memorial.full_name} className="w-full h-full object-cover" />
+                  <img src={memorial.profile_image_url} alt={memorial.full_name} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center font-kalam text-4xl opacity-20">No Profile Photo</div>
                 )}
@@ -625,7 +647,7 @@ export default function MemorialDetail() {
                         {/* Memory Image */}
                         {mem.image_url && (
                           <div className="w-full md:w-48 border-[2px] border-ink wobbly-sm overflow-hidden flex-shrink-0 bg-white shadow-sm rotate-1">
-                            <img src={mem.image_url} alt={mem.title} className="w-full object-cover max-h-48" />
+                            <img src={mem.image_url} alt={mem.title} className="w-full object-cover max-h-48" loading="lazy" />
                           </div>
                         )}
                         
@@ -763,7 +785,7 @@ export default function MemorialDetail() {
                         <h4 className="font-kalam text-2xl mb-2">{ev.title}</h4>
                         {ev.image_url && (
                           <div className="border-[2px] border-ink overflow-hidden max-h-48 mb-3 wobbly-xs">
-                            <img src={ev.image_url} alt={ev.title} className="w-full h-full object-cover" />
+                            <img src={ev.image_url} alt={ev.title} className="w-full h-full object-cover" loading="lazy" />
                           </div>
                         )}
                         {ev.description && (
@@ -787,7 +809,7 @@ export default function MemorialDetail() {
                 {memorial.profile_image_url && (
                   <div className="bg-white p-3 border-[3px] border-ink rotate-1 shadow-md wobbly-sm">
                     <div className="border-[2px] border-ink overflow-hidden aspect-square bg-erased">
-                      <img src={memorial.profile_image_url} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={memorial.profile_image_url} alt="Profile" className="w-full h-full object-cover" loading="lazy" />
                     </div>
                     <p className="font-patrick text-center mt-2 text-sm">Portrait</p>
                   </div>
@@ -797,7 +819,7 @@ export default function MemorialDetail() {
                 {memorial.photos && memorial.photos.map((ph, idx) => (
                   <div key={ph.id} className={`bg-white p-3 border-[3px] border-ink shadow-md wobbly-sm ${idx % 2 === 0 ? '-rotate-1' : 'rotate-2'}`}>
                     <div className="border-[2px] border-ink overflow-hidden aspect-square bg-erased">
-                      <img src={ph.image_url} alt={ph.caption || 'Album Image'} className="w-full h-full object-cover" />
+                      <img src={ph.image_url} alt={ph.caption || 'Album Image'} className="w-full h-full object-cover" loading="lazy" />
                     </div>
                     <p className="font-patrick text-center mt-2 text-sm">{ph.caption || 'Memory'}</p>
                   </div>

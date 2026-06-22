@@ -26,13 +26,16 @@ export default function Footer() {
             <div className="flex flex-col gap-3 font-patrick text-xl">
               <h4 className="font-kalam font-bold text-2xl decoration-wavy underline mb-2">Explore</h4>
               <Link to="/" className="hover:text-marker hover:line-through w-fit transition-colors">Home</Link>
-              <Link to="/tales" className="hover:text-marker hover:line-through w-fit transition-colors">Tales</Link>
+              <Link to="/memorials" className="hover:text-marker hover:line-through w-fit transition-colors">Memorials</Link>
               <Link to="/communities" className="hover:text-marker hover:line-through w-fit transition-colors">Communities</Link>
+              <Link to="/tales" className="hover:text-marker hover:line-through w-fit transition-colors">Tales</Link>
+              <Link to="/blog" className="hover:text-marker hover:line-through w-fit transition-colors">Blog</Link>
             </div>
             
             <div className="flex flex-col gap-3 font-patrick text-xl">
               <h4 className="font-kalam font-bold text-2xl decoration-wavy underline mb-2">Links</h4>
               <Link to="/about" className="hover:text-pen hover:line-through w-fit transition-colors">About</Link>
+              <Link to="/contact" className="hover:text-pen hover:line-through w-fit transition-colors">Contact</Link>
               <Link to="/privacy" className="hover:text-pen hover:line-through w-fit transition-colors">Privacy</Link>
               <a 
                 href="https://forms.gle/jPHUuWkMbHNGPahPA" 

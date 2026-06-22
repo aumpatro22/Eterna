@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/client';
+import SEO from '../components/layout/SEO';
 
 export default function TaleList() {
   const [tales, setTales] = useState([]);
@@ -23,6 +24,10 @@ export default function TaleList() {
 
   return (
     <div className="flex flex-col gap-10">
+      <SEO 
+        title="Eternal Tales & Family Legacy Stories – Eterna"
+        description="Browse through the collections of family stories, letters, and memories on Eterna."
+      />
       <div className="flex flex-col md:flex-row justify-between items-center gap-6 border-b-[3px] border-dashed border-ink pb-8">
         <div>
           <h1 className="font-kalam text-5xl mb-2 decoration-wavy underline decoration-marker">Eternal Tales</h1>

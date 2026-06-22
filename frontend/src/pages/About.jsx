@@ -1,8 +1,14 @@
 import { motion } from 'framer-motion';
+import SEO from '../components/layout/SEO';
 
 export default function About() {
   return (
     <div className="flex flex-col gap-12 py-6 text-ink">
+      <SEO 
+        title="About Us & Our Manifesto – Eterna"
+        description="Read Eterna's story, our mission to preserve human memories forever without algorithms or advertising, and why we built this sanctuary."
+        keywords="about, mission, manifesto, founder story, legacy, Eterna"
+      />
       {/* Title */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -129,9 +135,10 @@ export default function About() {
             <div className="bg-white border-[3px] border-ink p-4 pb-8 shadow-hard rotate-3 hover:rotate-1 transition-transform duration-300 w-full max-w-[280px]">
               <div className="border-[3px] border-ink bg-erased aspect-[3/4] overflow-hidden relative">
                 <img 
-                  src={`${import.meta.env.BASE_URL}max.jpg`} 
+                  src={`${import.meta.env.BASE_URL}max.webp`} 
                   alt="Max on the beach" 
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               </div>
               <p className="font-kalam text-2xl font-bold text-center mt-4 text-ink">Max ❤️</p>

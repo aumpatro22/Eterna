@@ -4,6 +4,7 @@ import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 import ReportModal from '../components/layout/ReportModal';
+import SEO from '../components/layout/SEO';
 
 // Pagination helper: groups paragraphs into pages of roughly 750 characters
 const paginateContent = (text, charsPerPage = 750) => {
@@ -160,6 +161,11 @@ export default function TaleDetail() {
 
   return (
     <div className="flex flex-col gap-10 select-none">
+      <SEO 
+        title={`${tale.title} – An Eternal Tale | Eterna`}
+        description={tale.description || `Read this collection of chapters and stories preserved on Eterna.`}
+        keywords={`${tale.title}, stories, letters, family legacy, Eterna`}
+      />
       
       {/* Title Header */}
       <div className="paper-card p-8 text-center bg-white rotate-1 tack-decoration">

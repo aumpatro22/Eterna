@@ -4,6 +4,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
 import ReportModal from '../components/layout/ReportModal';
+import SEO from '../components/layout/SEO';
+import { slugify } from '../utils/slugify';
 
 export default function ProfileDetail() {
   const { username } = useParams();
@@ -309,6 +311,10 @@ export default function ProfileDetail() {
 
   return (
     <div className="flex flex-col gap-10 max-w-4xl mx-auto font-patrick text-xl">
+      <SEO 
+        title={`${profile?.user?.username || 'User'}'s Profile – Eterna`}
+        description={`Explore the memorials and tales created by ${profile?.user?.username || 'user'} on Eterna.`}
+      />
       
       {/* Header Profile Card */}
       <div className="paper-card p-6 md:p-10 text-center bg-postit tack-decoration rotate-0.5 relative">
@@ -328,7 +334,12 @@ export default function ProfileDetail() {
         )}
 
         {profile.avatar_url ? (
-          <img src={profile.avatar_url} alt={username} className="w-32 h-32 border-[4px] border-ink wobbly-sm object-cover mx-auto mb-6 -rotate-2" />
+          <img 
+            src={profile.avatar_url} 
+            alt={username} 
+            className="w-32 h-32 border-[4px] border-ink wobbly-sm object-cover mx-auto mb-6 -rotate-2" 
+            loading="lazy"
+          />
         ) : (
           <div className="w-32 h-32 border-[4px] border-ink wobbly-sm bg-white mx-auto mb-6 flex items-center justify-center font-kalam text-6xl rotate-2">
             {username[0].toUpperCase()}
@@ -523,7 +534,7 @@ export default function ProfileDetail() {
                         🛡️
                       </button>
                     )}
-                    <Link to={`/memorial/${m.id}`}>
+                    <Link to={`/memorial/${m.id}-${slugify(m.full_name)}`}>
                       <div className={`paper-card p-6 bg-white ${idx % 2 === 0 ? '-rotate-1 tape-decoration' : 'rotate-2'} group-hover:rotate-0 transition-transform`}>
                         <h3 className="font-kalam text-3xl mb-2 group-hover:underline decoration-wavy">{m.full_name}</h3>
                         <p className="font-patrick text-lg mb-4">

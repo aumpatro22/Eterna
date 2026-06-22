@@ -5,6 +5,7 @@ import Tilt from 'react-parallax-tilt';
 import { useInView } from 'react-intersection-observer';
 import Lenis from 'lenis';
 import { useAuth } from '../contexts/AuthContext';
+import SEO from '../components/layout/SEO';
 
 /* ─── Pressed Flower Decorative Vector ──────────────────────── */
 const PressedFlower = ({ className }) => (
@@ -277,8 +278,24 @@ export default function Landing() {
     return () => clearInterval(interval);
   }, [isCassettePlaying]);
 
+  const orgSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Eterna",
+    "url": "https://eterna-five-phi.vercel.app",
+    "logo": "https://eterna-five-phi.vercel.app/eterna-logo.webp",
+    "description": "Eterna helps families preserve memories, stories, photos, and voices forever."
+  };
+
   return (
     <div className="flex flex-col gap-0 overflow-x-hidden relative min-h-screen selection:bg-postit/80 lg:cursor-none">
+      <SEO 
+        title="Eterna – Preserve Family Memories Forever"
+        description="Eterna helps families preserve memories, stories, photos, and voices forever in a quiet, beautiful digital scrapbook."
+        keywords="memory, legacy, memorials, heritage, family timeline, scrapbooking, remembrance"
+        canonicalUrl="https://eterna-five-phi.vercel.app/"
+        jsonLd={orgSchema}
+      />
       
       {/* Scroll progress bar */}
       <div 

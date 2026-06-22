@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://eterna-five-phi.vercel.app/sitemap.xml
