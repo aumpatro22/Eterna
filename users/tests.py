@@ -476,3 +476,13 @@ class LoginApiTests(APITestCase):
         })
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn('banned', response.data['error'])
+
+class CorsSettingsTest(TestCase):
+    def test_cors_allow_all_origins_not_set(self):
+        # Ensure CORS_ALLOW_ALL_ORIGINS isn't forcefully set in settings
+        from django.conf import settings
+        self.assertFalse(hasattr(settings, 'CORS_ALLOW_ALL_ORIGINS'))
+
+    def test_cors_credentials(self):
+        from django.conf import settings
+        self.assertTrue(settings.CORS_ALLOW_CREDENTIALS)

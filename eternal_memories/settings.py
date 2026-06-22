@@ -253,6 +253,12 @@ CSRF_TRUSTED_ORIGINS += [
 
 FRONTEND_URL = os.environ.get('FRONTEND_URL')
 if FRONTEND_URL:
+    from urllib.parse import urlparse
+    parsed = urlparse(FRONTEND_URL)
+    if parsed.scheme and parsed.netloc:
+        origin = f"{parsed.scheme}://{parsed.netloc}"
+        CORS_ALLOWED_ORIGINS.append(origin)
+        CSRF_TRUSTED_ORIGINS.append(origin)
     if FRONTEND_URL == '*':
         CORS_ALLOW_ALL_ORIGINS = True
         CORS_ALLOW_CREDENTIALS = False
@@ -272,4 +278,4 @@ AUTH_USER_MODEL = 'users.User'
 
 # Free Tier Daily Message limits
 FREE_TIER_DAILY_DM_LIMIT = 30
-FREE_TIER_DAILY_COMMUNITY_LIMIT = 30
+FREE_TIER_DAILY_COMMUNITY_LIMIT = 30
