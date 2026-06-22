@@ -116,8 +116,7 @@ class Conversation(models.Model):
     )
 
     def __str__(self):
-        usernames = ", ".join([u.username for u in self.participants.all()])
-        return f"Conversation between: {usernames}"
+        return f"Conversation {self.pk}"
 
 
 class DirectMessage(models.Model):
