@@ -255,6 +255,7 @@ FRONTEND_URL = os.environ.get('FRONTEND_URL')
 if FRONTEND_URL:
     if FRONTEND_URL == '*':
         CORS_ALLOW_ALL_ORIGINS = True
+        CORS_ALLOW_CREDENTIALS = False
     else:
         from urllib.parse import urlparse
         parsed = urlparse(FRONTEND_URL)
