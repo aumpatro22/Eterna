@@ -21,6 +21,76 @@ class EternaSocialApiTests(APITestCase):
         self.p1 = self.user1.profile
         self.p2 = self.user2.profile
 
+
+    def test_register_view_success(self):
+        from django.core.cache import cache
+        cache.clear()
+
+        response = self.client.post('/api/auth/register/', {
+            'username': 'newuser',
+            'email': 'newuser@example.com',
+            'first_name': 'New',
+            'last_name': 'User',
+            'password': 'Password123!',
+            'password2': 'Password123!'
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['status'], 'ok')
+        self.assertEqual(response.data['user']['username'], 'newuser')
+        self.assertIn('csrfToken', response.data)
+
+        # Verify user is created in the database
+        new_user = User.objects.filter(username='newuser').first()
+        self.assertIsNotNone(new_user)
+        self.assertEqual(new_user.email, 'newuser@example.com')
+
+
+    def test_register_view_validation_errors(self):
+        from django.core.cache import cache
+        cache.clear()
+
+        # 1. Missing fields
+        response = self.client.post('/api/auth/register/', {
+            'username': 'baduser'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # 2. Duplicate username
+        response = self.client.post('/api/auth/register/', {
+            'username': 'user1',  # Already created in setUp
+            'email': 'unique1@example.com',
+            'first_name': 'Test',
+            'last_name': 'User',
+            'password': 'Password123!',
+            'password2': 'Password123!'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('username', response.data)
+
+        # 3. Duplicate email
+        response = self.client.post('/api/auth/register/', {
+            'username': 'uniqueuser2',
+            'email': 'u1@example.com',  # Already created in setUp
+            'first_name': 'Test',
+            'last_name': 'User',
+            'password': 'Password123!',
+            'password2': 'Password123!'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('email', response.data)
+
+        # 4. Mismatched passwords
+        response = self.client.post('/api/auth/register/', {
+            'username': 'uniqueuser3',
+            'email': 'unique3@example.com',
+            'first_name': 'Test',
+            'last_name': 'User',
+            'password': 'Password123!',
+            'password2': 'DifferentPassword!'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('password2', response.data)
+
     def test_profile_privacy_connections_only(self):
         # Set user1 profile to CONNECTIONS_ONLY
         self.p1.privacy_setting = 'CONNECTIONS_ONLY'
