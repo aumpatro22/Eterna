@@ -23,6 +23,7 @@ export default function DirectMessages() {
   const [newChatUsername, setNewChatUsername] = useState('');
   const [newChatLoading, setNewChatLoading] = useState(false);
   const [newChatError, setNewChatError] = useState('');
+  const [showNewChatForm, setShowNewChatForm] = useState(false);
 
   // Live Search recommendations
   const [searchResults, setSearchResults] = useState([]);
@@ -48,6 +49,7 @@ export default function DirectMessages() {
       });
       setActiveConv(data);
       setShowChatListOnMobile(false);
+      setShowNewChatForm(false);
     } catch (e) {
       console.error('Failed to auto-start conversation', e);
     }
@@ -76,7 +78,15 @@ export default function DirectMessages() {
     const hasNewMessages = messages.length > prevMessagesLength.current;
     
     if (isNewConv && messages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      const scrollContainer = scrollContainerRef.current;
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        setTimeout(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+          }
+        }, 50);
+      }
       prevActiveConvId.current = activeConv.id;
       prevMessagesLength.current = messages.length;
     } else if (hasNewMessages) {
@@ -87,7 +97,18 @@ export default function DirectMessages() {
       if (scrollContainer) {
         const isNearBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 120;
         if (isMyMsg || isNearBottom) {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          scrollContainer.scrollTo({
+            top: scrollContainer.scrollHeight,
+            behavior: 'smooth'
+          });
+          setTimeout(() => {
+            if (scrollContainerRef.current) {
+              scrollContainerRef.current.scrollTo({
+                top: scrollContainerRef.current.scrollHeight,
+                behavior: 'smooth'
+              });
+            }
+          }, 50);
         }
       }
       prevMessagesLength.current = messages.length;
@@ -169,6 +190,7 @@ export default function DirectMessages() {
       setActiveConv(data);
       setShowChatListOnMobile(false);
       setNewChatUsername('');
+      setShowNewChatForm(false);
     } catch (err) {
       setNewChatError(err.message || 'User not found or invalid.');
     } finally {
@@ -235,7 +257,7 @@ export default function DirectMessages() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-[calc(100vh-150px)] gap-6 font-patrick">
+    <div className="flex flex-col md:flex-row h-full gap-6 font-patrick">
       
       {/* Left Pane: Conversations list & search */}
       <div className={`${showChatListOnMobile ? 'flex' : 'hidden'} md:flex md:col-span-1 paper-card bg-white p-6 flex-col gap-4 md:w-80 w-full overflow-y-auto tack-decoration -rotate-0.5`}>
@@ -243,90 +265,113 @@ export default function DirectMessages() {
 
         {/* Start new conversation */}
         <div ref={searchWrapperRef} className="relative mb-2">
-          <form onSubmit={handleStartChat} className="bg-erased p-3 border-[2px] border-ink wobbly-sm">
-            <h4 className="font-kalam text-lg font-bold mb-2">Start a New Chat</h4>
-            {newChatError && <p className="text-marker text-sm mb-1">{newChatError}</p>}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                className="input text-base flex-1 py-1 px-2"
-                placeholder="Enter username..."
-                required
-                value={newChatUsername}
-                onChange={e => {
-                  setNewChatUsername(e.target.value);
-                  setShowDropdown(true);
-                }}
-                onFocus={() => {
-                  if (newChatUsername.trim()) {
+          {!showNewChatForm ? (
+            <button
+              type="button"
+              onClick={() => setShowNewChatForm(true)}
+              className="btn btn-secondary w-full text-base py-1.5 px-3 flex items-center justify-center gap-1 bg-white hover:bg-postit/40"
+            >
+              ➕ Start a New Chat
+            </button>
+          ) : (
+            <form onSubmit={handleStartChat} className="bg-erased p-3 border-[2px] border-ink wobbly-sm">
+              <div className="flex justify-between items-center mb-2 border-b border-ink/10 pb-1">
+                <h4 className="font-kalam text-lg font-bold">Start a New Chat</h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNewChatForm(false);
+                    setNewChatUsername('');
+                    setNewChatError('');
+                  }}
+                  className="text-marker font-bold text-xs hover:underline"
+                >
+                  ✕ Close
+                </button>
+              </div>
+              {newChatError && <p className="text-marker text-sm mb-1">{newChatError}</p>}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  className="input text-base flex-1 py-1 px-2"
+                  placeholder="Enter username..."
+                  required
+                  value={newChatUsername}
+                  onChange={e => {
+                    setNewChatUsername(e.target.value);
                     setShowDropdown(true);
-                  }
-                }}
-              />
-              <button type="submit" disabled={newChatLoading} className="btn btn-primary text-sm py-1 px-3">
-                {newChatLoading ? '...' : 'Chat'}
-              </button>
-            </div>
+                  }}
+                  onFocus={() => {
+                    if (newChatUsername.trim()) {
+                      setShowDropdown(true);
+                    }
+                  }}
+                />
+                <button type="submit" disabled={newChatLoading} className="btn btn-primary text-sm py-1 px-3">
+                  {newChatLoading ? '...' : 'Chat'}
+                </button>
+              </div>
 
-            {/* Live Search Recommendations */}
-            {showDropdown && newChatUsername.trim() && (
-              <div className="mt-2 bg-white border-[2px] border-ink p-1 wobbly-xs max-h-48 overflow-y-auto flex flex-col gap-1 z-10">
-                {searchLoading && <div className="text-xs text-ink/75 p-1 animate-pulse">Searching...</div>}
-                {!searchLoading && searchResults.length === 0 && (
-                  <div className="text-xs text-ink/50 italic p-1">No users found.</div>
-                )}
-                {!searchLoading && searchResults.map(profile => (
-                  <div 
-                    key={profile.user.username} 
-                    className="flex items-center justify-between p-1.5 hover:bg-postit/50 rounded border-b border-ink/10 last:border-0"
-                  >
+              {/* Live Search Recommendations */}
+              {showDropdown && newChatUsername.trim() && (
+                <div className="mt-2 bg-white border-[2px] border-ink p-1 wobbly-xs max-h-48 overflow-y-auto flex flex-col gap-1 z-10">
+                  {searchLoading && <div className="text-xs text-ink/75 p-1 animate-pulse">Searching...</div>}
+                  {!searchLoading && searchResults.length === 0 && (
+                    <div className="text-xs text-ink/50 italic p-1">No users found.</div>
+                  )}
+                  {!searchLoading && searchResults.map(profile => (
                     <div 
-                      onClick={() => {
-                        setNewChatUsername(profile.user.username);
-                        autoStartChat(profile.user.username);
-                        setShowDropdown(false);
-                      }}
-                      className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
+                      key={profile.user.username} 
+                      className="flex items-center justify-between p-1.5 hover:bg-postit/50 rounded border-b border-ink/10 last:border-0"
                     >
-                      <img
-                        src={profile.avatar_url || `${import.meta.env.BASE_URL}default_avatar.jpg`}
-                        alt={profile.user.username}
-                        className="w-7 h-7 rounded-full border border-ink object-cover"
-                        onError={(e) => { e.target.src = `${import.meta.env.BASE_URL}default_avatar.jpg` }}
-                      />
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-bold text-xs truncate leading-tight">
-                          {profile.display_name || profile.user.username}
-                        </span>
-                        <span className="text-[10px] text-ink/60 truncate leading-none">
-                          @{profile.user.username}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex gap-1 shrink-0">
-                      <button
-                        type="button"
+                      <div 
                         onClick={() => {
                           setNewChatUsername(profile.user.username);
                           autoStartChat(profile.user.username);
                           setShowDropdown(false);
                         }}
-                        className="text-[10px] font-bold bg-postit border border-ink px-1.5 py-0.5 rounded hover:bg-postit/80"
+                        className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
                       >
-                        Chat
-                      </button>
-                      <Link
-                        to={`/profile/${profile.user.username}`}
-                        className="text-[10px] font-bold bg-white border border-ink px-1.5 py-0.5 rounded hover:bg-erased/80 text-center"
-                      >
-                        Explore
-                      </Link>
+                        <img
+                          src={profile.avatar_url || `${import.meta.env.BASE_URL}default_avatar.jpg`}
+                          alt={profile.user.username}
+                          className="w-7 h-7 rounded-full border border-ink object-cover"
+                          onError={(e) => { e.target.src = `${import.meta.env.BASE_URL}default_avatar.jpg` }}
+                        />
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-bold text-xs truncate leading-tight">
+                            {profile.display_name || profile.user.username}
+                          </span>
+                          <span className="text-[10px] text-ink/60 truncate leading-none">
+                            @{profile.user.username}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNewChatUsername(profile.user.username);
+                            autoStartChat(profile.user.username);
+                            setShowDropdown(false);
+                          }}
+                          className="text-[10px] font-bold bg-postit border border-ink px-1.5 py-0.5 rounded hover:bg-postit/80"
+                        >
+                          Chat
+                        </button>
+                        <Link
+                          to={`/profile/${profile.user.username}`}
+                          className="text-[10px] font-bold bg-white border border-ink px-1.5 py-0.5 rounded hover:bg-erased/80 text-center"
+                        >
+                          Explore
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </form>
+                  ))}
+                </div>
+              )}
+            </form>
+          )}
         </div>
 
         {/* List of active chats */}

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/layout/Navbar';
@@ -59,9 +59,10 @@ function ServerWakeUpScreen() {
   );
 }
 
-function App() {
+function AppContent() {
   const [sketchMode, setSketchMode] = useState(false);
   const [isWakingUp, setIsWakingUp] = useState(true);
+  const location = useLocation();
 
   useEffect(() => {
     let active = true;
@@ -90,48 +91,60 @@ function App() {
     return <ServerWakeUpScreen />;
   }
 
+  const isChatRoute = location.pathname === '/messages' || location.pathname.startsWith('/communities/');
+
+  return (
+    <div className={`flex flex-col min-h-screen ${sketchMode ? 'cursor-pencil' : ''}`}>
+      <Navbar sketchMode={sketchMode} setSketchMode={setSketchMode} />
+      <Routes>
+        {/* Landing page — full-width, no container constraint */}
+        <Route path="/" element={
+          <main className="flex-1 w-full">
+            <Landing />
+          </main>
+        } />
+        {/* All other pages — constrained centered layout */}
+        <Route path="*" element={
+          <main className={`flex-1 w-full mx-auto ${
+            isChatRoute 
+              ? 'max-w-7xl h-[calc(100vh-80px)] px-2 py-2 md:px-4 md:py-4 overflow-hidden' 
+              : 'max-w-5xl px-4 py-6 md:px-6 md:py-12'
+          }`}>
+            <Routes>
+              <Route path="/memorials" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/memorial/:id" element={<MemorialDetail />} />
+              <Route path="/memorials/create" element={<MemorialCreate />} />
+              <Route path="/tales" element={<TaleList />} />
+              <Route path="/tales/create" element={<TaleCreate />} />
+              <Route path="/tales/:slug" element={<TaleDetail />} />
+              <Route path="/communities" element={<CommunityList />} />
+              <Route path="/communities/:slug" element={<CommunityDetail />} />
+              <Route path="/profile/:username" element={<ProfileDetail />} />
+              <Route path="/messages" element={<DirectMessages />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/blog" element={<BlogList />} />
+              <Route path="/blog/:slug" element={<BlogDetail />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+        } />
+      </Routes>
+      {!isChatRoute && <Footer />}
+      <DoodleOverlay active={sketchMode} />
+      <ExitIntentHook />
+    </div>
+  );
+}
+
+function App() {
   return (
     <AuthProvider>
       <Router basename={import.meta.env.BASE_URL}>
         <ScrollToTop />
-        <div className={`flex flex-col min-h-screen ${sketchMode ? 'cursor-pencil' : ''}`}>
-          <Navbar sketchMode={sketchMode} setSketchMode={setSketchMode} />
-          <Routes>
-            {/* Landing page — full-width, no container constraint */}
-            <Route path="/" element={
-              <main className="flex-1 w-full">
-                <Landing />
-              </main>
-            } />
-            {/* All other pages — constrained centered layout */}
-            <Route path="*" element={
-              <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-6 md:px-6 md:py-12">
-                <Routes>
-                  <Route path="/memorials" element={<Home />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/memorial/:id" element={<MemorialDetail />} />
-                  <Route path="/memorials/create" element={<MemorialCreate />} />
-                  <Route path="/tales" element={<TaleList />} />
-                  <Route path="/tales/create" element={<TaleCreate />} />
-                  <Route path="/tales/:slug" element={<TaleDetail />} />
-                  <Route path="/communities" element={<CommunityList />} />
-                  <Route path="/communities/:slug" element={<CommunityDetail />} />
-                  <Route path="/profile/:username" element={<ProfileDetail />} />
-                  <Route path="/messages" element={<DirectMessages />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/blog" element={<BlogList />} />
-                  <Route path="/blog/:slug" element={<BlogDetail />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-            } />
-          </Routes>
-          <Footer />
-          <DoodleOverlay active={sketchMode} />
-          <ExitIntentHook />
-        </div>
+        <AppContent />
       </Router>
     </AuthProvider>
   );

@@ -66,7 +66,15 @@ export default function CommunityDetail() {
     const hasNewMessages = messages.length > prevMessagesLength.current;
     
     if (isNewSlug && messages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      const scrollContainer = scrollContainerRef.current;
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        setTimeout(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+          }
+        }, 50);
+      }
       prevSlug.current = slug;
       prevMessagesLength.current = messages.length;
     } else if (hasNewMessages) {
@@ -77,7 +85,18 @@ export default function CommunityDetail() {
       if (scrollContainer) {
         const isNearBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop - scrollContainer.clientHeight < 120;
         if (isMyMsg || isNearBottom) {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          scrollContainer.scrollTo({
+            top: scrollContainer.scrollHeight,
+            behavior: 'smooth'
+          });
+          setTimeout(() => {
+            if (scrollContainerRef.current) {
+              scrollContainerRef.current.scrollTo({
+                top: scrollContainerRef.current.scrollHeight,
+                behavior: 'smooth'
+              });
+            }
+          }, 50);
         }
       }
       prevMessagesLength.current = messages.length;
@@ -262,7 +281,7 @@ export default function CommunityDetail() {
   const showChat = community.is_member || community.community_type === 'PUBLIC';
 
   return (
-    <div className="flex flex-col h-[calc(100vh-150px)] gap-6">
+    <div className="flex flex-col h-full gap-6">
       <SEO 
         title={`${community.title} – Support Community | Eterna`}
         description={community.description || "Join this Eterna circle to connect and share support."}

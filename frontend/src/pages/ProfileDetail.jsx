@@ -751,7 +751,7 @@ export default function ProfileDetail() {
                     return (
                       <div key={conn.id} className="paper-card bg-white p-4 flex justify-between items-center border-[3px] border-ink wobbly-xs rotate-0.5 hover:rotate-0 transition-transform">
                         <div>
-                          <Link to={`/users/${otherUser}`} className="font-kalam text-2xl text-ink hover:underline">
+                          <Link to={`/profile/${otherUser}`} className="font-kalam text-2xl text-ink hover:underline">
                             @{otherUser}
                           </Link>
                           <p className="text-sm font-bold text-ink/50">Relationship: {conn.connection_type}</p>
@@ -784,7 +784,7 @@ export default function ProfileDetail() {
                         <span className="font-bold text-base bg-white border border-ink px-2 py-0.5 rounded mr-2">
                           {conn.connection_type}
                         </span>
-                        <Link to={`/users/${conn.sender_username}`} className="font-kalam text-2xl text-ink hover:underline">
+                        <Link to={`/profile/${conn.sender_username}`} className="font-kalam text-2xl text-ink hover:underline">
                           @{conn.sender_username}
                         </Link>
                         <span className="text-base text-ink/75 block md:inline md:ml-2">wants to connect with you.</span>
@@ -825,7 +825,7 @@ export default function ProfileDetail() {
                   {connections.pending_outgoing.map((conn) => (
                     <div key={conn.id} className="paper-card bg-white p-4 flex justify-between items-center border-[3px] border-ink wobbly-xs rotate-0.5">
                       <div>
-                        <Link to={`/users/${conn.receiver_username}`} className="font-kalam text-2xl text-ink hover:underline">
+                        <Link to={`/profile/${conn.receiver_username}`} className="font-kalam text-2xl text-ink hover:underline">
                           @{conn.receiver_username}
                         </Link>
                         <p className="text-sm font-bold text-ink/50">Request Type: {conn.connection_type}</p>
