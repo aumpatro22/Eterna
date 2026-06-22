@@ -22,8 +22,10 @@ if RENDER_HOSTNAME and RENDER_HOSTNAME not in ALLOWED_HOSTS:  # FIX block
 
 # NEW: CSRF trusted origins (from Render hostname or env)
 _env_csrf = [o for o in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if o]
-if RENDER_HOSTNAME:  # FIX block
-    _env_csrf.append(f"https://{RENDER_HOSTNAME}")
+if RENDER_HOSTNAME:
+    render_origin = f"https://{RENDER_HOSTNAME}"
+    if render_origin not in _env_csrf:
+        _env_csrf.append(render_origin)
 CSRF_TRUSTED_ORIGINS = _env_csrf or []
 
 # Application definition
