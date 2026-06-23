@@ -3,29 +3,37 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
-import DoodleOverlay from './components/layout/DoodleOverlay';
-import ExitIntentHook from './components/layout/ExitIntentHook';
 import ScrollToTop from './components/layout/ScrollToTop';
+import LoadingSkeleton from './components/common/LoadingSkeleton';
 
 // Pages
-import Landing from './pages/Landing';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import MemorialDetail from './pages/MemorialDetail';
-import MemorialCreate from './pages/MemorialCreate';
-import TaleList from './pages/TaleList';
-import TaleCreate from './pages/TaleCreate';
-import TaleDetail from './pages/TaleDetail';
-import CommunityList from './pages/CommunityList';
-import CommunityDetail from './pages/CommunityDetail';
-import ProfileDetail from './pages/ProfileDetail';
-import DirectMessages from './pages/DirectMessages';
-import About from './pages/About';
-import BlogList from './pages/BlogList';
-import BlogDetail from './pages/BlogDetail';
-import Contact from './pages/Contact';
+
+// Lazy-loaded heavy pages
+const Landing = lazy(() => import('./pages/Landing'));
+const MemorialDetail = lazy(() => import('./pages/MemorialDetail'));
+const MemorialCreate = lazy(() => import('./pages/MemorialCreate'));
+const TaleList = lazy(() => import('./pages/TaleList'));
+const TaleCreate = lazy(() => import('./pages/TaleCreate'));
+const TaleDetail = lazy(() => import('./pages/TaleDetail'));
+const CommunityList = lazy(() => import('./pages/CommunityList'));
+const CommunityDetail = lazy(() => import('./pages/CommunityDetail'));
+const ProfileDetail = lazy(() => import('./pages/ProfileDetail'));
+const DirectMessages = lazy(() => import('./pages/DirectMessages'));
+const About = lazy(() => import('./pages/About'));
+const BlogList = lazy(() => import('./pages/BlogList'));
+const BlogDetail = lazy(() => import('./pages/BlogDetail'));
+const Contact = lazy(() => import('./pages/Contact'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel/AdminLayout'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const DataPromise = lazy(() => import('./pages/DataPromise'));
+
+// Lazy-loaded expensive layout components
+const DoodleOverlay = lazy(() => import('./components/layout/DoodleOverlay'));
+const ExitIntentHook = lazy(() => import('./components/layout/ExitIntentHook'));
 
 function NotFound() {
   return (
@@ -112,45 +120,52 @@ function AppContent() {
   return (
     <div className={`flex flex-col min-h-screen ${sketchMode ? 'cursor-pencil' : ''}`}>
       <Navbar sketchMode={sketchMode} setSketchMode={setSketchMode} />
-      <Routes>
-        {/* Landing page — full-width, no container constraint */}
-        <Route path="/" element={
-          <main className="flex-1 w-full">
-            <Landing />
-          </main>
-        } />
-        {/* All other pages — constrained centered layout */}
-        <Route path="*" element={
-          <main className={`flex-1 w-full mx-auto ${
-            isChatRoute 
-              ? 'max-w-7xl h-[calc(100vh-80px)] px-2 py-2 md:px-4 md:py-4 overflow-hidden' 
-              : 'max-w-5xl px-4 py-6 md:px-6 md:py-12'
-          }`}>
-            <Routes>
-              <Route path="/memorials" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/memorial/:id" element={<MemorialDetail />} />
-              <Route path="/memorials/create" element={<MemorialCreate />} />
-              <Route path="/tales" element={<TaleList />} />
-              <Route path="/tales/create" element={<TaleCreate />} />
-              <Route path="/tales/:slug" element={<TaleDetail />} />
-              <Route path="/communities" element={<CommunityList />} />
-              <Route path="/communities/:slug" element={<CommunityDetail />} />
-              <Route path="/profile/:username" element={<ProfileDetail />} />
-              <Route path="/messages" element={<DirectMessages />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/blog" element={<BlogList />} />
-              <Route path="/blog/:slug" element={<BlogDetail />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-        } />
-      </Routes>
+      <Suspense fallback={<LoadingSkeleton />}>
+        <Routes>
+          {/* Landing page — full-width, no container constraint */}
+          <Route path="/" element={
+            <main className="flex-1 w-full">
+              <Landing />
+            </main>
+          } />
+          {/* All other pages — constrained centered layout */}
+          <Route path="*" element={
+            <main className={`flex-1 w-full mx-auto ${
+              isChatRoute 
+                ? 'max-w-7xl h-[calc(100vh-80px)] px-2 py-2 md:px-4 md:py-4 overflow-hidden' 
+                : 'max-w-5xl px-4 py-6 md:px-6 md:py-12'
+            }`}>
+              <Routes>
+                <Route path="/memorials" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/memorial/:id" element={<MemorialDetail />} />
+                <Route path="/memorials/create" element={<MemorialCreate />} />
+                <Route path="/tales" element={<TaleList />} />
+                <Route path="/tales/create" element={<TaleCreate />} />
+                <Route path="/tales/:slug" element={<TaleDetail />} />
+                <Route path="/communities" element={<CommunityList />} />
+                <Route path="/communities/:slug" element={<CommunityDetail />} />
+                <Route path="/profile/:username" element={<ProfileDetail />} />
+                <Route path="/messages" element={<DirectMessages />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/blog" element={<BlogList />} />
+                <Route path="/blog/:slug" element={<BlogDetail />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/trust-charter" element={<DataPromise />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          } />
+        </Routes>
+      </Suspense>
       {!isChatRoute && <Footer />}
-      <DoodleOverlay active={sketchMode} />
-      <ExitIntentHook />
+      <Suspense fallback={null}>
+        <DoodleOverlay active={sketchMode} />
+        <ExitIntentHook />
+      </Suspense>
     </div>
   );
 }

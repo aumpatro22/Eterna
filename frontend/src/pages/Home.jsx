@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
-import Interactive3DNotebook from '../components/Home/Interactive3DNotebook';
-import DoodleCorkboard from '../components/Home/DoodleCorkboard';
+
+const Interactive3DNotebook = lazy(() => import('../components/Home/Interactive3DNotebook'));
+const DoodleCorkboard = lazy(() => import('../components/Home/DoodleCorkboard'));
 import SEO from '../components/layout/SEO';
 import { slugify } from '../utils/slugify';
 
@@ -101,7 +102,9 @@ export default function Home() {
 
           {/* 3D Interactive Notebook */}
           <div className="lg:col-span-6 w-full flex justify-center">
-            <Interactive3DNotebook />
+            <Suspense fallback={<div className="w-12 h-12 border-4 border-dashed border-[#C59B5C] rounded-full animate-spin"></div>}>
+              <Interactive3DNotebook />
+            </Suspense>
           </div>
 
         </div>
@@ -256,7 +259,13 @@ export default function Home() {
 
       {/* Guestboard Corkboard */}
       <section className="w-full">
-        <DoodleCorkboard />
+        <Suspense fallback={
+          <div className="paper-card p-12 bg-white max-w-2xl mx-auto rotate-1 text-center font-kalam text-2xl animate-pulse">
+            Sketching memory corkboard...
+          </div>
+        }>
+          <DoodleCorkboard />
+        </Suspense>
       </section>
 
     </div>

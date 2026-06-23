@@ -1,25 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, NavLink, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../api/client';
+import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 
-// Views
-import Dashboard from './Dashboard';
-import UsersList from './UsersList';
-import SessionsList from './SessionsList';
-import MemorialsList from './MemorialsList';
-import TalesList from './TalesList';
-import CommunitiesList from './CommunitiesList';
-import MessagesModeration from './MessagesModeration';
-import ReportsCenter from './ReportsCenter';
-import MediaLibrary from './MediaLibrary';
-import ContactMessages from './ContactMessages';
-import OwnershipRequests from './OwnershipRequests';
-import RecoveryCenter from './RecoveryCenter';
-import Analytics from './Analytics';
-import DatabaseHealth from './DatabaseHealth';
-import AuditLogs from './AuditLogs';
-import PlatformStatus from './PlatformStatus';
+// Views (lazy loaded)
+const Dashboard = lazy(() => import('./Dashboard'));
+const UsersList = lazy(() => import('./UsersList'));
+const SessionsList = lazy(() => import('./SessionsList'));
+const MemorialsList = lazy(() => import('./MemorialsList'));
+const TalesList = lazy(() => import('./TalesList'));
+const CommunitiesList = lazy(() => import('./CommunitiesList'));
+const MessagesModeration = lazy(() => import('./MessagesModeration'));
+const ReportsCenter = lazy(() => import('./ReportsCenter'));
+const MediaLibrary = lazy(() => import('./MediaLibrary'));
+const ContactMessages = lazy(() => import('./ContactMessages'));
+const OwnershipRequests = lazy(() => import('./OwnershipRequests'));
+const RecoveryCenter = lazy(() => import('./RecoveryCenter'));
+const Analytics = lazy(() => import('./Analytics'));
+const DatabaseHealth = lazy(() => import('./DatabaseHealth'));
+const AuditLogs = lazy(() => import('./AuditLogs'));
+const PlatformStatus = lazy(() => import('./PlatformStatus'));
 
 export default function AdminLayout() {
   const { user, loading, logout } = useAuth();
@@ -272,24 +273,26 @@ export default function AdminLayout() {
 
         {/* Workspace Body */}
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/users" element={<UsersList currentUser={user} />} />
-            <Route path="/sessions" element={<SessionsList currentUser={user} />} />
-            <Route path="/memorials" element={<MemorialsList />} />
-            <Route path="/tales" element={<TalesList />} />
-            <Route path="/communities" element={<CommunitiesList currentUser={user} />} />
-            <Route path="/messages" element={<MessagesModeration />} />
-            <Route path="/reports" element={<ReportsCenter currentUser={user} />} />
-            <Route path="/media" element={<MediaLibrary />} />
-            <Route path="/contact" element={<ContactMessages />} />
-            <Route path="/ownership" element={<OwnershipRequests />} />
-            <Route path="/recovery" element={<RecoveryCenter />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/health" element={<DatabaseHealth />} />
-            <Route path="/audit-logs" element={<AuditLogs />} />
-            <Route path="/status" element={<PlatformStatus currentUser={user} />} />
-          </Routes>
+          <Suspense fallback={<LoadingSkeleton />}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/users" element={<UsersList currentUser={user} />} />
+              <Route path="/sessions" element={<SessionsList currentUser={user} />} />
+              <Route path="/memorials" element={<MemorialsList />} />
+              <Route path="/tales" element={<TalesList />} />
+              <Route path="/communities" element={<CommunitiesList currentUser={user} />} />
+              <Route path="/messages" element={<MessagesModeration />} />
+              <Route path="/reports" element={<ReportsCenter currentUser={user} />} />
+              <Route path="/media" element={<MediaLibrary />} />
+              <Route path="/contact" element={<ContactMessages />} />
+              <Route path="/ownership" element={<OwnershipRequests />} />
+              <Route path="/recovery" element={<RecoveryCenter />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/health" element={<DatabaseHealth />} />
+              <Route path="/audit-logs" element={<AuditLogs />} />
+              <Route path="/status" element={<PlatformStatus currentUser={user} />} />
+            </Routes>
+          </Suspense>
         </main>
       </div>
     </div>

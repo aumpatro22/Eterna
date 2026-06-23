@@ -26,6 +26,8 @@ export default function Footer() {
           <Link to="/about" className="hover:text-marker hover:underline transition-colors">About</Link>
           <Link to="/contact" className="hover:text-marker hover:underline transition-colors">Contact</Link>
           <Link to="/privacy" className="hover:text-marker hover:underline transition-colors">Privacy</Link>
+          <Link to="/terms" className="hover:text-marker hover:underline transition-colors">Terms</Link>
+          <Link to="/trust-charter" className="hover:text-marker hover:underline transition-colors">Our Promise</Link>
           <a 
             href="https://forms.gle/jPHUuWkMbHNGPahPA" 
             target="_blank" 

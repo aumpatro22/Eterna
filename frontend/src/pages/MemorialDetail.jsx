@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { compressImage } from '../utils/imageCompression';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
-import InteractiveCandle from '../components/Memorial/InteractiveCandle';
-import CassetteTapePlayer from '../components/Memorial/CassetteTapePlayer';
 import ReportModal from '../components/layout/ReportModal';
 import SEO from '../components/layout/SEO';
+
+const InteractiveCandle = lazy(() => import('../components/Memorial/InteractiveCandle'));
+const CassetteTapePlayer = lazy(() => import('../components/Memorial/CassetteTapePlayer'));
 
 const formatLocalTime = (isoString) => {
   if (!isoString) return '';
@@ -905,13 +906,25 @@ export default function MemorialDetail() {
         <div className="md:col-span-1 flex flex-col gap-8 sticky top-24">
           
           {/* Cassette Tape Player */}
-          <CassetteTapePlayer />
+          <Suspense fallback={
+            <div className="paper-card p-6 bg-white rotate-1 text-center font-kalam text-xl animate-pulse">
+              Loading music player...
+            </div>
+          }>
+            <CassetteTapePlayer />
+          </Suspense>
 
           {/* Interactive Candle Lighting */}
-          <InteractiveCandle 
-            candlesCount={memorial.candles?.length || 0}
-            onLight={handleLightCandle}
-          />
+          <Suspense fallback={
+            <div className="paper-card p-6 bg-postit -rotate-1 text-center font-kalam text-xl animate-pulse">
+              Preparing tribute candle...
+            </div>
+          }>
+            <InteractiveCandle 
+              candlesCount={memorial.candles?.length || 0}
+              onLight={handleLightCandle}
+            />
+          </Suspense>
 
           {/* Lit Candles List */}
           <div className="paper-card p-6 -rotate-1">
