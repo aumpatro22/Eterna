@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { compressImage } from '../utils/imageCompression';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../api/client';
@@ -6,6 +6,228 @@ import { useAuth } from '../contexts/AuthContext';
 import ReportModal from '../components/layout/ReportModal';
 import SEO from '../components/layout/SEO';
 import { slugify } from '../utils/slugify';
+
+
+function ConnectionsTree({ connections, rootUser }) {
+  if (!connections || connections.length === 0) {
+    return (
+      <div className="text-center italic text-ink/50 py-16 bg-erased border-[3px] border-dashed border-ink/30 wobbly-sm max-w-lg mx-auto rotate-1">
+        🌳 This user has not planted any connection roots yet.
+      </div>
+    );
+  }
+
+  const N = connections.length;
+  const centerX = 300;
+  const centerY = 80;
+
+  const children = connections.map((conn, idx) => {
+    const otherUser = conn.sender_username === rootUser ? conn.receiver_username : conn.sender_username;
+    const type = conn.connection_type; // 'FRIEND', 'FAMILY', 'SUPPORTER'
+    
+    // Multi-layer layout: first 6 nodes in layer 1 (inner), next in layer 2 (outer)
+    const layer = idx < 6 ? 1 : 2;
+    const currentRadius = layer === 1 ? 130 : 210;
+    
+    const nodesInLayer = layer === 1 ? Math.min(N, 6) : N - 6;
+    const layerIdx = layer === 1 ? idx : idx - 6;
+    
+    let angle = 90;
+    if (nodesInLayer > 1) {
+      const startAngle = layer === 1 ? 40 : 25;
+      const endAngle = layer === 1 ? 140 : 155;
+      angle = startAngle + (layerIdx * (endAngle - startAngle)) / (nodesInLayer - 1);
+    }
+    
+    const rad = (angle * Math.PI) / 180;
+    const x = centerX + currentRadius * Math.cos(rad);
+    const y = centerY + currentRadius * Math.sin(rad);
+    
+    return { username: otherUser, type, x, y, layer };
+  });
+
+  return (
+    <div className="paper-card bg-white p-6 md:p-8 flex flex-col items-center justify-center rotate-0.5 border-[4px] border-ink wobbly-md shadow-hard overflow-hidden max-w-full">
+      <h3 className="font-kalam text-3xl text-[#2E241B] mb-2">Circle Connection Roots</h3>
+      <p className="font-patrick text-base text-[#2E241B]/70 mb-6 italic text-center">
+        Hover over the roots to see the bonds. Click nodes to view profiles.
+      </p>
+      
+      {/* Scrollable mobile wrapper */}
+      <div className="w-full overflow-x-auto">
+        <div className="relative min-w-[500px] md:min-w-0 w-full aspect-[3/2] border-2 border-dashed border-ink/10 rounded-lg bg-[#FAF8F5] overflow-hidden">
+          <svg viewBox="0 0 600 400" className="w-full h-full">
+            {/* Background Trunk root decoration */}
+            <path 
+              d="M 285 0 Q 300 45 300 80 Q 300 45 315 0" 
+              fill="none" 
+              stroke="#7A5C3E" 
+              strokeWidth="12" 
+              strokeLinecap="round"
+            />
+            
+            {/* Connection Lines (Roots) */}
+            {children.map((child, idx) => {
+              const factor = child.layer === 1 ? 0.35 : 0.55;
+              const cx = centerX + (child.x - centerX) * 0.2;
+              const cy = centerY + (child.y - centerY) * factor;
+              
+              let strokeColor = '#7A5C3E'; 
+              if (child.type === 'FRIEND') strokeColor = '#8A7A5C';
+              if (child.type === 'SUPPORTER') strokeColor = '#5C7A8A';
+
+              return (
+                <g key={`root-${idx}`}>
+                  <path
+                    d={`M ${centerX} ${centerY} Q ${cx} ${cy} ${child.x} ${child.y}`}
+                    fill="none"
+                    stroke={strokeColor}
+                    strokeWidth={child.layer === 1 ? "7" : "5"}
+                    strokeLinecap="round"
+                    opacity="0.8"
+                  />
+                  <path
+                    d={`M ${centerX} ${centerY} Q ${cx} ${cy} ${child.x} ${child.y}`}
+                    fill="none"
+                    stroke="#E8D5C4"
+                    strokeWidth="1.5"
+                    strokeDasharray="4, 4"
+                    strokeLinecap="round"
+                  />
+                  
+                  {/* Small leaves/shoots branching off the roots */}
+                  <circle 
+                    cx={cx + (child.x - cx) * 0.3} 
+                    cy={cy + (child.y - cy) * 0.3} 
+                    r="5.5" 
+                    fill={child.type === 'FAMILY' ? '#FF8B8B' : child.type === 'FRIEND' ? '#FFE885' : '#85D4FF'} 
+                    stroke="#2D2D2D" 
+                    strokeWidth="1.5"
+                  />
+                </g>
+              );
+            })}
+            
+            {/* Central Root Node (Me / Owner) */}
+            <g transform={`translate(${centerX}, ${centerY})`} className="cursor-pointer group">
+              <circle 
+                cx="0" 
+                cy="0" 
+                r="34" 
+                fill="#FAF6EF" 
+                stroke="#2D2D2D" 
+                strokeWidth="3.5"
+                className="group-hover:fill-postit transition-colors"
+              />
+              <text 
+                x="0" 
+                y="-6" 
+                textAnchor="middle" 
+                className="text-2xl select-none"
+              >
+                🌳
+              </text>
+              <text 
+                x="0" 
+                y="18" 
+                textAnchor="middle" 
+                className="font-kalam text-xs font-bold fill-[#2D2D2D] select-none"
+              >
+                ROOT
+              </text>
+            </g>
+
+            {/* Child Connection Nodes */}
+            {children.map((child, idx) => {
+              let badgeBg = '#FF8B8B'; // FAMILY
+              let badgeIcon = '❤️';
+              if (child.type === 'FRIEND') {
+                badgeBg = '#FFE885';
+                badgeIcon = '🤝';
+              } else if (child.type === 'SUPPORTER') {
+                badgeBg = '#85D4FF';
+                badgeIcon = '🎗️';
+              }
+
+              return (
+                <Link to={`/profile/${child.username}`} key={`node-${idx}`}>
+                  <g 
+                    transform={`translate(${child.x}, ${child.y})`} 
+                    className="cursor-pointer group"
+                  >
+                    <circle 
+                      cx="0" 
+                      cy="0" 
+                      r="28" 
+                      fill="white" 
+                      stroke={badgeBg} 
+                      strokeWidth="4"
+                      className="shadow-sm group-hover:scale-110 transition-transform"
+                    />
+                    <circle 
+                      cx="0" 
+                      cy="0" 
+                      r="25" 
+                      fill="none" 
+                      stroke="#2D2D2D" 
+                      strokeWidth="2" 
+                    />
+                    <text 
+                      x="0" 
+                      y="5" 
+                      textAnchor="middle" 
+                      className="font-kalam text-lg font-bold fill-ink select-none"
+                    >
+                      {child.username[0].toUpperCase()}
+                    </text>
+                    
+                    {/* Relationship Type badge bubble */}
+                    <g transform="translate(18, -18)">
+                      <circle cx="0" cy="0" r="10" fill={badgeBg} stroke="#2D2D2D" strokeWidth="1.5" />
+                      <text x="0" y="3.5" textAnchor="middle" className="text-[10px] select-none">
+                        {badgeIcon}
+                      </text>
+                    </g>
+
+                    {/* Username caption label below node */}
+                    <g transform="translate(0, 44)">
+                      <rect 
+                        x="-55" 
+                        y="-12" 
+                        width="110" 
+                        height="20" 
+                        fill="white" 
+                        stroke="#2D2D2D" 
+                        strokeWidth="1.5" 
+                        rx="4" 
+                        className="group-hover:fill-postit transition-colors"
+                      />
+                      <text 
+                        x="0" 
+                        y="2.5" 
+                        textAnchor="middle" 
+                        className="font-patrick text-xs font-bold fill-ink select-none"
+                      >
+                        @{child.username}
+                      </text>
+                    </g>
+                  </g>
+                </Link>
+              );
+            })}
+          </svg>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex gap-4 mt-6 text-sm font-bold flex-wrap justify-center border-t border-dashed border-ink/20 pt-4 w-full">
+        <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full border border-ink bg-[#FF8B8B]"></span> ❤️ Family</span>
+        <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full border border-ink bg-[#FFE885]"></span> 🤝 Friend</span>
+        <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full border border-ink bg-[#85D4FF]"></span> 🎗️ Supporter</span>
+      </div>
+    </div>
+  );
+}
 
 export default function ProfileDetail() {
   const { username } = useParams();
@@ -28,6 +250,149 @@ export default function ProfileDetail() {
   const [editTags, setEditTags] = useState('');
   const [updatingProfile, setUpdatingProfile] = useState(false);
   const [imageError, setImageError] = useState(false);
+
+  // Custom square crop & resize states
+  const [rawImageSrc, setRawImageSrc] = useState(null);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [cropZoom, setCropZoom] = useState(1);
+  const [cropOffset, setCropOffset] = useState({ x: 0, y: 0 });
+  const [isDraggingCrop, setIsDraggingCrop] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [croppedPreviewUrl, setCroppedPreviewUrl] = useState(null);
+  const [imgElement, setImgElement] = useState(null);
+  const canvasRef = useRef(null);
+
+  // Circles viewing options
+  const [circlesViewMode, setCirclesViewMode] = useState('tree'); // 'tree' or 'list'
+
+  useEffect(() => {
+    if (rawImageSrc) {
+      const img = new Image();
+      img.onload = () => {
+        setImgElement(img);
+      };
+      img.src = rawImageSrc;
+    } else {
+      setImgElement(null);
+    }
+  }, [rawImageSrc]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !imgElement) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    
+    const imgRatio = imgElement.width / imgElement.height;
+    let drawWidth = canvasWidth;
+    let drawHeight = canvasHeight;
+    if (imgRatio > 1) {
+      drawWidth = canvasHeight * imgRatio;
+    } else {
+      drawHeight = canvasWidth / imgRatio;
+    }
+
+    drawWidth *= cropZoom;
+    drawHeight *= cropZoom;
+
+    const x = (canvasWidth - drawWidth) / 2 + cropOffset.x;
+    const y = (canvasHeight - drawHeight) / 2 + cropOffset.y;
+
+    ctx.drawImage(imgElement, x, y, drawWidth, drawHeight);
+
+    // Draw dashed crop square guide
+    ctx.strokeStyle = '#C59B5C';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([6, 6]);
+    ctx.strokeRect(4, 4, canvasWidth - 8, canvasHeight - 8);
+  }, [imgElement, cropZoom, cropOffset]);
+
+  const handleMouseDown = (e) => {
+    setIsDraggingCrop(true);
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    setDragStart({ x: clientX - cropOffset.x, y: clientY - cropOffset.y });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDraggingCrop) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    setCropOffset({
+      x: clientX - dragStart.x,
+      y: clientY - dragStart.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDraggingCrop(false);
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        setRawImageSrc(reader.result);
+        setCropZoom(1);
+        setCropOffset({ x: 0, y: 0 });
+        setShowCropModal(true);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    }
+  };
+
+  const handleApplyCrop = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !imgElement) return;
+
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 400;
+    tempCanvas.height = 400;
+    const tempCtx = tempCanvas.getContext('2d');
+
+    const canvasWidth = tempCanvas.width;
+    const canvasHeight = tempCanvas.height;
+    
+    const imgRatio = imgElement.width / imgElement.height;
+    let drawWidth = canvasWidth;
+    let drawHeight = canvasHeight;
+    if (imgRatio > 1) {
+      drawWidth = canvasHeight * imgRatio;
+    } else {
+      drawHeight = canvasWidth / imgRatio;
+    }
+
+    drawWidth *= cropZoom;
+    drawHeight *= cropZoom;
+
+    const scale = tempCanvas.width / canvas.width;
+    const x = (canvasWidth - drawWidth) / 2 + cropOffset.x * scale;
+    const y = (canvasHeight - drawHeight) / 2 + cropOffset.y * scale;
+
+    tempCtx.drawImage(imgElement, x, y, drawWidth, drawHeight);
+
+    tempCanvas.toBlob(async (blob) => {
+      if (blob) {
+        const croppedFile = new File([blob], 'avatar_cropped.jpg', { type: 'image/jpeg' });
+        const compressed = await compressImage(croppedFile);
+        setEditProfileImage(compressed);
+        setCroppedPreviewUrl(URL.createObjectURL(compressed));
+        setShowCropModal(false);
+        setRawImageSrc(null);
+      }
+    }, 'image/jpeg', 0.9);
+  };
+
+  const handleCancelCrop = () => {
+    setShowCropModal(false);
+    setRawImageSrc(null);
+  };
+
 
   // Timeline add states
   const [showAddMilestone, setShowAddMilestone] = useState(false);
@@ -167,6 +532,7 @@ export default function ProfileDetail() {
       await api.post('/api/users/profile/update/', formData);
       setShowEditModal(false);
       setEditProfileImage(null);
+      setCroppedPreviewUrl(null);
       fetchProfile();
     } catch (err) {
       alert(err.message || 'Failed to update profile.');
@@ -695,42 +1061,66 @@ export default function ProfileDetail() {
           </div>
         )}
 
-        {/* Panel 3: Joined Circles */}
+        {/* Panel 3: Joined Circles & Roots */}
         {activeTab === 'circles' && (
-          <div>
-            <h2 className="font-kalam text-3xl mb-6">Joined Circles 👥</h2>
-            {profile.joined_communities && profile.joined_communities.length > 0 ? (
-              <div className="grid md:grid-cols-2 gap-6">
-                {profile.joined_communities.map((c, idx) => (
-                  <Link to={`/communities/${c.slug}`} key={c.id} className="group">
-                    <div className={`paper-card p-6 bg-white flex items-center gap-4 ${idx % 2 === 0 ? '-rotate-1 tape-decoration' : 'rotate-1 tack-decoration'} group-hover:rotate-0 transition-transform`}>
-                      {c.icon_image ? (
-                        <img src={c.icon_image} alt={c.title} className="w-16 h-16 border-[2px] border-ink object-cover wobbly-xs" />
-                      ) : (
-                        <div className="w-16 h-16 border-[2px] border-ink bg-postit flex items-center justify-center font-kalam text-3xl wobbly-xs">
-                          👥
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <h3 className="font-kalam text-2xl text-ink group-hover:underline">{c.title}</h3>
-                        <div className="flex gap-2 mt-1">
-                          <span className="text-xs font-bold border border-ink bg-white px-1.5 py-0.5 rounded">
-                            {c.community_type}
-                          </span>
-                          {c.is_archived && (
-                            <span className="text-xs bg-marker text-white font-bold px-1.5 py-0.5 rounded">
-                              Archived
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+          <div className="flex flex-col gap-6">
+            <div className="flex justify-between items-center flex-wrap gap-4 border-b border-dashed border-ink/20 pb-4">
+              <h2 className="font-kalam text-3xl">Circles & Connection Roots</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCirclesViewMode('tree')}
+                  className={`btn text-sm py-1.5 px-4 ${circlesViewMode === 'tree' ? 'bg-marker text-white' : 'bg-white'}`}
+                >
+                  🌳 View Tree Roots
+                </button>
+                <button
+                  onClick={() => setCirclesViewMode('list')}
+                  className={`btn text-sm py-1.5 px-4 ${circlesViewMode === 'list' ? 'bg-marker text-white' : 'bg-white'}`}
+                >
+                  👥 Joined Communities
+                </button>
               </div>
+            </div>
+
+            {circlesViewMode === 'tree' ? (
+              <ConnectionsTree connections={data.connections} rootUser={username} />
             ) : (
-              <div className="text-center italic text-ink/50 py-10 bg-erased border-[3px] border-dashed border-ink/30 wobbly-sm">
-                This user has not joined any Circles yet.
+              <div>
+                <h3 className="font-kalam text-2xl mb-4">Joined Circles ({profile.joined_communities?.length || 0})</h3>
+                {profile.joined_communities && profile.joined_communities.length > 0 ? (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {profile.joined_communities.map((c, idx) => (
+                      <Link to={`/communities/${c.slug}`} key={c.id} className="group">
+                        <div className={`paper-card p-6 bg-white flex items-center gap-4 ${idx % 2 === 0 ? '-rotate-1 tape-decoration' : 'rotate-1 tack-decoration'} group-hover:rotate-0 transition-transform`}>
+                          {c.icon_image ? (
+                            <img src={c.icon_image} alt={c.title} className="w-16 h-16 border-[2px] border-ink object-cover wobbly-xs" />
+                          ) : (
+                            <div className="w-16 h-16 border-[2px] border-ink bg-postit flex items-center justify-center font-kalam text-3xl wobbly-xs">
+                              👥
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-kalam text-2xl text-ink group-hover:underline">{c.title}</h3>
+                            <div className="flex gap-2 mt-1">
+                              <span className="text-xs font-bold border border-ink bg-white px-1.5 py-0.5 rounded">
+                                {c.community_type}
+                              </span>
+                              {c.is_archived && (
+                                <span className="text-xs bg-marker text-white font-bold px-1.5 py-0.5 rounded">
+                                  Archived
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center italic text-ink/50 py-10 bg-erased border-[3px] border-dashed border-ink/30 wobbly-sm">
+                    This user has not joined any Circles yet.
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -877,15 +1267,18 @@ export default function ProfileDetail() {
                   type="file"
                   accept="image/*"
                   className="text-base"
-                  onChange={async (e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      const compressed = await compressImage(e.target.files[0]);
-                      setEditProfileImage(compressed);
-                    }
-                  }}
+                  onChange={handleFileChange}
                 />
-                {editProfileImage && (
-                  <p className="text-sm text-marker font-bold mt-1">📎 Selected: {editProfileImage.name}</p>
+                {croppedPreviewUrl ? (
+                  <div className="mt-2 flex flex-col items-center gap-1 bg-[#FAF8F5] p-2 border-[2px] border-dashed border-ink rounded wobbly-sm max-w-xs">
+                    <span className="text-xs font-bold text-marker">✂️ Cropped Preview:</span>
+                    <img src={croppedPreviewUrl} alt="Cropped preview" className="w-24 h-24 object-cover border-[3px] border-ink wobbly-xs rotate-1" />
+                  </div>
+                ) : profile.avatar_url && (
+                  <div className="mt-2 flex flex-col items-center gap-1">
+                    <span className="text-xs font-bold text-ink/50">Current Photo:</span>
+                    <img src={profile.avatar_url} alt="Current profile" className="w-24 h-24 object-cover border-[3px] border-ink wobbly-xs" />
+                  </div>
                 )}
               </div>
 
@@ -921,12 +1314,32 @@ export default function ProfileDetail() {
                   value={editTags}
                   onChange={e => setEditTags(e.target.value)}
                 />
+                <div className="flex gap-2 flex-wrap mt-2">
+                  <span className="text-sm font-bold text-ink/60 mr-1 self-center">Suggestions:</span>
+                  {['#legacy', '#storyteller', '#historian', '#family', '#genealogist', '#supporter', '#doodle'].map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        const cleanTag = tag.replace('#', '');
+                        const existing = editTags.split(',').map(t => t.trim()).filter(Boolean);
+                        if (!existing.includes(cleanTag)) {
+                          const updated = [...existing, cleanTag].join(', ');
+                          setEditTags(updated);
+                        }
+                      }}
+                      className="bg-[#F8F5F0] hover:bg-postit border-2 border-ink px-2 py-0.5 wobbly-sm text-xs font-bold transition-transform hover:-rotate-1 active:scale-95 cursor-pointer"
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex gap-4 justify-end mt-4">
                 <button
                   type="button"
-                  onClick={() => { setShowEditModal(false); setEditProfileImage(null); }}
+                  onClick={() => { setShowEditModal(false); setEditProfileImage(null); setCroppedPreviewUrl(null); }}
                   className="btn btn-secondary text-base py-1.5 px-4"
                   disabled={updatingProfile}
                 >
@@ -941,6 +1354,64 @@ export default function ProfileDetail() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Client-side Crop/Resize Modal Overlay */}
+      {showCropModal && (
+        <div className="fixed inset-0 bg-ink/80 z-[9999999] flex items-center justify-center p-6 backdrop-blur-[4px]">
+          <div className="paper-card bg-white p-6 max-w-sm w-full relative rotate-1 shadow-hard text-center">
+            <h4 className="font-kalam text-2xl text-marker mb-3">Crop Profile Photo</h4>
+            <p className="font-patrick text-base text-ink/70 mb-4">
+              Drag image to adjust position, use slider to zoom.
+            </p>
+            
+            <div className="relative mx-auto border-[3px] border-ink w-60 h-60 overflow-hidden cursor-grab active:cursor-grabbing bg-gray-100 rounded-lg">
+              <canvas
+                ref={canvasRef}
+                width={240}
+                height={240}
+                className="w-full h-full"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleMouseDown}
+                onTouchMove={handleMouseMove}
+                onTouchEnd={handleMouseUp}
+              />
+            </div>
+
+            <div className="mt-4 flex flex-col gap-1 items-stretch">
+              <label className="text-sm font-bold font-patrick text-ink/70">Zoom: {Math.round(cropZoom * 100)}%</label>
+              <input
+                type="range"
+                min="0.5"
+                max="3"
+                step="0.05"
+                value={cropZoom}
+                onChange={(e) => setCropZoom(parseFloat(e.target.value))}
+                className="w-full accent-marker cursor-pointer"
+              />
+            </div>
+
+            <div className="flex gap-4 justify-center mt-6">
+              <button
+                type="button"
+                onClick={handleCancelCrop}
+                className="btn btn-secondary text-base py-1 px-4"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyCrop}
+                className="btn btn-primary bg-marker text-white text-base py-1 px-6 font-bold"
+              >
+                Apply Crop
+              </button>
+            </div>
           </div>
         </div>
       )}

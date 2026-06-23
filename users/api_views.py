@@ -230,11 +230,20 @@ def profile_detail(request, username):
         t['reactions'] = tale_counts.get(tid, {'like': 0, 'love': 0, 'support': 0})
         t['my_reaction'] = user_tale_react.get(tid)
 
+    profile_conns = CircleConnection.objects.filter(
+        status='ACCEPTED'
+    ).filter(
+        Q(sender=profile_user) | Q(receiver=profile_user)
+    )
+    connections_data = CircleConnectionSerializer(profile_conns, many=True).data
+
     return Response({
         'profile': profile_data,
         'memorials': memorials_data,
         'tales': tales_data,
+        'connections': connections_data,
     })
+
 
 
 

@@ -201,7 +201,7 @@ def admin_users_list(request):
             'username': u.username,
             'email': u.email,
             'display_name': u.profile.display_name,
-            'profile_image': u.profile.profile_image.url if u.profile.profile_image else None,
+            'profile_image': request.build_absolute_uri(u.profile.profile_image.url) if u.profile.profile_image else None,
             'joined_date': u.date_joined,
             'storage_used': u.profile.storage_used,
             'role': u.admin_role,
@@ -314,7 +314,7 @@ def admin_user_profile_detail(request, pk):
         'email': user.email,
         'display_name': profile.display_name,
         'bio': profile.bio,
-        'profile_image': profile.profile_image.url if profile.profile_image else None,
+        'profile_image': request.build_absolute_uri(profile.profile_image.url) if profile.profile_image else None,
         'joined_date': user.date_joined,
         'storage_used': profile.storage_used,
         'storage_limit': profile.storage_limit,
@@ -408,7 +408,7 @@ def admin_memorials_list(request):
             'birth_date': m.birth_date,
             'passing_date': m.passing_date,
             'owner': m.owner.username,
-            'cover_image': m.cover_image.url if m.cover_image else None,
+            'cover_image': request.build_absolute_uri(m.cover_image.url) if m.cover_image else None,
             'visibility': m.visibility,
             'created_at': m.created_at,
             'is_hidden': m.is_hidden,
@@ -654,7 +654,7 @@ def admin_messages_list(request):
             'community_title': msg.community.title if msg.community else 'None',
             'author': msg.author.username,
             'content': msg.content,
-            'image': msg.image.url if msg.image else None,
+            'image': request.build_absolute_uri(msg.image.url) if msg.image else None,
             'created_at': msg.created_at,
             'is_deleted': msg.is_deleted
         })
@@ -852,7 +852,7 @@ def admin_media_list(request):
     for p in profiles:
         media_items.append({
             'id': f"profile-{p.id}",
-            'url': p.profile_image.url,
+            'url': request.build_absolute_uri(p.profile_image.url),
             'name': os.path.basename(p.profile_image.name),
             'type': 'image',
             'model': 'Profile',
@@ -868,7 +868,7 @@ def admin_media_list(request):
         if m.profile_image and m.profile_image.name:
             media_items.append({
                 'id': f"mem-profile-{m.id}",
-                'url': m.profile_image.url,
+                'url': request.build_absolute_uri(m.profile_image.url),
                 'name': os.path.basename(m.profile_image.name),
                 'type': 'image',
                 'model': 'Memorial (Profile)',
@@ -878,7 +878,7 @@ def admin_media_list(request):
         if m.cover_image and m.cover_image.name:
             media_items.append({
                 'id': f"mem-cover-{m.id}",
-                'url': m.cover_image.url,
+                'url': request.build_absolute_uri(m.cover_image.url),
                 'name': os.path.basename(m.cover_image.name),
                 'type': 'image',
                 'model': 'Memorial (Cover)',
@@ -893,7 +893,7 @@ def admin_media_list(request):
     for ph in photos:
         media_items.append({
             'id': f"photo-{ph.id}",
-            'url': ph.image.url,
+            'url': request.build_absolute_uri(ph.image.url),
             'name': os.path.basename(ph.image.name),
             'type': 'image',
             'model': 'MemorialPhoto',
@@ -909,7 +909,7 @@ def admin_media_list(request):
         if my.image and my.image.name:
             media_items.append({
                 'id': f"memory-img-{my.id}",
-                'url': my.image.url,
+                'url': request.build_absolute_uri(my.image.url),
                 'name': os.path.basename(my.image.name),
                 'type': 'image',
                 'model': 'Memory (Image)',
@@ -919,7 +919,7 @@ def admin_media_list(request):
         if my.voice_note and my.voice_note.name:
             media_items.append({
                 'id': f"memory-audio-{my.id}",
-                'url': my.voice_note.url,
+                'url': request.build_absolute_uri(my.voice_note.url),
                 'name': os.path.basename(my.voice_note.name),
                 'type': 'audio',
                 'model': 'Memory (Voice Note)',
@@ -935,7 +935,7 @@ def admin_media_list(request):
         if c.icon_image and c.icon_image.name:
             media_items.append({
                 'id': f"comm-icon-{c.id}",
-                'url': c.icon_image.url,
+                'url': request.build_absolute_uri(c.icon_image.url),
                 'name': os.path.basename(c.icon_image.name),
                 'type': 'image',
                 'model': 'Community (Icon)',
@@ -945,7 +945,7 @@ def admin_media_list(request):
         if c.cover_image and c.cover_image.name:
             media_items.append({
                 'id': f"comm-cover-{c.id}",
-                'url': c.cover_image.url,
+                'url': request.build_absolute_uri(c.cover_image.url),
                 'name': os.path.basename(c.cover_image.name),
                 'type': 'image',
                 'model': 'Community (Cover)',
@@ -960,7 +960,7 @@ def admin_media_list(request):
     for cm in cms:
         media_items.append({
             'id': f"comm-msg-{cm.id}",
-            'url': cm.image.url,
+            'url': request.build_absolute_uri(cm.image.url),
             'name': os.path.basename(cm.image.name),
             'type': 'image',
             'model': 'CommunityMessage',

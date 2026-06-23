@@ -315,3 +315,31 @@ html.lenis, html.lenis body {
   outline-offset: 4.5px;
   border-radius: 4px;
 }
+
+/* Lined notebook styles */
+.notebook-lines {
+  background-image: linear-gradient(rgba(45, 45, 45, 0.15) 1px, transparent 1px);
+  background-size: 100% 28px;
+  background-position: 0 40px;
+}
+
+.notebook-text {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.125rem; /* text-lg */
+  line-height: 28px;
+  padding-top: 4px;
+}
+
+@media (min-width: 768px) {
+  .notebook-lines {
+    background-size: 100% 32px;
+    background-position: 0 42px;
+  }
+  
+  .notebook-text {
+    font-size: 1.25rem; /* text-xl */
+    line-height: 32px;
+    padding-top: 6px;
+  }
+}
+

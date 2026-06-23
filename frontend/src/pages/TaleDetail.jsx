@@ -48,6 +48,9 @@ export default function TaleDetail() {
   const [chapterForm, setChapterForm] = useState({ title: '', content: '', order: 1 });
   const [submitLoading, setSubmitLoading] = useState(false);
 
+  // Instagram share state
+  const [shareSuccess, setShareSuccess] = useState(false);
+
   useEffect(() => {
     fetchTale();
   }, [slug]);
@@ -154,6 +157,176 @@ export default function TaleDetail() {
     </div>
   );
   if (!tale) return <div className="text-center font-kalam text-4xl mt-12">Tale not found.</div>;
+
+  const shareToInstagram = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1920;
+    const ctx = canvas.getContext('2d');
+
+    // 1. Draw background gradient (warm beige/scrapbook feel)
+    const grad = ctx.createLinearGradient(0, 0, 0, 1920);
+    grad.addColorStop(0, '#F5EFE6');
+    grad.addColorStop(1, '#E8D5C4');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1080, 1920);
+
+    // 2. Draw organic roots
+    ctx.strokeStyle = 'rgba(122, 92, 62, 0.15)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(100, 1920);
+    ctx.quadraticCurveTo(200, 1500, 150, 1200);
+    ctx.quadraticCurveTo(100, 1000, 300, 800);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(980, 1920);
+    ctx.quadraticCurveTo(800, 1600, 900, 1300);
+    ctx.stroke();
+
+    // 3. Draw Eterna Branding
+    ctx.fillStyle = '#2D2D2D';
+    ctx.font = 'bold 48px "Kalam", "Comic Sans MS", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('ETERNA', 540, 180);
+    
+    ctx.font = '28px "Patrick Hand", sans-serif';
+    ctx.fillStyle = 'rgba(45, 45, 45, 0.6)';
+    ctx.fillText('— P r e s e r v i n g  L e g a c i e s —', 540, 220);
+
+    // 4. Draw Polaroid Frame
+    const px = 540 - 420;
+    const py = 350;
+    const pw = 840;
+    const ph = 1080;
+
+    // Shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowBlur = 30;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 15;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(px, py, pw, ph);
+
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    // 5. Draw Polaroid Inner Photo Area (scrapbook lined paper)
+    const ix = px + 50;
+    const iy = py + 50;
+    const iw = pw - 100;
+    const ih = ph - 220;
+
+    ctx.fillStyle = '#FCFAF7';
+    ctx.fillRect(ix, iy, iw, ih);
+
+    // Notebook lines
+    ctx.strokeStyle = 'rgba(45, 45, 45, 0.08)';
+    ctx.lineWidth = 2;
+    const lineSpacing = 60;
+    for (let y = iy + 80; y < iy + ih; y += lineSpacing) {
+      ctx.beginPath();
+      ctx.moveTo(ix, y);
+      ctx.lineTo(ix + iw, y);
+      ctx.stroke();
+    }
+
+    // Margin red line
+    ctx.strokeStyle = 'rgba(255, 77, 77, 0.2)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(ix + 80, iy);
+    ctx.lineTo(ix + 80, iy + ih);
+    ctx.stroke();
+
+    // 6. Draw Content: Title & Snippet
+    ctx.fillStyle = '#2D2D2D';
+    ctx.textAlign = 'left';
+    
+    // Chapter Title
+    ctx.font = 'bold 44px "Kalam", "Comic Sans MS", sans-serif';
+    ctx.fillText(activeChapter.title.toUpperCase(), ix + 120, iy + 70);
+
+    // Snippet text (word wrapped)
+    ctx.font = '36px "Patrick Hand", sans-serif';
+    const text = leftPageText || rightPageText || activeChapter.content;
+    const cleanSnippet = text.substring(0, 320) + (text.length > 320 ? '...' : '');
+    
+    const words = cleanSnippet.split(' ');
+    let line = '';
+    let textY = iy + 175;
+    const maxWidth = iw - 160;
+    const lineHeight = 60;
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      const metrics = ctx.measureText(testLine);
+      const testWidth = metrics.width;
+      if (testWidth > maxWidth && n > 0) {
+        ctx.fillText(line, ix + 120, textY);
+        line = words[n] + ' ';
+        textY += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    ctx.fillText(line, ix + 120, textY);
+
+    // 7. Polaroid Caption
+    ctx.font = 'italic 38px "Kalam", "Comic Sans MS", sans-serif';
+    ctx.fillStyle = '#4E3629';
+    ctx.textAlign = 'center';
+    ctx.fillText(`"${tale.title}"`, 540, py + ph - 110);
+    
+    ctx.font = '28px "Patrick Hand", sans-serif';
+    ctx.fillStyle = 'rgba(78, 54, 41, 0.7)';
+    ctx.fillText(`by @${tale.author_username}`, 540, py + ph - 50);
+
+    // 8. Draw Eterna Stamp at bottom
+    ctx.fillStyle = '#2D2D2D';
+    ctx.font = 'bold 36px "Kalam", "Comic Sans MS", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Preserved on Eterna', 540, 1600);
+
+    ctx.font = '26px "Patrick Hand", sans-serif';
+    ctx.fillStyle = 'rgba(45, 45, 45, 0.6)';
+    ctx.fillText('Scan to read the full story', 540, 1640);
+
+    ctx.strokeStyle = '#C59B5C';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(540, 1750, 60, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    ctx.fillStyle = '#C59B5C';
+    ctx.font = 'bold 20px "Kalam", "Comic Sans MS", sans-serif';
+    ctx.fillText('OFFICIAL', 540, 1740);
+    ctx.fillText('MEMORIES', 540, 1765);
+
+    // 9. Download
+    const dataUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = `${tale.title.replace(/\s+/g, '_')}_story.png`;
+    link.href = dataUrl;
+    link.click();
+
+    // Copy caption
+    const shareText = `Just read "${activeChapter.title}" from the tale "${tale.title}" by @${tale.author_username} on Eterna! 📖✨\nRead it here: ${window.location.href}\n\n#EternaMemories #FamilyLegacy #Tales #Storytelling`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(shareText)
+        .then(() => setShareSuccess(true))
+        .catch((err) => {
+          console.warn('Clipboard write failed, showing manual caption box:', err);
+          setShareSuccess(true);
+        });
+    } else {
+      setShareSuccess(true);
+    }
+  };
 
   const pages = activeChapter ? paginateContent(activeChapter.content) : [];
   const leftPageText = pages[bookIndex] || '';
@@ -366,28 +539,18 @@ export default function TaleDetail() {
                 </div>
 
                 {/* Left Page */}
-                <div className="w-full md:w-1/2 h-full bg-paper border-b-[2px] md:border-b-0 md:border-r-[2px] border-ink/30 p-8 flex flex-col justify-between relative min-h-[500px]">
+                <div className="w-full md:w-1/2 h-full bg-paper border-b-[2px] md:border-b-0 md:border-r-[2px] border-ink/30 p-4 sm:p-8 flex flex-col justify-between relative min-h-[320px] md:min-h-[500px]">
                   {/* Lined notebook lines */}
-                  <div 
-                    className="absolute inset-0 opacity-10 pointer-events-none"
-                    style={{
-                      backgroundImage: 'linear-gradient(rgba(45, 45, 45, 0.4) 1px, transparent 1px)',
-                      backgroundSize: '100% 28px',
-                      backgroundPosition: '0 40px',
-                    }}
-                  />
+                  <div className="absolute inset-0 opacity-10 pointer-events-none notebook-lines" />
 
                   <div className="relative z-10">
                     <h3 className="font-kalam text-2xl text-ink/40 mb-6 uppercase tracking-wider">{tale.title}</h3>
                     {leftPageText ? (
-                      <div 
-                        className="font-patrick text-lg md:text-xl whitespace-pre-wrap text-ink/90"
-                        style={{ lineHeight: '28px', paddingTop: '4px' }}
-                      >
+                      <div className="notebook-text whitespace-pre-wrap text-ink/90">
                         {bookIndex === 0 ? (
                           <>
                             {/* Drop Cap */}
-                            <span className="float-left text-6xl font-kalam leading-none mr-2 mt-2 text-marker">{leftPageText.charAt(0)}</span>
+                            <span className="float-left text-5xl md:text-6xl font-kalam leading-none mr-2 mt-2 text-marker">{leftPageText.charAt(0)}</span>
                             {leftPageText.substring(1)}
                           </>
                         ) : (
@@ -408,24 +571,14 @@ export default function TaleDetail() {
                 </div>
 
                 {/* Right Page */}
-                <div className="w-full md:w-1/2 h-full bg-paper p-8 flex flex-col justify-between relative min-h-[500px]">
+                <div className="w-full md:w-1/2 h-full bg-paper p-4 sm:p-8 flex flex-col justify-between relative min-h-[320px] md:min-h-[500px]">
                   {/* Lined notebook lines */}
-                  <div 
-                    className="absolute inset-0 opacity-10 pointer-events-none"
-                    style={{
-                      backgroundImage: 'linear-gradient(rgba(45, 45, 45, 0.4) 1px, transparent 1px)',
-                      backgroundSize: '100% 28px',
-                      backgroundPosition: '0 40px',
-                    }}
-                  />
+                  <div className="absolute inset-0 opacity-10 pointer-events-none notebook-lines" />
 
                   <div className="relative z-10">
                     <h3 className="font-kalam text-2xl text-ink/40 mb-6 uppercase tracking-wider">{activeChapter.title}</h3>
                     {rightPageText ? (
-                      <div 
-                        className="font-patrick text-lg md:text-xl whitespace-pre-wrap text-ink/90"
-                        style={{ lineHeight: '28px', paddingTop: '4px' }}
-                      >
+                      <div className="notebook-text whitespace-pre-wrap text-ink/90">
                         {rightPageText}
                       </div>
                     ) : (
@@ -440,6 +593,7 @@ export default function TaleDetail() {
                     page {bookIndex + 2}
                   </div>
                 </div>
+
 
               </div>
 
@@ -461,6 +615,16 @@ export default function TaleDetail() {
                   className="btn btn-primary py-2 px-6"
                 >
                   Flip Next ▶
+                </button>
+              </div>
+
+              {/* Instagram Share trigger */}
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={shareToInstagram}
+                  className="btn btn-secondary bg-postit hover:bg-postit/90 py-2 px-6 flex items-center gap-2 border-[3px] border-ink -rotate-1 cursor-pointer transition-transform hover:scale-105"
+                >
+                  📸 Share Page to Instagram
                 </button>
               </div>
 
@@ -504,6 +668,61 @@ export default function TaleDetail() {
           targetId={reportTargetId}
           onClose={() => setShowReportModal(false)}
         />
+      )}
+
+      {/* Instagram Share Instruction Modal */}
+      {shareSuccess && (
+        <div className="fixed inset-0 bg-ink/60 z-[999999] flex items-center justify-center p-6 backdrop-blur-[2px] overflow-y-auto">
+          <div className="paper-card bg-white p-6 max-w-md w-full relative rotate-1 tack-decoration shadow-hard my-8">
+            <button
+              onClick={() => setShareSuccess(false)}
+              className="absolute top-3 right-3 font-kalam text-2xl hover:text-marker"
+            >
+              ✖
+            </button>
+            <h3 className="font-kalam text-3xl text-marker mb-3 border-b-2 border-dashed border-ink/20 pb-1">
+              Ready for Instagram! 📸
+            </h3>
+            <p className="font-patrick text-lg mb-4 text-ink/80">
+              Your Polaroid story card has been downloaded, and a share caption has been copied to your clipboard!
+            </p>
+            
+            <div className="bg-[#FAF8F5] border-[3px] border-ink p-4 wobbly-sm mb-4 text-left font-patrick">
+              <h4 className="font-bold text-base uppercase text-[#C59B5C] mb-2">How to share:</h4>
+              <ol className="list-decimal pl-5 flex flex-col gap-2 text-base">
+                <li>Open <strong>Instagram</strong> on your phone.</li>
+                <li>Swipe right to open <strong>Stories</strong> (or tap + to create a Post).</li>
+                <li>Select the downloaded story card from your gallery.</li>
+                <li>Pinch to adjust, then paste the copied caption into your story!</li>
+              </ol>
+            </div>
+
+            {/* Display the caption so they can manually copy if browser blocked clipboard */}
+            <div className="mb-4 text-left font-patrick text-sm">
+              <span className="font-bold text-ink/60 block mb-1">Share Caption:</span>
+              <textarea
+                readOnly
+                className="w-full h-20 p-2 bg-[#F8F5F0] border-2 border-ink text-xs rounded outline-none cursor-text resize-none font-mono"
+                value={`Just read "${activeChapter?.title}" from the tale "${tale?.title}" by @${tale?.author_username} on Eterna! 📖✨\nRead it here: ${window.location.href}\n\n#EternaMemories #FamilyLegacy #Tales #Storytelling`}
+                onClick={(e) => {
+                  e.target.select();
+                  if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(e.target.value);
+                    alert('Caption copied to clipboard!');
+                  }
+                }}
+              />
+              <span className="text-[10px] text-ink/40 block mt-1">(Click inside box to select and copy manually)</span>
+            </div>
+
+            <button
+              onClick={() => setShareSuccess(false)}
+              className="btn btn-primary bg-marker text-white text-base py-2 w-full font-bold"
+            >
+              Sweet! Let's Share
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
