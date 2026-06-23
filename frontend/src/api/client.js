@@ -25,7 +25,7 @@ async function request(url, options = {}) {
   const defaults = {
     credentials: 'include',
     headers: {
-      'X-CSRFToken': csrfTokenInMemory || getCookie('csrftoken') || '',
+      'X-CSRFToken': getCookie('csrftoken') || csrfTokenInMemory || '',
     },
   };
 
