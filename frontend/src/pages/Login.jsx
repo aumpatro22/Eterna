@@ -39,15 +39,15 @@ export default function Login() {
           )}
 
           <div>
-            <label className="input-label">Username</label>
-            <input className="input" type="text" value={form.username}
+            <label htmlFor="username" className="input-label">Username</label>
+            <input id="username" className="input" type="text" value={form.username}
               onChange={e => setForm({ ...form, username: e.target.value })}
               placeholder="Your username" required autoFocus />
           </div>
 
           <div>
-            <label className="input-label">Password</label>
-            <input className="input" type="password" value={form.password}
+            <label htmlFor="password" className="input-label">Password</label>
+            <input id="password" className="input" type="password" value={form.password}
               onChange={e => setForm({ ...form, password: e.target.value })}
               placeholder="Your password" required />
           </div>
