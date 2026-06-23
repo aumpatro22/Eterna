@@ -163,6 +163,10 @@ STORAGES = {
     },
 }
 
+# Compatibility fallbacks for older/third-party packages (like django-cloudinary-storage's collectstatic command)
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+DEFAULT_FILE_STORAGE = _default_storage
+
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
