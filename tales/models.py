@@ -14,13 +14,13 @@ class Tale(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        import bleach
+        import nh3
         if self.title:
-            self.title = bleach.clean(self.title, tags=[], strip=True)
+            self.title = nh3.clean(self.title, tags=set())
         if self.subtitle:
-            self.subtitle = bleach.clean(self.subtitle, tags=[], strip=True)
+            self.subtitle = nh3.clean(self.subtitle, tags=set())
         if self.description:
-            self.description = bleach.clean(self.description, tags=[], strip=True)
+            self.description = nh3.clean(self.description, tags=set())
         if not self.slug:
             base = slugify(self.title)[:175]
             candidate = base
@@ -52,9 +52,9 @@ class Chapter(models.Model):
         return f"{self.tale.title} — {self.title}"
 
     def save(self, *args, **kwargs):
-        import bleach
+        import nh3
         if self.title:
-            self.title = bleach.clean(self.title, tags=[], strip=True)
+            self.title = nh3.clean(self.title, tags=set())
         if self.content:
-            self.content = bleach.clean(self.content, tags=[], strip=True)
+            self.content = nh3.clean(self.content, tags=set())
         super().save(*args, **kwargs)

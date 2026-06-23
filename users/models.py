@@ -60,12 +60,12 @@ class Profile(models.Model):
             self.public_search = False
             self.privacy_setting = 'PRIVATE'
 
-        import bleach
+        import nh3
         from .validators import validate_image_file, optimize_image
         if self.bio:
-            self.bio = bleach.clean(self.bio, tags=[], strip=True)
+            self.bio = nh3.clean(self.bio, tags=set())
         if self.display_name:
-            self.display_name = bleach.clean(self.display_name, tags=[], strip=True)
+            self.display_name = nh3.clean(self.display_name, tags=set())
         
         # Avoid recursion when only updating storage_used
         update_fields = kwargs.get('update_fields')
@@ -159,10 +159,10 @@ class DirectMessage(models.Model):
         return f"DM from {self.sender.username} in Conv {self.conversation_id}: {self.content[:24]}"
 
     def save(self, *args, **kwargs):
-        import bleach
+        import nh3
         from .validators import validate_image_file, optimize_image
         if self.content:
-            self.content = bleach.clean(self.content, tags=[], strip=True)
+            self.content = nh3.clean(self.content, tags=set())
         if self.image:
             validate_image_file(self.image)
             optimize_image(self.image)
@@ -312,11 +312,11 @@ class ContactMessage(models.Model):
         return f"Contact message from {self.name} ({self.status})"
 
     def save(self, *args, **kwargs):
-        import bleach
+        import nh3
         if self.name:
-            self.name = bleach.clean(self.name, tags=[], strip=True)
+            self.name = nh3.clean(self.name, tags=set())
         if self.email:
-            self.email = bleach.clean(self.email, tags=[], strip=True)
+            self.email = nh3.clean(self.email, tags=set())
         if self.message:
-            self.message = bleach.clean(self.message, tags=[], strip=True)
+            self.message = nh3.clean(self.message, tags=set())
         super().save(*args, **kwargs)

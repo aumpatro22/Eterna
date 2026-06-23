@@ -1,21 +1,26 @@
 # Django core
-Django==4.2.19
-Pillow>=11.0.0,<12.0
-django-bleach==3.1.0
+# Django 5.2 LTS - supported until April 2028. Replaces EOL 4.2.x branch.
+Django>=5.2.13,<6
+Pillow>=12.2.0,<13  # Security fix: CVE-2026-42308/42309/42310/42311 (buffer overflow, integer overflow, DoS)
+# Replaced deprecated django-bleach/bleach with nh3 (Rust-based, actively maintained)
+nh3>=0.2.14,<1
 djangorestframework==3.17.1
-django-cors-headers==4.9.0
+django-cors-headers>=4.9.0,<5
 
 # API requests
-requests==2.31.0
+# Security fix: CVE-2024-35195 (cert bypass), CVE-2024-47081 (netrc leak), CVE-2026-25645 (temp file)
+requests>=2.34.0,<3
 
 # For deployment
 dj-database-url==2.2.0
-gunicorn==21.2.0
+# Security fix: CVE-2024-1135, CVE-2024-6827 (HTTP request smuggling)
+gunicorn>=26.0.0,<27
 psycopg[binary]>=3.1.0  # For PostgreSQL in production (Python 3.13 compatible)
-whitenoise==6.6.0  # For serving static files
-cloudinary==1.44.2
+whitenoise>=6.6.0,<7  # For serving static files
+cloudinary>=1.44.2,<2
 django-cloudinary-storage==0.3.0
 
 # Development tools
-django-debug-toolbar==4.2.0
-python-dotenv==1.0.0  # For loading environment variables
+django-debug-toolbar>=4.2.0,<5
+# Security fix: CVE-2026-28684 (symlink attack on .env file)
+python-dotenv>=1.2.2,<2  # For loading environment variables
