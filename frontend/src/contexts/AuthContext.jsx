@@ -17,9 +17,11 @@ export function AuthProvider({ children }) {
         setUser(data.user);
       } else {
         setUser(null);
+        localStorage.removeItem('eterna_auth_token');
       }
     } catch {
       setUser(null);
+      localStorage.removeItem('eterna_auth_token');
     } finally {
       setLoading(false);
     }
@@ -34,6 +36,9 @@ export function AuthProvider({ children }) {
     if (data.csrfToken) {
       setCsrfToken(data.csrfToken);
     }
+    if (data.token) {
+      localStorage.setItem('eterna_auth_token', data.token);
+    }
     setUser(data.user);
     return data;
   };
@@ -43,13 +48,22 @@ export function AuthProvider({ children }) {
     if (data.csrfToken) {
       setCsrfToken(data.csrfToken);
     }
+    if (data.token) {
+      localStorage.setItem('eterna_auth_token', data.token);
+    }
     setUser(data.user);
     return data;
   };
 
   const logout = async () => {
-    await api.post('/api/auth/logout/', {});
-    setUser(null);
+    try {
+      await api.post('/api/auth/logout/', {});
+    } catch (err) {
+      console.error('Logout failed', err);
+    } finally {
+      localStorage.removeItem('eterna_auth_token');
+      setUser(null);
+    }
   };
 
   return (

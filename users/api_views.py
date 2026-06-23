@@ -9,6 +9,7 @@ from django.middleware.csrf import get_token
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes, throttle_classes, authentication_classes
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
 
 from .models import Profile, Reaction, DirectMessage, Conversation, CircleConnection, ProfileTimelineEvent, Report
 from .serializers import (
@@ -40,9 +41,11 @@ def register_view(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     user = serializer.save()
     login(request, user)
+    token, _ = Token.objects.get_or_create(user=user)
     return Response({
         'status': 'ok',
         'user': UserSerializer(user).data,
+        'token': token.key,
         'csrfToken': get_token(request)
     }, status=status.HTTP_201_CREATED)
 
@@ -66,9 +69,11 @@ def login_view(request):
     if getattr(user, 'is_banned', False):
         return Response({'error': f'Your account has been banned: {user.ban_reason or "No reason provided."}'}, status=status.HTTP_403_FORBIDDEN)
     login(request, user)
+    token, _ = Token.objects.get_or_create(user=user)
     return Response({
         'status': 'ok',
         'user': UserSerializer(user).data,
+        'token': token.key,
         'csrfToken': get_token(request)
     })
 
@@ -77,6 +82,10 @@ def login_view(request):
 @permission_classes([permissions.IsAuthenticated])
 def logout_view(request):
     """POST /api/auth/logout/ — session logout."""
+    try:
+        request.user.auth_token.delete()
+    except Exception:
+        pass
     logout(request)
     return Response({'status': 'ok'})
 

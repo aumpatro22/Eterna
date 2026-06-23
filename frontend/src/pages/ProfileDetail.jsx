@@ -27,6 +27,7 @@ export default function ProfileDetail() {
   const [editProfileImage, setEditProfileImage] = useState(null);
   const [editTags, setEditTags] = useState('');
   const [updatingProfile, setUpdatingProfile] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   // Timeline add states
   const [showAddMilestone, setShowAddMilestone] = useState(false);
@@ -63,6 +64,7 @@ export default function ProfileDetail() {
   const fetchProfile = async () => {
     setLoading(true);
     setErrorData(null);
+    setImageError(false);
     try {
       const resp = await api.get(`/api/users/${username}/`);
       setData(resp);
@@ -333,12 +335,13 @@ export default function ProfileDetail() {
           </button>
         )}
 
-        {profile.avatar_url ? (
+        {profile.avatar_url && !imageError ? (
           <img 
             src={profile.avatar_url} 
             alt={username} 
             className="w-32 h-32 border-[4px] border-ink wobbly-sm object-cover mx-auto mb-6 -rotate-2" 
             loading="lazy"
+            onError={() => setImageError(true)}
           />
         ) : (
           <div className="w-32 h-32 border-[4px] border-ink wobbly-sm bg-white mx-auto mb-6 flex items-center justify-center font-kalam text-6xl rotate-2">

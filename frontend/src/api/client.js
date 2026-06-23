@@ -22,12 +22,17 @@ async function request(url, options = {}) {
     targetUrl = `${BASE_URL}${url}`;
   }
 
+  const token = localStorage.getItem('eterna_auth_token');
   const defaults = {
     credentials: 'include',
     headers: {
       'X-CSRFToken': getCookie('csrftoken') || csrfTokenInMemory || '',
     },
   };
+
+  if (token) {
+    defaults.headers['Authorization'] = `Token ${token}`;
+  }
 
   // Don't set Content-Type for FormData (browser sets it with boundary)
   if (!(options.body instanceof FormData)) {
