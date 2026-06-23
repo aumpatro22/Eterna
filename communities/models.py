@@ -30,6 +30,7 @@ class Community(models.Model):
     )
     
     is_archived = models.BooleanField(default=False)
+    is_locked = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

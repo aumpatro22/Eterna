@@ -9,6 +9,8 @@ class Tale(models.Model):
     subtitle = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
     is_public = models.BooleanField(default=True)
+    is_hidden = models.BooleanField(default=False)
+    is_archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

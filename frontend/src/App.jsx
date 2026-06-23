@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -25,6 +25,7 @@ import About from './pages/About';
 import BlogList from './pages/BlogList';
 import BlogDetail from './pages/BlogDetail';
 import Contact from './pages/Contact';
+const AdminPanel = lazy(() => import('./pages/AdminPanel/AdminLayout'));
 
 function NotFound() {
   return (
@@ -91,7 +92,22 @@ function AppContent() {
     return <ServerWakeUpScreen />;
   }
 
+  const isAdminRoute = location.pathname.startsWith('/admin-panel');
   const isChatRoute = location.pathname === '/messages' || location.pathname.startsWith('/communities/');
+
+  if (isAdminRoute) {
+    return (
+      <Suspense fallback={
+        <div className="fixed inset-0 bg-[#F8F5F0] flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-dashed border-[#C59B5C] rounded-full animate-spin"></div>
+        </div>
+      }>
+        <Routes>
+          <Route path="/admin-panel/*" element={<AdminPanel />} />
+        </Routes>
+      </Suspense>
+    );
+  }
 
   return (
     <div className={`flex flex-col min-h-screen ${sketchMode ? 'cursor-pencil' : ''}`}>

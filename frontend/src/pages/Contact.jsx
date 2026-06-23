@@ -1,16 +1,22 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import SEO from '../components/layout/SEO';
+import api from '../api/client';
 
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) return;
-    setSubmitted(true);
-    setForm({ name: '', email: '', message: '' });
+    try {
+      await api.post('/api/contact/', form);
+      setSubmitted(true);
+      setForm({ name: '', email: '', message: '' });
+    } catch (err) {
+      alert(err.message || 'Failed to send message');
+    }
   };
 
   return (

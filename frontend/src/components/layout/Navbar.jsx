@@ -35,6 +35,9 @@ export default function Navbar({ sketchMode, setSketchMode }) {
           {user && (
             <Link to="/messages" className="font-patrick text-xl font-bold md:hover:-rotate-2 transition-transform decoration-wavy md:hover:underline">Messages</Link>
           )}
+          {user && (user.role === 'ADMIN' || user.is_superuser) && (
+            <Link to="/admin-panel" className="font-patrick text-xl font-bold text-[#C59B5C] md:hover:-rotate-2 transition-transform decoration-wavy md:hover:underline">Admin</Link>
+          )}
 
           {/* Sketch Mode Toggler */}
           <button
@@ -89,6 +92,9 @@ export default function Navbar({ sketchMode, setSketchMode }) {
           <Link to="/about" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-marker">About</Link>
           {user && (
             <Link to="/messages" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-marker">Messages</Link>
+          )}
+          {user && (user.role === 'ADMIN' || user.is_superuser) && (
+            <Link to="/admin-panel" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center text-[#C59B5C] md:hover:text-[#2E241B]">Admin</Link>
           )}
           
           <button

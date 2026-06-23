@@ -22,6 +22,8 @@ class Memorial(models.Model):
     visibility = models.CharField(max_length=20, choices=VISIBILITY_CHOICES, default='PUBLIC')
     is_ai_generated_image = models.BooleanField(default=False)
     tags = models.ManyToManyField("ExperienceTag", related_name='memorials', blank=True)
+    is_hidden = models.BooleanField(default=False)
+    is_archived = models.BooleanField(default=False)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

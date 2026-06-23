@@ -1,5 +1,6 @@
 from django.urls import path
 from . import api_views
+from . import admin_api_views
 
 urlpatterns = [
     path('auth/register/', api_views.register_view, name='api_register'),
@@ -22,4 +23,36 @@ urlpatterns = [
     path('connections/block/', api_views.block_user_directly, name='api_block_user_directly'),
     path('reports/', api_views.file_report, name='api_file_report'),
     path('react/', api_views.react_toggle, name='api_react'),
+
+    # Public contact submit
+    path('contact/', admin_api_views.public_submit_contact, name='api_public_submit_contact'),
+
+    # Admin Panel APIs
+    path('admin/dashboard/', admin_api_views.admin_dashboard, name='api_admin_dashboard'),
+    path('admin/global-search/', admin_api_views.admin_global_search, name='api_admin_global_search'),
+    path('admin/users/', admin_api_views.admin_users_list, name='api_admin_users_list'),
+    path('admin/users/<int:pk>/status/', admin_api_views.admin_user_status_action, name='api_admin_user_status_action'),
+    path('admin/users/<int:pk>/notes/', admin_api_views.admin_user_notes, name='api_admin_user_notes'),
+    path('admin/users/<int:pk>/profile/', admin_api_views.admin_user_profile_detail, name='api_admin_user_profile_detail'),
+    path('admin/sessions/', admin_api_views.admin_sessions_list, name='api_admin_sessions_list'),
+    path('admin/memorials/', admin_api_views.admin_memorials_list, name='api_admin_memorials_list'),
+    path('admin/memorials/<int:pk>/action/', admin_api_views.admin_memorial_action, name='api_admin_memorial_action'),
+    path('admin/tales/', admin_api_views.admin_tales_list, name='api_admin_tales_list'),
+    path('admin/tales/<int:pk>/action/', admin_api_views.admin_tale_action, name='api_admin_tale_action'),
+    path('admin/communities/', admin_api_views.admin_communities_list, name='api_admin_communities_list'),
+    path('admin/communities/<int:pk>/action/', admin_api_views.admin_community_action, name='api_admin_community_action'),
+    path('admin/communities/<int:pk>/details/', admin_api_views.admin_community_details, name='api_admin_community_details'),
+    path('admin/messages/', admin_api_views.admin_messages_list, name='api_admin_messages_list'),
+    path('admin/messages/<int:pk>/action/', admin_api_views.admin_message_action, name='api_admin_message_action'),
+    path('admin/reports/', admin_api_views.admin_reports_list, name='api_admin_reports_list'),
+    path('admin/reports/<int:pk>/action/', admin_api_views.admin_report_action, name='api_admin_report_action'),
+    path('admin/media/', admin_api_views.admin_media_list, name='api_admin_media_list'),
+    path('admin/ownership-requests/', admin_api_views.admin_ownership_requests_list, name='api_admin_ownership_requests_list'),
+    path('admin/ownership-requests/<int:pk>/action/', admin_api_views.admin_ownership_request_action, name='api_admin_ownership_request_action'),
+    path('admin/platform-status/', admin_api_views.admin_platform_status, name='api_admin_platform_status'),
+    path('admin/database-health/', admin_api_views.admin_database_health, name='api_admin_database_health'),
+    path('admin/audit-logs/', admin_api_views.admin_audit_logs_list, name='api_admin_audit_logs_list'),
+    path('admin/recovery/', admin_api_views.admin_recovery_list, name='api_admin_recovery_list'),
+    path('admin/recovery/restore/', admin_api_views.admin_recovery_restore, name='api_admin_recovery_restore'),
+    path('admin/contact-messages/', admin_api_views.admin_contact_messages, name='api_admin_contact_messages'),
 ]

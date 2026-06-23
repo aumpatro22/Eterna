@@ -7,8 +7,24 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 
 class User(AbstractUser):
+    ROLE_CHOICES = (
+        ('ADMIN', 'Super Admin'),
+        ('MODERATOR', 'Moderator'),
+        ('SUPPORT', 'Support Staff'),
+        ('USER', 'Regular User'),
+    )
     is_banned = models.BooleanField(default=False)
     ban_reason = models.TextField(blank=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='USER')
+    admin_notes = models.TextField(blank=True)
+
+    @property
+    def admin_role(self):
+        if self.is_superuser:
+            return 'ADMIN'
+        if self.role == 'USER' and self.is_staff:
+            return 'SUPPORT'
+        return self.role
 
     def __str__(self):
         return self.username
@@ -40,6 +56,10 @@ class Profile(models.Model):
         return f"{self.user.username}'s Profile"
 
     def save(self, *args, **kwargs):
+        if self.user.is_staff or self.user.role in ['ADMIN', 'MODERATOR', 'SUPPORT']:
+            self.public_search = False
+            self.privacy_setting = 'PRIVATE'
+
         import bleach
         from .validators import validate_image_file, optimize_image
         if self.bio:
@@ -207,6 +227,13 @@ class Report(models.Model):
         ('HARASSMENT', 'Harassment'),
         ('FAKE_ACCOUNT', 'Fake Account'),
         ('INAPPROPRIATE_CONTENT', 'Inappropriate Content'),
+        ('COPYRIGHT', 'Copyright'),
+        ('OTHER', 'Other'),
+    )
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
     )
 
     reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reports_submitted')
@@ -215,7 +242,71 @@ class Report(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
     reason = models.CharField(max_length=25, choices=REASON_CHOICES)
     description = models.TextField(blank=True)
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='PENDING')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Report by {self.reporter.username} on {self.content_type.model}:{self.object_id} ({self.reason})"
+
+
+class PlatformStatus(models.Model):
+    maintenance_mode = models.BooleanField(default=False)
+    announcement_banner = models.TextField(blank=True)
+    banner_enabled = models.BooleanField(default=False)
+    last_backup_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Platform Statuses"
+
+    def __str__(self):
+        return f"Platform Status: Maintenance={self.maintenance_mode}, Banner={self.banner_enabled}"
+
+
+class AuditLog(models.Model):
+    admin = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='admin_audit_logs')
+    action = models.CharField(max_length=100)
+    target_type = models.CharField(max_length=100)
+    target_id = models.CharField(max_length=100)
+    reason = models.TextField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.admin.username} performed {self.action} on {self.target_type}:{self.target_id}"
+
+
+class MemorialOwnershipRequest(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    )
+    memorial = models.ForeignKey('memorials.Memorial', on_delete=models.CASCADE, related_name='ownership_requests')
+    requester = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='submitted_ownership_requests')
+    current_owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='lost_ownership_requests')
+    claim_reason = models.TextField()
+    proof_description = models.TextField(blank=True)
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Ownership Request for {self.memorial.full_name} by {self.requester.username}"
+
+
+class ContactMessage(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('RESOLVED', 'Resolved'),
+    )
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    message = models.TextField()
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Contact message from {self.name} ({self.status})"

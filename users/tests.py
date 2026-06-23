@@ -486,3 +486,83 @@ class CorsSettingsTest(TestCase):
     def test_cors_credentials(self):
         from django.conf import settings
         self.assertTrue(settings.CORS_ALLOW_CREDENTIALS)
+
+
+class EternaAdminPanelAccessTests(APITestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.regular_user = User.objects.create_user(
+            username='regularuser', email='regular@example.com', password='Password123!', role='USER'
+        )
+        self.moderator = User.objects.create_user(
+            username='moduser', email='mod@example.com', password='Password123!', role='MODERATOR'
+        )
+        self.support = User.objects.create_user(
+            username='supportuser', email='support@example.com', password='Password123!', role='SUPPORT'
+        )
+        self.admin_user = User.objects.create_user(
+            username='adminuser', email='admin@example.com', password='Password123!', role='ADMIN'
+        )
+        self.superuser = User.objects.create_superuser(
+            username='superuser', email='super@example.com', password='Password123!'
+        )
+
+    def test_spa_view_admin_panel_restriction(self):
+        # Anonymous user
+        response = self.client.get('/admin-panel/')
+        self.assertEqual(response.status_code, 403)
+
+        # Regular user
+        self.client.force_login(self.regular_user)
+        response = self.client.get('/admin-panel/')
+        self.assertEqual(response.status_code, 403)
+
+        # Moderator
+        self.client.force_login(self.moderator)
+        response = self.client.get('/admin-panel/')
+        self.assertEqual(response.status_code, 403)
+
+        # Support staff
+        self.client.force_login(self.support)
+        response = self.client.get('/admin-panel/')
+        self.assertEqual(response.status_code, 403)
+
+        # Admin user
+        self.client.force_login(self.admin_user)
+        response = self.client.get('/admin-panel/')
+        self.assertNotEqual(response.status_code, 403)
+
+        # Superuser
+        self.client.force_login(self.superuser)
+        response = self.client.get('/admin-panel/')
+        self.assertNotEqual(response.status_code, 403)
+
+    def test_admin_dashboard_api_restriction(self):
+        # Anonymous user
+        response = self.client.get('/api/admin/dashboard/')
+        self.assertIn(response.status_code, [401, 403])
+
+        # Regular user
+        self.client.force_authenticate(user=self.regular_user)
+        response = self.client.get('/api/admin/dashboard/')
+        self.assertEqual(response.status_code, 403)
+
+        # Moderator
+        self.client.force_authenticate(user=self.moderator)
+        response = self.client.get('/api/admin/dashboard/')
+        self.assertEqual(response.status_code, 403)
+
+        # Support staff
+        self.client.force_authenticate(user=self.support)
+        response = self.client.get('/api/admin/dashboard/')
+        self.assertEqual(response.status_code, 403)
+
+        # Admin user
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.get('/api/admin/dashboard/')
+        self.assertEqual(response.status_code, 200)
+
+        # Superuser
+        self.client.force_authenticate(user=self.superuser)
+        response = self.client.get('/api/admin/dashboard/')
+        self.assertEqual(response.status_code, 200)
