@@ -139,8 +139,6 @@ if (BASE_DIR / 'static').exists():
 if (BASE_DIR / 'frontend' / 'dist').exists():
     _static_dirs.append(BASE_DIR / 'frontend' / 'dist')
 STATICFILES_DIRS = _static_dirs
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-
 # Cloudinary Integration
 CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
 CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY', '')
@@ -152,9 +150,18 @@ if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
         'API_KEY': CLOUDINARY_API_KEY,
         'API_SECRET': CLOUDINARY_API_SECRET,
     }
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    _default_storage = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 else:
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    _default_storage = 'django.core.files.storage.FileSystemStorage'
+
+STORAGES = {
+    "default": {
+        "BACKEND": _default_storage,
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # Media files
 MEDIA_URL = '/media/'
