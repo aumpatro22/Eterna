@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client';
 
-export default function CommunitiesList() {
+export default function CommunitiesList({ currentUser }) {
   const [communities, setCommunities] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -28,6 +28,11 @@ export default function CommunitiesList() {
   const [actionComm, setActionComm] = useState(null);
   const [actionType, setActionType] = useState('');
   const [actionReason, setActionReason] = useState('');
+
+  // Delete community state
+  const [deleteTargetComm, setDeleteTargetComm] = useState(null);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const fetchCommunities = async () => {
     setLoading(true);
@@ -77,6 +82,30 @@ export default function CommunitiesList() {
       }
     } catch (err) {
       alert(err.message || 'Failed to execute community action');
+    }
+  };
+
+  const handleDeleteCommunity = async () => {
+    if (!deleteTargetComm || !deleteReason.trim()) return;
+    setDeleting(true);
+    try {
+      const res = await api.post(`/api/admin/communities/${deleteTargetComm.id}/action/`, {
+        action: 'delete',
+        reason: deleteReason,
+      });
+      if (res.status === 'deleted') {
+        if (selectedComm && selectedComm.id === deleteTargetComm.id) {
+          setSelectedComm(null);
+          setDetailsData(null);
+        }
+        setDeleteTargetComm(null);
+        setDeleteReason('');
+        fetchCommunities();
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to delete community');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -168,6 +197,15 @@ export default function CommunitiesList() {
                       >
                         Inspect
                       </button>
+                      {currentUser?.role === 'ADMIN' && (
+                        <button
+                          onClick={() => { setDeleteTargetComm(c); setDeleteReason(''); }}
+                          className="bg-red-50 hover:bg-red-100 border border-red-400 px-2.5 py-1 text-sm rounded text-red-700 font-bold"
+                          title="Permanently delete this community"
+                        >
+                          🗑 Delete
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -235,6 +273,54 @@ export default function CommunitiesList() {
         </div>
       )}
 
+      {/* Delete Community Confirmation Modal */}
+      {deleteTargetComm && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white border-4 border-red-600 p-6 max-w-md w-full rounded-xl shadow-2xl font-patrick text-lg">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-4xl">☠</span>
+              <div>
+                <h3 className="font-kalam text-2xl font-bold text-red-700">Permanently Delete Community</h3>
+                <p className="text-sm text-gray-600">This action is <strong>irreversible</strong>. All data will be wiped.</p>
+              </div>
+            </div>
+
+            <div className="bg-red-50 border border-red-200 rounded p-3 mb-4 text-sm">
+              <p className="font-bold text-red-800">Community to be deleted:</p>
+              <p className="text-red-700 font-bold">{deleteTargetComm.title}</p>
+              <p className="text-red-600 mt-1">⚠ All posts, memberships, and files in this circle will be permanently erased.</p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-bold mb-1 text-red-700">Mandatory Deletion Reason (for audit log)</label>
+              <textarea
+                placeholder="State the reason for permanently removing this community..."
+                className="w-full bg-red-50 border-2 border-red-400 focus:border-red-600 h-24 p-2 rounded outline-none"
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 font-bold">
+              <button
+                onClick={() => { setDeleteTargetComm(null); setDeleteReason(''); }}
+                disabled={deleting}
+                className="bg-white border border-gray-300 px-4 py-1.5 rounded hover:bg-gray-100 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteCommunity}
+                disabled={!deleteReason.trim() || deleting}
+                className="bg-red-600 hover:bg-red-700 text-white px-5 py-1.5 rounded disabled:opacity-50 flex items-center gap-2"
+              >
+                {deleting ? 'Deleting...' : '☠ Confirm Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Details Side Panel */}
       {selectedComm && (
         <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-[#F8F5F0] border-l-3 border-[#2E241B] shadow-hard z-40 flex flex-col font-patrick">
@@ -286,6 +372,16 @@ export default function CommunitiesList() {
                     className="bg-green-50 text-green-700 border border-green-300 px-3 py-1 rounded text-sm font-bold hover:bg-green-100"
                   >
                     Unlock Circle
+                  </button>
+                )}
+
+                {currentUser?.role === 'ADMIN' && (
+                  <button
+                    onClick={() => { setDeleteTargetComm(selectedComm); setDeleteReason(''); }}
+                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm font-bold ml-auto"
+                    title="Permanently delete this community and all its data"
+                  >
+                    ☠ Permanently Delete
                   </button>
                 )}
               </div>

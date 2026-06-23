@@ -223,10 +223,10 @@ def admin_user_status_action(request, pk):
     action = request.data.get('action')
     reason = request.data.get('reason', '').strip()
     
-    if action in ['ban', 'unban', 'change_role']:
-        # Banning/Role changes require ADMIN
+    if action in ['ban', 'unban', 'change_role', 'delete']:
+        # Banning/Role changes/Deletion require ADMIN
         if not check_staff_role(request, ['ADMIN']):
-            return Response({"detail": "Only Admins can perform ban or role modifications."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Only Admins can perform ban, role, or delete operations."}, status=status.HTTP_403_FORBIDDEN)
     else:
         # Activates/deactivates require MODERATOR
         if not check_staff_role(request, ['MODERATOR']):
@@ -257,6 +257,17 @@ def admin_user_status_action(request, pk):
         user.is_staff = (new_role in ['ADMIN', 'MODERATOR', 'SUPPORT'])
         user.save()
         log_admin_action(request.user, "CHANGE_ROLE", "USER", user.id, f"Role changed to {new_role}. {reason}")
+    elif action == 'delete':
+        # Cannot delete your own account or another superuser
+        if user.pk == request.user.pk:
+            return Response({"detail": "You cannot delete your own admin account."}, status=status.HTTP_400_BAD_REQUEST)
+        if user.is_superuser:
+            return Response({"detail": "Superuser accounts cannot be deleted via the admin panel."}, status=status.HTTP_403_FORBIDDEN)
+        username_snapshot = user.username
+        user_id_snapshot = user.id
+        user.delete()
+        log_admin_action(request.user, "DELETE_USER", "USER", user_id_snapshot, f"Permanently deleted account '{username_snapshot}'. Reason: {reason}")
+        return Response({"status": "deleted"})
     else:
         return Response({"detail": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -550,12 +561,18 @@ def admin_communities_list(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def admin_community_action(request, pk):
-    if not check_staff_role(request, ['MODERATOR']):
-        return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
-        
-    community = get_object_or_404(Community, pk=pk)
     action = request.data.get('action')
     reason = request.data.get('reason', '').strip()
+
+    # Delete is ADMIN-only; all other actions require MODERATOR
+    if action == 'delete':
+        if not check_staff_role(request, ['ADMIN']):
+            return Response({"detail": "Only Admins can permanently delete communities."}, status=status.HTTP_403_FORBIDDEN)
+    else:
+        if not check_staff_role(request, ['MODERATOR']):
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+        
+    community = get_object_or_404(Community, pk=pk)
     
     if action == 'archive':
         community.is_archived = True
@@ -574,6 +591,12 @@ def admin_community_action(request, pk):
         community.is_locked = False
         community.save()
         log_admin_action(request.user, "UNLOCK_COMMUNITY", "COMMUNITY", community.id, reason)
+    elif action == 'delete':
+        title_snapshot = community.title
+        comm_id_snapshot = community.id
+        community.delete()
+        log_admin_action(request.user, "DELETE_COMMUNITY", "COMMUNITY", comm_id_snapshot, f"Permanently deleted community '{title_snapshot}'. Reason: {reason}")
+        return Response({"status": "deleted"})
     else:
         return Response({"detail": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
         

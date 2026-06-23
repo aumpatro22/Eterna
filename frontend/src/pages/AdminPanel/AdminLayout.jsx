@@ -278,7 +278,7 @@ export default function AdminLayout() {
             <Route path="/sessions" element={<SessionsList currentUser={user} />} />
             <Route path="/memorials" element={<MemorialsList />} />
             <Route path="/tales" element={<TalesList />} />
-            <Route path="/communities" element={<CommunitiesList />} />
+            <Route path="/communities" element={<CommunitiesList currentUser={user} />} />
             <Route path="/messages" element={<MessagesModeration />} />
             <Route path="/reports" element={<ReportsCenter currentUser={user} />} />
             <Route path="/media" element={<MediaLibrary />} />
