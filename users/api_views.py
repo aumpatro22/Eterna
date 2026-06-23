@@ -414,6 +414,7 @@ def profile_update(request):
     bio = request.data.get('bio')
     privacy_setting = request.data.get('privacy_setting')
     profile_image = request.FILES.get('profile_image')
+    tags = request.data.get('tags')
 
     if display_name is not None:
         profile.display_name = display_name
@@ -425,8 +426,17 @@ def profile_update(request):
         profile.privacy_setting = privacy_setting
     if profile_image is not None:
         profile.profile_image = profile_image
+    if tags is not None:
+        profile.tags = tags
 
-    profile.save()
+    try:
+        profile.save()
+    except Exception as e:
+        from django.core.exceptions import ValidationError
+        if isinstance(e, ValidationError):
+            return Response({'error': str(e.messages[0] if hasattr(e, 'messages') else e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Failed to save profile. The image may be invalid or corrupted.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     serializer = ProfileSerializer(profile, context={'request': request})
     return Response(serializer.data)
 

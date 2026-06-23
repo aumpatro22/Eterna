@@ -25,10 +25,9 @@ def validate_image_file(file):
     # Deep verification of image bytes
     try:
         file.seek(0)
-        header = file.read(2048)
-        file.seek(0)
-        img = Image.open(io.BytesIO(header))
+        img = Image.open(file)
         img.verify()
+        file.seek(0)
     except Exception:
         raise ValidationError("Invalid or corrupted image file.")
 
