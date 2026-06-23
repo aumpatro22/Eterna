@@ -89,7 +89,9 @@ class MemorialListView(generics.ListAPIView):
 
 class MemorialDetailView(generics.RetrieveAPIView):
     """GET /api/memorials/<pk>/ — full detail with visibility check."""
-    queryset = Memorial.objects.select_related('owner')
+    # ⚡ Bolt: Fixed N+1 query issue by prefetching related objects
+    # This prevents additional database queries when serializing memories, tags, messages, candles, photos, and timeline events
+    queryset = Memorial.objects.select_related('owner').prefetch_related('memories__author', 'tags', 'messages', 'candles', 'photos', 'timeline_events')
     serializer_class = MemorialDetailSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -117,7 +119,9 @@ class MemorialByPublicIdView(generics.RetrieveAPIView):
 
     def get_object(self):
         pid = self.kwargs['public_id']
-        obj = get_object_or_404(Memorial.objects.select_related('owner'), public_id=pid)
+        # ⚡ Bolt: Fixed N+1 query issue by prefetching related objects
+        # This prevents additional database queries when serializing memories, tags, messages, candles, photos, and timeline events
+        obj = get_object_or_404(Memorial.objects.select_related('owner').prefetch_related('memories__author', 'tags', 'messages', 'candles', 'photos', 'timeline_events'), public_id=pid)
         user = self.request.user
         if obj.visibility == 'PUBLIC':
             return obj
