@@ -31,6 +31,7 @@ urlpatterns = [
     path('admin/dashboard/', admin_api_views.admin_dashboard, name='api_admin_dashboard'),
     path('admin/global-search/', admin_api_views.admin_global_search, name='api_admin_global_search'),
     path('admin/users/', admin_api_views.admin_users_list, name='api_admin_users_list'),
+    path('admin/users/add-staff/', admin_api_views.admin_add_staff, name='api_admin_add_staff'),
     path('admin/users/<int:pk>/status/', admin_api_views.admin_user_status_action, name='api_admin_user_status_action'),
     path('admin/users/<int:pk>/notes/', admin_api_views.admin_user_notes, name='api_admin_user_notes'),
     path('admin/users/<int:pk>/profile/', admin_api_views.admin_user_profile_detail, name='api_admin_user_profile_detail'),

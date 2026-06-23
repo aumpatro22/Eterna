@@ -310,3 +310,13 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"Contact message from {self.name} ({self.status})"
+
+    def save(self, *args, **kwargs):
+        import bleach
+        if self.name:
+            self.name = bleach.clean(self.name, tags=[], strip=True)
+        if self.email:
+            self.email = bleach.clean(self.email, tags=[], strip=True)
+        if self.message:
+            self.message = bleach.clean(self.message, tags=[], strip=True)
+        super().save(*args, **kwargs)

@@ -35,6 +35,11 @@ export default function UsersList({ currentUser }) {
   const [actionType, setActionType] = useState(''); // 'ban' | 'unban' | 'activate' | 'deactivate' | 'role'
   const [targetRole, setTargetRole] = useState('USER');
 
+  // Add Staff Modal state
+  const [showAddStaff, setShowAddStaff] = useState(false);
+  const [newStaff, setNewStaff] = useState({ username: '', email: '', password: '', role: 'SUPPORT' });
+  const [addingStaff, setAddingStaff] = useState(false);
+
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -107,6 +112,22 @@ export default function UsersList({ currentUser }) {
     }
   };
 
+  const handleAddStaff = async (e) => {
+    e.preventDefault();
+    setAddingStaff(true);
+    try {
+      await api.post('/api/admin/users/add-staff/', newStaff);
+      alert(`Successfully added staff member: ${newStaff.username}`);
+      setShowAddStaff(false);
+      setNewStaff({ username: '', email: '', password: '', role: 'SUPPORT' });
+      fetchUsers();
+    } catch (err) {
+      alert(err.message || 'Failed to add staff member');
+    } finally {
+      setAddingStaff(false);
+    }
+  };
+
   const formatSize = (bytes) => {
     const mb = bytes / (1024 * 1024);
     return mb.toFixed(2) + ' MB';
@@ -119,6 +140,14 @@ export default function UsersList({ currentUser }) {
           <h1 className="font-kalam text-4xl font-bold text-[#2E241B]">Users Management</h1>
           <p className="font-patrick text-xl text-[#2E241B]/70">Admin moderation dashboard for Eterna accounts</p>
         </div>
+        {currentUser?.role === 'ADMIN' && (
+          <button
+            onClick={() => setShowAddStaff(true)}
+            className="bg-[#2E241B] hover:bg-black text-[#F8F5F0] px-4 py-2 rounded-lg font-bold shadow transition flex items-center gap-2"
+          >
+            <span>➕</span> Add Staff
+          </button>
+        )}
       </div>
 
       {/* Filters & Search */}
@@ -266,6 +295,82 @@ export default function UsersList({ currentUser }) {
           </button>
         </div>
       </div>
+
+      {/* Add Staff Modal */}
+      {showAddStaff && (
+        <div className="fixed inset-0 bg-[#2E241B]/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white border-3 border-[#2E241B] p-6 max-w-md w-full rounded-lg shadow-hard font-patrick text-lg">
+            <h3 className="font-kalam text-2xl font-bold text-[#2E241B] mb-4 uppercase">
+              Add Staff Member
+            </h3>
+            
+            <form onSubmit={handleAddStaff} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold mb-1">Username</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full bg-[#F8F5F0] border-2 border-[#2E241B] px-3 py-2 rounded"
+                  value={newStaff.username}
+                  onChange={(e) => setNewStaff({...newStaff, username: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  className="w-full bg-[#F8F5F0] border-2 border-[#2E241B] px-3 py-2 rounded"
+                  value={newStaff.email}
+                  onChange={(e) => setNewStaff({...newStaff, email: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-1">Temporary Password</label>
+                <input
+                  type="password"
+                  required
+                  className="w-full bg-[#F8F5F0] border-2 border-[#2E241B] px-3 py-2 rounded"
+                  value={newStaff.password}
+                  onChange={(e) => setNewStaff({...newStaff, password: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold mb-1">Assign Role</label>
+                <select 
+                  className="w-full bg-[#F8F5F0] border-2 border-[#2E241B] px-3 py-2 rounded"
+                  value={newStaff.role}
+                  onChange={(e) => setNewStaff({...newStaff, role: e.target.value})}
+                >
+                  <option value="ADMIN">Super Admin (Full Access)</option>
+                  <option value="MODERATOR">Co-Admin / Moderator</option>
+                  <option value="SUPPORT">Spectator / Support Staff</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 font-bold mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowAddStaff(false)}
+                  className="bg-white border border-gray-300 px-4 py-1.5 rounded hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingStaff}
+                  className="bg-[#2E241B] text-white px-4 py-1.5 rounded hover:bg-black disabled:opacity-50 flex items-center gap-2"
+                >
+                  {addingStaff ? 'Creating...' : 'Create Account'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Action Reason Confirmation Modal */}
       {actionUser && (

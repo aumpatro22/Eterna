@@ -1074,7 +1074,7 @@ def admin_database_health(request):
                 
                 # DB Size
                 db_name = connection.settings_dict.get('NAME', 'postgres')
-                cursor.execute(f"SELECT pg_database_size('{db_name}');")
+                cursor.execute("SELECT pg_database_size(%s);", [db_name])
                 db_size_bytes = cursor.fetchone()[0]
                 db_size_gb = db_size_bytes / (1024 ** 3)
             else:
@@ -1290,3 +1290,42 @@ def admin_contact_messages(request):
         })
         
     return Response({'total': total, 'messages': data})
+
+from django.contrib.auth.hashers import make_password
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_add_staff(request):
+    if not check_staff_role(request, ['ADMIN']):
+        return Response({'detail': 'Only Super Admins can create staff accounts.'}, status=status.HTTP_403_FORBIDDEN)
+        
+    username = request.data.get('username', '').strip()
+    email = request.data.get('email', '').strip()
+    password = request.data.get('password', '')
+    role = request.data.get('role', 'SUPPORT')
+    
+    if not all([username, email, password]):
+        return Response({'detail': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    if User.objects.filter(username=username).exists():
+        return Response({'detail': 'Username already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    if User.objects.filter(email=email).exists():
+        return Response({'detail': 'Email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    if role not in ['ADMIN', 'MODERATOR', 'SUPPORT']:
+        return Response({'detail': 'Invalid role.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    user = User.objects.create(
+        username=username,
+        email=email,
+        password=make_password(password),
+        role=role,
+        is_staff=True,
+        is_superuser=(role == 'ADMIN')
+    )
+    
+    log_admin_action(request.user, 'CREATE_STAFF', 'USER', user.id, f'Created {role} account: {username}')
+    
+    return Response({'status': 'success', 'user_id': user.id})
+
