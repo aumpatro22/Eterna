@@ -27,3 +27,4 @@ python-dotenv>=1.2.2,<2  # For loading environment variables
 
 # Supabase Auth — JWT verification for Google OAuth login
 PyJWT>=2.8.0,<3
+cryptography>=42.0.0,<44

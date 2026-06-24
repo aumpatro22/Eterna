@@ -142,18 +142,34 @@ def supabase_google_oauth_view(request):
     # ── 1. Verify the JWT ───────────────────────────────────────────────────
     try:
         # Log the header to diagnose algorithm or signing issues
+        header = {}
         try:
             header = pyjwt.get_unverified_header(access_token)
             print(f"[Supabase Auth] JWT Header: {header}")
         except Exception as header_err:
             print(f"[Supabase Auth] Failed to read JWT header: {header_err}")
 
-        payload = pyjwt.decode(
-            access_token,
-            jwt_secret,
-            algorithms=['HS256'],
-            options={'verify_exp': True},
-        )
+        alg = header.get('alg', 'HS256')
+        if alg == 'ES256' and getattr(django_settings, 'SUPABASE_URL', ''):
+            # Asymmetric ES256 verification using Supabase's JWKS endpoint
+            from jwt import PyJWKClient
+            jwks_url = f"{django_settings.SUPABASE_URL.rstrip('/')}/auth/v1/jwks.json"
+            jwk_client = PyJWKClient(jwks_url)
+            signing_key = jwk_client.get_signing_key_from_jwt(access_token)
+            payload = pyjwt.decode(
+                access_token,
+                signing_key.key,
+                algorithms=['ES256'],
+                options={'verify_exp': True},
+            )
+        else:
+            # Symmetric HS256 verification using the secret
+            payload = pyjwt.decode(
+                access_token,
+                jwt_secret,
+                algorithms=['HS256'],
+                options={'verify_exp': True},
+            )
     except pyjwt.ExpiredSignatureError:
         return Response({'error': 'Session has expired. Please sign in again.'}, status=status.HTTP_401_UNAUTHORIZED)
     except pyjwt.InvalidTokenError as exc:
