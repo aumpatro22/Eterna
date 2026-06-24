@@ -141,6 +141,13 @@ def supabase_google_oauth_view(request):
 
     # ── 1. Verify the JWT ───────────────────────────────────────────────────
     try:
+        # Log the header to diagnose algorithm or signing issues
+        try:
+            header = pyjwt.get_unverified_header(access_token)
+            print(f"[Supabase Auth] JWT Header: {header}")
+        except Exception as header_err:
+            print(f"[Supabase Auth] Failed to read JWT header: {header_err}")
+
         payload = pyjwt.decode(
             access_token,
             jwt_secret,
@@ -150,6 +157,7 @@ def supabase_google_oauth_view(request):
     except pyjwt.ExpiredSignatureError:
         return Response({'error': 'Session has expired. Please sign in again.'}, status=status.HTTP_401_UNAUTHORIZED)
     except pyjwt.InvalidTokenError as exc:
+        print(f"[Supabase Auth] JWT Verification failed: {exc}")
         return Response({'error': f'Invalid token: {exc}'}, status=status.HTTP_401_UNAUTHORIZED)
 
     # ── 2. Extract user info from claims ────────────────────────────────────
