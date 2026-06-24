@@ -172,7 +172,9 @@ def supabase_google_oauth_view(request):
             )
     except pyjwt.ExpiredSignatureError:
         return Response({'error': 'Session has expired. Please sign in again.'}, status=status.HTTP_401_UNAUTHORIZED)
-    except pyjwt.InvalidTokenError as exc:
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()
         print(f"[Supabase Auth] JWT Verification failed: {exc}")
         return Response({'error': f'Invalid token: {exc}'}, status=status.HTTP_401_UNAUTHORIZED)
 
