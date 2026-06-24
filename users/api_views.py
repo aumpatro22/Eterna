@@ -153,7 +153,7 @@ def supabase_google_oauth_view(request):
         if alg == 'ES256' and getattr(django_settings, 'SUPABASE_URL', ''):
             # Asymmetric ES256 verification using Supabase's JWKS endpoint
             from jwt import PyJWKClient
-            jwks_url = f"{django_settings.SUPABASE_URL.rstrip('/')}/auth/v1/jwks.json"
+            jwks_url = f"{django_settings.SUPABASE_URL.rstrip('/')}/auth/v1/.well-known/jwks.json"
             
             headers = {}
             anon_key = getattr(django_settings, 'SUPABASE_ANON_KEY', '')
