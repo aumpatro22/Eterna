@@ -10,6 +10,7 @@ import LoadingSkeleton from './components/common/LoadingSkeleton';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AuthCallback from './pages/AuthCallback';
 
 // Lazy-loaded heavy pages
 const Landing = lazy(() => import('./pages/Landing'));
@@ -139,6 +140,7 @@ function AppContent() {
                 <Route path="/memorials" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/memorial/:id" element={<MemorialDetail />} />
                 <Route path="/memorials/create" element={<MemorialCreate />} />
                 <Route path="/tales" element={<TaleList />} />

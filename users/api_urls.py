@@ -7,6 +7,7 @@ urlpatterns = [
     path('auth/login/', api_views.login_view, name='api_login'),
     path('auth/logout/', api_views.logout_view, name='api_logout'),
     path('auth/me/', api_views.me_view, name='api_me'),
+    path('auth/supabase/', api_views.supabase_google_oauth_view, name='api_supabase_oauth'),
     path('users/search/', api_views.search_profiles, name='api_search_profiles'),
     path('users/<str:username>/', api_views.profile_detail, name='api_profile_detail'),
     path('conversations/', api_views.list_conversations, name='api_conversations_list'),

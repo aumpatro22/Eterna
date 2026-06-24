@@ -90,7 +90,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-        'CONN_MAX_AGE': 300,
+        'CONN_MAX_AGE': 0,
     }
 }
 
@@ -101,7 +101,7 @@ if os.environ.get('DATABASE_URL') and not IS_TESTING:
     try:
         import dj_database_url
         DATABASES['default'] = dj_database_url.config(
-            conn_max_age=300,
+            conn_max_age=0,
             ssl_require=(os.environ.get('PGSSLMODE') == 'require' or not DEBUG)
         )
     except Exception:
@@ -175,6 +175,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
 AI_HORDE_API_KEY = os.environ.get('AI_HORDE_API_KEY', '')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+
+# Supabase Auth — used to verify JWT tokens from Google OAuth login
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+SUPABASE_JWT_SECRET = os.environ.get('SUPABASE_JWT_SECRET', '')
 
 # Auth settings
 LOGIN_REDIRECT_URL = 'home'
@@ -294,3 +298,7 @@ AUDIO_LIMIT_MB = 10
 FREE_MEMORIAL_LIMIT = 3
 SESSION_TIMEOUT_SECONDS = 3600
 DEFAULT_USER_STORAGE_LIMIT = 52428800
+
+# ── Supabase Auth (Google OAuth) ──────────────────────────────────────────────
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+SUPABASE_JWT_SECRET = os.environ.get('SUPABASE_JWT_SECRET', '')

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 
 export default function Login() {
   const { login } = useAuth();
@@ -61,6 +62,17 @@ export default function Login() {
           Don't have an account?{' '}
           <Link to="/register" className="font-bold md:hover:text-pen md:hover:underline decoration-wavy">Sign Up</Link>
         </p>
+
+        {/* ── Google OAuth divider ── */}
+        <div className="flex items-center gap-3 mt-6">
+          <div className="flex-1 border-t-[2px] border-dashed border-ink/30" />
+          <span className="font-patrick text-lg text-ink/50 whitespace-nowrap">or sign in with</span>
+          <div className="flex-1 border-t-[2px] border-dashed border-ink/30" />
+        </div>
+
+        <div className="mt-4">
+          <GoogleLoginButton label="Continue with Google" />
+        </div>
       </div>
     </div>
   );

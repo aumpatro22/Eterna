@@ -55,6 +55,22 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  /**
+   * loginWithToken — called by AuthCallback after the backend verifies a
+   * Supabase OAuth token.  The payload shape is identical to login/register:
+   * { status, user, token, csrfToken }
+   */
+  const loginWithToken = async (data) => {
+    if (data.csrfToken) {
+      setCsrfToken(data.csrfToken);
+    }
+    if (data.token) {
+      localStorage.setItem('eterna_auth_token', data.token);
+    }
+    setUser(data.user);
+    return data;
+  };
+
   const logout = async () => {
     try {
       await api.post('/api/auth/logout/', {});
@@ -67,7 +83,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, checkAuth }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, checkAuth, loginWithToken }}>
       {children}
     </AuthContext.Provider>
   );

@@ -385,7 +385,7 @@ class EternaSessionAndIdleTests(TestCase):
         from django.conf import settings
         self.assertEqual(settings.SESSION_COOKIE_AGE, 7200)
         self.assertTrue(settings.SESSION_SAVE_EVERY_REQUEST)
-        self.assertEqual(settings.DATABASES['default']['CONN_MAX_AGE'], 300)
+        self.assertEqual(settings.DATABASES['default']['CONN_MAX_AGE'], 0)
 
     def test_last_seen_middleware_authenticated(self):
         from django.contrib.sessions.backends.db import SessionStore

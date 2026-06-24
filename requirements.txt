@@ -24,3 +24,6 @@ django-cloudinary-storage==0.3.0
 django-debug-toolbar>=4.2.0,<5
 # Security fix: CVE-2026-28684 (symlink attack on .env file)
 python-dotenv>=1.2.2,<2  # For loading environment variables
+
+# Supabase Auth — JWT verification for Google OAuth login
+PyJWT>=2.8.0,<3

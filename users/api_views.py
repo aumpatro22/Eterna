@@ -106,6 +106,120 @@ def me_view(request):
     })
 
 
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([permissions.AllowAny])
+@throttle_classes([AuthThrottle])
+def supabase_google_oauth_view(request):
+    """
+    POST /api/auth/supabase/
+    Accepts a Supabase access_token (JWT), verifies it server-side using
+    SUPABASE_JWT_SECRET, and returns the same response shape as login_view
+    so the frontend AuthContext needs zero special handling.
+
+    Flow:
+      1. Decode & verify the JWT — rejects expired / tampered tokens
+      2. Extract email + display name from the JWT claims
+      3. get_or_create a local Django User (username = email prefix, unique)
+      4. Ensure a Profile exists (signal normally handles this)
+      5. Issue / retrieve a DRF Token
+      6. Return {status, user, token, csrfToken}
+    """
+    from django.conf import settings as django_settings
+    import jwt as pyjwt
+
+    access_token = request.data.get('access_token', '').strip()
+    if not access_token:
+        return Response({'error': 'access_token is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    jwt_secret = getattr(django_settings, 'SUPABASE_JWT_SECRET', '')
+    if not jwt_secret:
+        return Response(
+            {'error': 'Google login is not configured on the server.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    # ── 1. Verify the JWT ───────────────────────────────────────────────────
+    try:
+        payload = pyjwt.decode(
+            access_token,
+            jwt_secret,
+            algorithms=['HS256'],
+            options={'verify_exp': True},
+        )
+    except pyjwt.ExpiredSignatureError:
+        return Response({'error': 'Session has expired. Please sign in again.'}, status=status.HTTP_401_UNAUTHORIZED)
+    except pyjwt.InvalidTokenError as exc:
+        return Response({'error': f'Invalid token: {exc}'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    # ── 2. Extract user info from claims ────────────────────────────────────
+    # Supabase puts the user's email and metadata in these claim keys
+    email = (
+        payload.get('email') or
+        (payload.get('user_metadata') or {}).get('email') or
+        ''
+    ).lower().strip()
+
+    if not email:
+        return Response({'error': 'Could not extract email from token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Friendly display name from Google profile
+    google_name = (
+        (payload.get('user_metadata') or {}).get('full_name') or
+        (payload.get('user_metadata') or {}).get('name') or
+        email.split('@')[0]
+    )
+
+    # ── 3. Get or create Django User ────────────────────────────────────────
+    # Derive a safe, unique username from the email prefix
+    base_username = email.split('@')[0]
+    # Strip characters Django usernames don't allow
+    import re as _re
+    base_username = _re.sub(r'[^\w.@+-]', '_', base_username)[:140]
+
+    # Try to find by email first (handles username collisions gracefully)
+    django_user = User.objects.filter(email=email).first()
+
+    if not django_user:
+        # Generate a unique username if the base one is taken
+        candidate = base_username
+        counter = 1
+        while User.objects.filter(username=candidate).exists():
+            candidate = f'{base_username}_{counter}'
+            counter += 1
+
+        django_user = User.objects.create_user(
+            username=candidate,
+            email=email,
+            # Random unusable password — user can set one later via password reset
+            password=None,
+        )
+        # Populate display name on the auto-created Profile
+        try:
+            django_user.profile.display_name = google_name[:100]
+            django_user.profile.save(update_fields=['display_name'])
+        except Exception:
+            pass
+
+    # Blocked users cannot log in via OAuth either
+    if getattr(django_user, 'is_banned', False):
+        return Response(
+            {'error': f'Your account has been suspended: {django_user.ban_reason or "No reason provided."}'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    # ── 4. Log in + issue DRF Token ─────────────────────────────────────────
+    login(request, django_user, backend='django.contrib.auth.backends.ModelBackend')
+    token, _ = Token.objects.get_or_create(user=django_user)
+
+    return Response({
+        'status': 'ok',
+        'user': UserSerializer(django_user).data,
+        'token': token.key,
+        'csrfToken': get_token(request),
+    }, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def search_profiles(request):
@@ -661,3 +775,88 @@ def file_report(request):
     }, status=status.HTTP_201_CREATED)
 
 
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([permissions.AllowAny])
+@throttle_classes([AuthThrottle])
+def supabase_auth_view(request):
+    """
+    POST /api/auth/supabase/
+    Verifies a Supabase access token (Google OAuth), finds or creates a Django user,
+    and returns a DRF token + user data — same shape as the normal login response.
+    """
+    import jwt as pyjwt
+    from django.conf import settings
+    import re
+
+    access_token = request.data.get('access_token', '').strip()
+    if not access_token:
+        return Response({'error': 'access_token is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    jwt_secret = getattr(settings, 'SUPABASE_JWT_SECRET', '')
+    if not jwt_secret:
+        return Response(
+            {'error': 'Supabase is not configured on this server.'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+
+    # ── Verify JWT ────────────────────────────────────────────────────────────
+    try:
+        payload = pyjwt.decode(
+            access_token,
+            jwt_secret,
+            algorithms=['HS256'],
+            options={'verify_exp': True},
+        )
+    except pyjwt.ExpiredSignatureError:
+        return Response(
+            {'error': 'Google session has expired. Please sign in again.'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+    except pyjwt.InvalidTokenError as e:
+        return Response({'error': f'Invalid token: {e}'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    # ── Extract user info ─────────────────────────────────────────────────────
+    email = payload.get('email', '').strip().lower()
+    if not email:
+        return Response({'error': 'Google account has no email address.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user_metadata = payload.get('user_metadata') or {}
+    full_name = user_metadata.get('full_name') or user_metadata.get('name') or ''
+    name_parts = full_name.split()
+    first_name = user_metadata.get('given_name') or (name_parts[0] if name_parts else '')
+    last_name = user_metadata.get('family_name') or (name_parts[-1] if len(name_parts) > 1 else '')
+
+    # ── Find or create Django user ────────────────────────────────────────────
+    user = User.objects.filter(email=email).first()
+    if user is None:
+        base_username = re.sub(r'[^a-zA-Z0-9_]', '', email.split('@')[0])[:28] or 'user'
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f'{base_username}{counter}'
+            counter += 1
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            first_name=first_name[:30],
+            last_name=last_name[:150],
+            password=None,
+        )
+
+    # ── Guard: banned ─────────────────────────────────────────────────────────
+    if getattr(user, 'is_banned', False):
+        return Response(
+            {'error': f'Your account has been banned: {user.ban_reason or "No reason provided."}'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # ── Session + DRF token ───────────────────────────────────────────────────
+    login(request, user)
+    token, _ = Token.objects.get_or_create(user=user)
+    return Response({
+        'status': 'ok',
+        'user': UserSerializer(user).data,
+        'token': token.key,
+        'csrfToken': get_token(request),
+    })
