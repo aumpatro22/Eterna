@@ -13,7 +13,7 @@ settings.DEBUG = True
 
 from django.db import connection, reset_queries
 from django.contrib.auth import get_user_model
-from communities.models import Community, Membership
+from communities.models import Membership
 
 User = get_user_model()
 
