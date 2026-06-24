@@ -1,9 +1,12 @@
 import os
 import io
+import logging
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import UploadedFile
 from PIL import Image
+
+logger = logging.getLogger(__name__)
 
 def validate_image_file(file):
     if not file:
@@ -110,4 +113,4 @@ def optimize_image(field, max_dimension=1200, quality=80):
             field.save(new_name, ContentFile(output.read()), save=False)
         except Exception as e:
             # Silently log/ignore optimization errors to avoid blocking the request
-            pass
+            logger.error(f"Image optimization failed: {e}", exc_info=True)
