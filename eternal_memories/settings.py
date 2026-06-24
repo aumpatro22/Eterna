@@ -302,3 +302,4 @@ DEFAULT_USER_STORAGE_LIMIT = 52428800
 # ── Supabase Auth (Google OAuth) ──────────────────────────────────────────────
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
 SUPABASE_JWT_SECRET = os.environ.get('SUPABASE_JWT_SECRET', '')
+SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY', '')
