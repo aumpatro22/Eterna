@@ -9,7 +9,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eternal_memories.settings')
 django.setup()
 
 from django.contrib.auth import get_user_model
-from communities.models import Community, Membership, CommunityJoinRequest
+from communities.models import Membership, CommunityJoinRequest
 
 User = get_user_model()
 
