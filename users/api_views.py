@@ -156,7 +156,7 @@ def supabase_google_oauth_view(request):
             jwks_url = f"{django_settings.SUPABASE_URL.rstrip('/')}/auth/v1/.well-known/jwks.json"
             
             headers = {}
-            anon_key = getattr(django_settings, 'SUPABASE_ANON_KEY', '')
+            anon_key = getattr(django_settings, 'SUPABASE_ANON_KEY', '').strip()
             if anon_key:
                 headers['apikey'] = anon_key
 
