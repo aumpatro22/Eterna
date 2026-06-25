@@ -253,6 +253,7 @@ REST_FRAMEWORK = {
         'auth': '5/minute',
         'messages': '30/minute',
         'reports': '10/minute',
+        'contact': '3/minute',
     }
 }
 
