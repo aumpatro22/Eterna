@@ -9,6 +9,15 @@ class AuthThrottle(SimpleRateThrottle):
             'ident': ident
         }
 
+class ContactThrottle(SimpleRateThrottle):
+    scope = 'contact'
+    def get_cache_key(self, request, view):
+        ident = self.get_ident(request)
+        return self.cache_format % {
+            'scope': self.scope,
+            'ident': ident
+        }
+
 class MessageThrottle(SimpleRateThrottle):
     scope = 'messages'
     def get_cache_key(self, request, view):
