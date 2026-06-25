@@ -368,6 +368,7 @@ export default function DoodleCorkboard() {
               onClick={() => deleteNote(note.id)}
               className="absolute top-1 right-2 font-kalam text-xs text-ink/30 hover:text-marker font-bold"
               title="Unpin Note"
+              aria-label="Unpin Note"
             >
               x
             </button>
