@@ -55,38 +55,38 @@ export default function Register() {
 
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="input-label">First Name</label>
-              <input className="input" type="text" required
+              <label htmlFor="first_name" className="input-label">First Name <span className="text-marker">*</span></label>
+              <input id="first_name" className="input" type="text" required aria-required="true"
                 value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} />
             </div>
             <div>
-              <label className="input-label">Last Name</label>
-              <input className="input" type="text" required
+              <label htmlFor="last_name" className="input-label">Last Name <span className="text-marker">*</span></label>
+              <input id="last_name" className="input" type="text" required aria-required="true"
                 value={form.last_name} onChange={e => setForm({...form, last_name: e.target.value})} />
             </div>
           </div>
 
           <div>
-            <label className="input-label">Username</label>
-            <input className="input" type="text" required
+            <label htmlFor="username" className="input-label">Username <span className="text-marker">*</span></label>
+            <input id="username" className="input" type="text" required aria-required="true"
               value={form.username} onChange={e => setForm({...form, username: e.target.value})} />
           </div>
 
           <div>
-            <label className="input-label">Email</label>
-            <input className="input" type="email" required
+            <label htmlFor="email" className="input-label">Email <span className="text-marker">*</span></label>
+            <input id="email" className="input" type="email" required aria-required="true"
               value={form.email} onChange={e => setForm({...form, email: e.target.value})} />
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="input-label">Password</label>
-              <input className="input" type="password" required minLength={8}
+              <label htmlFor="password" className="input-label">Password <span className="text-marker">*</span></label>
+              <input id="password" className="input" type="password" required aria-required="true" minLength={8}
                 value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
             </div>
             <div>
-              <label className="input-label">Confirm Password</label>
-              <input className="input" type="password" required minLength={8}
+              <label htmlFor="password2" className="input-label">Confirm Password <span className="text-marker">*</span></label>
+              <input id="password2" className="input" type="password" required aria-required="true" minLength={8}
                 value={form.password2} onChange={e => setForm({...form, password2: e.target.value})} />
             </div>
           </div>
