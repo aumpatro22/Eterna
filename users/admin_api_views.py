@@ -11,12 +11,13 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 User = get_user_model()
 from users.models import Profile, Report, PlatformStatus, AuditLog, MemorialOwnershipRequest, ContactMessage
+from users.throttles import ReportThrottle
 from memorials.models import Memorial, MemorialPhoto, TimelineEvent, Memory
 from tales.models import Tale, Chapter
 from communities.models import Community, Membership, CommunityJoinRequest, CommunityMessage, CommunityBan
@@ -1258,6 +1259,7 @@ def admin_recovery_restore(request):
 # Public Submit Endpoint for Contact Page
 @api_view(['POST'])
 @permission_classes([])
+@throttle_classes([ReportThrottle])
 def public_submit_contact(request):
     name = request.data.get('name', '').strip()
     email = request.data.get('email', '').strip()
