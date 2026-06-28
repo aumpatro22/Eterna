@@ -86,15 +86,15 @@ export default function TaleCreate() {
             <h3 className="font-kalam text-3xl mb-6">2. Privacy Settings</h3>
             
             <label className="flex items-center gap-4 cursor-pointer font-kalam text-2xl group select-none">
-              <div className={`w-8 h-8 border-[3px] border-ink wobbly-sm flex items-center justify-center transition-colors ${form.is_public ? 'bg-marker' : 'bg-white'}`}>
-                {form.is_public && <span className="text-white">X</span>}
-              </div>
               <input
                 type="checkbox"
-                className="hidden"
+                className="sr-only peer"
                 checked={form.is_public}
                 onChange={(e) => setForm({ ...form, is_public: e.target.checked })}
               />
+              <div className={`w-8 h-8 border-[3px] border-ink wobbly-sm flex items-center justify-center transition-colors peer-focus-visible:outline-3 peer-focus-visible:outline-dotted peer-focus-visible:outline-offset-[4.5px] peer-focus-visible:outline-ink ${form.is_public ? 'bg-marker' : 'bg-white'}`}>
+                {form.is_public && <span className="text-white">X</span>}
+              </div>
               <span className="md:group-hover:underline decoration-wavy">Make this story public for everyone</span>
             </label>
           </div>

@@ -252,15 +252,15 @@ export default function MemorialCreate() {
             {/* AI Image Option */}
             <div className="mt-6">
               <label className="flex items-center gap-4 cursor-pointer font-kalam text-2xl group">
-                <div className={`w-8 h-8 border-[3px] border-ink wobbly-sm flex items-center justify-center transition-colors ${form.use_ai_image ? 'bg-marker' : 'bg-white'}`}>
-                  {form.use_ai_image && <span className="text-white">✓</span>}
-                </div>
                 <input 
                   type="checkbox" 
-                  className="hidden" 
+                  className="sr-only peer"
                   checked={form.use_ai_image} 
                   onChange={e => setForm({...form, use_ai_image: e.target.checked})} 
                 />
+                <div className={`w-8 h-8 border-[3px] border-ink wobbly-sm flex items-center justify-center transition-colors peer-focus-visible:outline-3 peer-focus-visible:outline-dotted peer-focus-visible:outline-offset-[4.5px] peer-focus-visible:outline-ink ${form.use_ai_image ? 'bg-marker' : 'bg-white'}`}>
+                  {form.use_ai_image && <span className="text-white">✓</span>}
+                </div>
                 <span className="group-hover:underline decoration-wavy">✨ Generate Profile Sketch with AI</span>
               </label>
               
@@ -395,15 +395,15 @@ export default function MemorialCreate() {
             <h3 className="font-kalam text-3xl mb-6">5. AI Tribute Writer</h3>
             
             <label className="flex items-center gap-4 cursor-pointer font-kalam text-2xl group">
-              <div className={`w-8 h-8 border-[3px] border-ink wobbly-sm flex items-center justify-center transition-colors ${form.generate_tribute ? 'bg-marker' : 'bg-white'}`}>
-                {form.generate_tribute && <span className="text-white">✓</span>}
-              </div>
               <input 
                 type="checkbox" 
-                className="hidden" 
+                className="sr-only peer"
                 checked={form.generate_tribute} 
                 onChange={e => setForm({...form, generate_tribute: e.target.checked})} 
               />
+              <div className={`w-8 h-8 border-[3px] border-ink wobbly-sm flex items-center justify-center transition-colors peer-focus-visible:outline-3 peer-focus-visible:outline-dotted peer-focus-visible:outline-offset-[4.5px] peer-focus-visible:outline-ink ${form.generate_tribute ? 'bg-marker' : 'bg-white'}`}>
+                {form.generate_tribute && <span className="text-white">✓</span>}
+              </div>
               <span className="group-hover:underline decoration-wavy">✨ Let AI help draft a beautiful tribute</span>
             </label>
             
