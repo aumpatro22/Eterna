@@ -648,13 +648,13 @@ export default function CommunityDetail() {
 
                       {/* Image Attachment Input */}
                       <div className="flex items-center gap-4 text-sm font-patrick">
-                        <label className="cursor-pointer bg-erased hover:bg-paper border-2 border-ink px-2 py-0.5 rounded wobbly-sm flex items-center gap-1 select-none">
+                        <label className="cursor-pointer bg-erased hover:bg-paper border-2 border-ink px-2 py-0.5 rounded wobbly-sm flex items-center gap-1 select-none focus-within:outline-3 focus-within:outline-dotted focus-within:outline-offset-[4.5px] focus-within:outline-ink">
                           📸 Attach Image
                           <input
                             ref={fileInputRef}
                             type="file"
                             accept="image/*"
-                            className="hidden"
+                            className="sr-only"
                             onChange={async (e) => {
                               const file = e.target.files[0];
                               if (file) {
