@@ -22,7 +22,9 @@ class TaleListView(generics.ListAPIView):
         qs = qs.annotate(
             chapter_count_annotated=Count('chapters', filter=Q(chapters__published=True))
         )
-        if not self.request.user.is_authenticated:
+        if self.request.user.is_authenticated:
+            qs = qs.filter(Q(is_public=True) | Q(author=self.request.user))
+        else:
             qs = qs.filter(is_public=True)
         if q:
             qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
