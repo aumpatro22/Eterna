@@ -1,0 +1,4 @@
+## 2025-02-27 - [CRITICAL] IDOR in TaleListView via Incorrect Authentication Filter
+**Vulnerability:** The TaleListView `get_queryset` explicitly queried `is_public=True` ONLY when the user was NOT authenticated. Authenticated users bypassed the filter entirely, meaning any logged-in user could fetch private tales that belonged to other users.
+**Learning:** Checking `if not request.user.is_authenticated:` and failing to implement the inverse safe filter for authenticated states creates a massive authorization bypass. We must explicitly define the allowed states for BOTH authenticated and unauthenticated contexts.
+**Prevention:** Always verify that visibility filters restrict querysets to the user's scope (e.g. `Q(is_public=True) | Q(author=request.user)`) rather than just omitting filters entirely when authenticated.

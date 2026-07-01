@@ -69,3 +69,51 @@ class TaleCreateAPITests(APITestCase):
 
         # Verify database state
         self.assertEqual(Tale.objects.count(), 0)
+
+class TaleListAPITests(APITestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(
+            username='user1', password='Password123!', email='user1@example.com'
+        )
+        self.user2 = User.objects.create_user(
+            username='user2', password='Password123!', email='user2@example.com'
+        )
+
+        self.public_tale_u1 = Tale.objects.create(
+            author=self.user1, title='Public Tale User 1', is_public=True
+        )
+        self.private_tale_u1 = Tale.objects.create(
+            author=self.user1, title='Private Tale User 1', is_public=False
+        )
+
+        self.public_tale_u2 = Tale.objects.create(
+            author=self.user2, title='Public Tale User 2', is_public=True
+        )
+        self.private_tale_u2 = Tale.objects.create(
+            author=self.user2, title='Private Tale User 2', is_public=False
+        )
+
+        self.url = reverse('api_tale_list')
+
+    def test_list_tales_unauthenticated(self):
+        """Unauthenticated user only sees public tales."""
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        titles = [t['title'] for t in response.data['results']]
+        self.assertIn('Public Tale User 1', titles)
+        self.assertIn('Public Tale User 2', titles)
+        self.assertNotIn('Private Tale User 1', titles)
+        self.assertNotIn('Private Tale User 2', titles)
+
+    def test_list_tales_authenticated_idor(self):
+        """Authenticated user sees public tales and THEIR OWN private tales, but not others' private tales."""
+        self.client.force_authenticate(user=self.user1)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        titles = [t['title'] for t in response.data['results']]
+        self.assertIn('Public Tale User 1', titles)
+        self.assertIn('Public Tale User 2', titles)
+        self.assertIn('Private Tale User 1', titles) # Own private tale
+        self.assertNotIn('Private Tale User 2', titles) # IDOR check: Should NOT see user2's private tale
