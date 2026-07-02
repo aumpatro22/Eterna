@@ -1,3 +1,4 @@
-## 2024-06-26 - Adding Accessible Form Labels and Required Indicators
-**Learning:** Explicitly linking form labels (`htmlFor`) to inputs (`id`) is a critical accessibility requirement. Visual required indicators (`<span className="text-marker">*</span>`) should be accompanied by `aria-required="true"` to ensure screen readers correctly convey the mandatory nature of fields.
-**Action:** Always ensure `id` and `htmlFor` attributes are correctly matched on forms, and that visual indicators of required fields have programmatic equivalents (`aria-required`).
+## 2024-05-24 - Accessibility Enhancements in Navbar
+
+**Learning:** When dealing with custom toggle buttons (like "Sketch Mode") and dynamic menus in React applications, developers frequently forget to communicate state changes to screen readers using ARIA attributes like `aria-pressed`, `aria-expanded`, and `aria-controls`.
+**Action:** Always verify that interactive custom components have corresponding ARIA states that reflect their visual and functional state. In this app, checking the Navbar components is a great place to start looking for a11y quick wins.
