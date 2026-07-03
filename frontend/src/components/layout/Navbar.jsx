@@ -77,6 +77,9 @@ export default function Navbar({ sketchMode, setSketchMode }) {
         <button 
           className="md:hidden border-[3px] border-ink bg-white p-2 wobbly-sm shadow-hard active:shadow-none active:translate-y-1 active:translate-x-1"
           onClick={() => setMobileOpen(!mobileOpen)}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-menu"
+          aria-label="Toggle navigation menu"
         >
           <span className="font-kalam font-bold text-xl">{mobileOpen ? 'X' : 'Menu'}</span>
         </button>
@@ -84,7 +87,7 @@ export default function Navbar({ sketchMode, setSketchMode }) {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t-[3px] border-ink bg-white p-6 flex flex-col gap-4 font-kalam text-xl">
+        <div id="mobile-menu" className="md:hidden border-t-[3px] border-ink bg-white p-6 flex flex-col gap-4 font-kalam text-xl">
           <Link to="/" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-marker">Home</Link>
           <Link to="/memorials" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-marker">Memorials</Link>
           <Link to="/communities" onClick={() => setMobileOpen(false)} className="block py-2.5 min-h-[44px] flex items-center md:hover:text-marker">Communities</Link>
