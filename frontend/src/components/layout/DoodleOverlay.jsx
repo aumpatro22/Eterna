@@ -134,18 +134,24 @@ export default function DoodleOverlay({ active }) {
             className={`w-8 h-8 rounded-full border-2 border-ink ${color === '#ff4d4d' ? 'ring-2 ring-offset-2 ring-marker' : ''}`}
             style={{ backgroundColor: '#ff4d4d' }}
             title="Red Marker"
+            aria-label="Red Marker"
+            aria-pressed={color === '#ff4d4d'}
           />
           <button
             onClick={() => setColor('#2d5da1')}
             className={`w-8 h-8 rounded-full border-2 border-ink ${color === '#2d5da1' ? 'ring-2 ring-offset-2 ring-pen' : ''}`}
             style={{ backgroundColor: '#2d5da1' }}
             title="Blue Pen"
+            aria-label="Blue Pen"
+            aria-pressed={color === '#2d5da1'}
           />
           <button
             onClick={() => setColor('#2d2d2d')}
             className={`w-8 h-8 rounded-full border-2 border-ink ${color === '#2d2d2d' ? 'ring-2 ring-offset-2 ring-ink' : ''}`}
             style={{ backgroundColor: '#2d2d2d' }}
             title="Sketch Pencil"
+            aria-label="Sketch Pencil"
+            aria-pressed={color === '#2d2d2d'}
           />
         </div>
 
@@ -154,18 +160,21 @@ export default function DoodleOverlay({ active }) {
           <button
             onClick={() => setLineWidth(2)}
             className={`px-2 py-0.5 border-[2px] border-ink wobbly-sm ${lineWidth === 2 ? 'bg-ink text-white' : 'bg-white'}`}
+            aria-pressed={lineWidth === 2}
           >
             Thin
           </button>
           <button
             onClick={() => setLineWidth(5)}
             className={`px-2 py-0.5 border-[2px] border-ink wobbly-sm ${lineWidth === 5 ? 'bg-ink text-white' : 'bg-white'}`}
+            aria-pressed={lineWidth === 5}
           >
             Medium
           </button>
           <button
             onClick={() => setLineWidth(10)}
             className={`px-2 py-0.5 border-[2px] border-ink wobbly-sm ${lineWidth === 10 ? 'bg-ink text-white' : 'bg-white'}`}
+            aria-pressed={lineWidth === 10}
           >
             Thick
           </button>
