@@ -252,12 +252,14 @@ export default function DoodleCorkboard() {
           <div className="flex justify-center gap-4 mb-4">
             <button
               onClick={() => setNoteType('text')}
+              aria-pressed={noteType === 'text'}
               className={`px-4 py-2 border-[2px] border-ink font-patrick font-bold text-lg wobbly-sm ${noteType === 'text' ? 'bg-ink text-white' : 'bg-white text-ink'}`}
             >
               Write Text
             </button>
             <button
               onClick={() => setNoteType('doodle')}
+              aria-pressed={noteType === 'doodle'}
               className={`px-4 py-2 border-[2px] border-ink font-patrick font-bold text-lg wobbly-sm ${noteType === 'doodle' ? 'bg-ink text-white' : 'bg-white text-ink'}`}
             >
               Draw Doodle
@@ -271,6 +273,8 @@ export default function DoodleCorkboard() {
               <button
                 key={col}
                 onClick={() => setNoteColor(col)}
+                aria-label={`Select ${col.replace('bg-', '')} paper color`}
+                aria-pressed={noteColor === col}
                 className={`w-6 h-6 border-[2px] border-ink rounded-full ${col} ${noteColor === col ? 'ring-2 ring-ink ring-offset-1' : ''}`}
               />
             ))}
@@ -303,14 +307,23 @@ export default function DoodleCorkboard() {
               </div>
               <div className="flex justify-between w-full max-w-[280px]">
                 <div className="flex gap-2">
-                  {['#2d2d2d', '#ff4d4d', '#2d5da1'].map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setBrushColor(c)}
-                      className={`w-6 h-6 rounded-full border border-ink ${brushColor === c ? 'ring-2 ring-offset-1 ring-ink' : ''}`}
-                      style={{ backgroundColor: c }}
-                    />
-                  ))}
+                  {['#2d2d2d', '#ff4d4d', '#2d5da1'].map((c) => {
+                    const colorNames = {
+                      '#2d2d2d': 'black',
+                      '#ff4d4d': 'red',
+                      '#2d5da1': 'blue'
+                    };
+                    return (
+                      <button
+                        key={c}
+                        onClick={() => setBrushColor(c)}
+                        aria-label={`Select ${colorNames[c]} brush color`}
+                        aria-pressed={brushColor === c}
+                        className={`w-6 h-6 rounded-full border border-ink ${brushColor === c ? 'ring-2 ring-offset-1 ring-ink' : ''}`}
+                        style={{ backgroundColor: c }}
+                      />
+                    );
+                  })}
                 </div>
                 <button 
                   onClick={clearCanvas}
@@ -368,6 +381,7 @@ export default function DoodleCorkboard() {
               onClick={() => deleteNote(note.id)}
               className="absolute top-1 right-2 font-kalam text-xs text-ink/30 hover:text-marker font-bold"
               title="Unpin Note"
+              aria-label="Unpin Note"
             >
               x
             </button>
