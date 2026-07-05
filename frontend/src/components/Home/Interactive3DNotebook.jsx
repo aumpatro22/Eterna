@@ -214,16 +214,22 @@ export default function Interactive3DNotebook() {
                   <div className="flex justify-center gap-3 mt-3">
                     <button
                       onClick={() => setColor('#2d5da1')}
+                      aria-label="Select blue brush color"
+                      aria-pressed={color === '#2d5da1'}
                       className={`w-6 h-6 rounded-full border border-ink ${color === '#2d5da1' ? 'ring-2 ring-offset-1 ring-pen' : ''}`}
                       style={{ backgroundColor: '#2d5da1' }}
                     />
                     <button
                       onClick={() => setColor('#ff4d4d')}
+                      aria-label="Select red brush color"
+                      aria-pressed={color === '#ff4d4d'}
                       className={`w-6 h-6 rounded-full border border-ink ${color === '#ff4d4d' ? 'ring-2 ring-offset-1 ring-marker' : ''}`}
                       style={{ backgroundColor: '#ff4d4d' }}
                     />
                     <button
                       onClick={() => setColor('#2d2d2d')}
+                      aria-label="Select black brush color"
+                      aria-pressed={color === '#2d2d2d'}
                       className={`w-6 h-6 rounded-full border border-ink ${color === '#2d2d2d' ? 'ring-2 ring-offset-1 ring-ink' : ''}`}
                       style={{ backgroundColor: '#2d2d2d' }}
                     />
