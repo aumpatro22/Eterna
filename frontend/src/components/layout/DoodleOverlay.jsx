@@ -128,24 +128,30 @@ export default function DoodleOverlay({ active }) {
         <h4 className="font-kalam text-xl text-center">Pencil Box ✏️</h4>
         
         {/* Colors */}
-        <div className="flex gap-3 justify-center">
+        <div className="flex gap-3 justify-center" role="group" aria-label="Color selection">
           <button
             onClick={() => setColor('#ff4d4d')}
             className={`w-8 h-8 rounded-full border-2 border-ink ${color === '#ff4d4d' ? 'ring-2 ring-offset-2 ring-marker' : ''}`}
             style={{ backgroundColor: '#ff4d4d' }}
             title="Red Marker"
+            aria-label="Red Marker"
+            aria-pressed={color === '#ff4d4d'}
           />
           <button
             onClick={() => setColor('#2d5da1')}
             className={`w-8 h-8 rounded-full border-2 border-ink ${color === '#2d5da1' ? 'ring-2 ring-offset-2 ring-pen' : ''}`}
             style={{ backgroundColor: '#2d5da1' }}
             title="Blue Pen"
+            aria-label="Blue Pen"
+            aria-pressed={color === '#2d5da1'}
           />
           <button
             onClick={() => setColor('#2d2d2d')}
             className={`w-8 h-8 rounded-full border-2 border-ink ${color === '#2d2d2d' ? 'ring-2 ring-offset-2 ring-ink' : ''}`}
             style={{ backgroundColor: '#2d2d2d' }}
             title="Sketch Pencil"
+            aria-label="Sketch Pencil"
+            aria-pressed={color === '#2d2d2d'}
           />
         </div>
 
