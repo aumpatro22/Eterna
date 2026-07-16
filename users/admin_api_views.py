@@ -244,6 +244,8 @@ def admin_user_status_action(request, pk):
         user.is_banned = True
         user.ban_reason = reason
         user.save()
+        if hasattr(user, 'auth_token'):
+            user.auth_token.delete()
         log_admin_action(request.user, "BAN_USER", "USER", user.id, reason)
     elif action == 'unban':
         user.is_banned = False
@@ -824,6 +826,8 @@ def admin_report_action(request, pk):
                 author.is_banned = True
                 author.ban_reason = f"Banned due to report #{report.id}: {reason}"
                 author.save()
+                if hasattr(author, 'auth_token'):
+                    author.auth_token.delete()
                 
         report.status = 'APPROVED'
         report.save()
