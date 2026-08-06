@@ -269,15 +269,13 @@ CSRF_TRUSTED_ORIGINS += [
 
 FRONTEND_URL = os.environ.get('FRONTEND_URL')
 if FRONTEND_URL:
-    if FRONTEND_URL == '*':
-        CORS_ALLOW_ALL_ORIGINS = True
-        CORS_ALLOW_CREDENTIALS = False
-    else:
-        from urllib.parse import urlparse
-        parsed = urlparse(FRONTEND_URL)
-        if parsed.scheme and parsed.netloc:
-            origin = f"{parsed.scheme}://{parsed.netloc}"
+    from urllib.parse import urlparse
+    parsed = urlparse(FRONTEND_URL)
+    if parsed.scheme and parsed.netloc:
+        origin = f"{parsed.scheme}://{parsed.netloc}"
+        if origin not in CORS_ALLOWED_ORIGINS:
             CORS_ALLOWED_ORIGINS.append(origin)
+        if origin not in CSRF_TRUSTED_ORIGINS:
             CSRF_TRUSTED_ORIGINS.append(origin)
 
 # Eterna Support Circle Co-Admin Limits
