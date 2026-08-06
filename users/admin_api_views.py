@@ -696,7 +696,7 @@ def admin_reports_list(request):
     status_filter = request.GET.get('status', '').strip()
     reason_filter = request.GET.get('reason', '').strip()
     
-    reports = Report.objects.select_related('reporter', 'content_type').order_by('-created_at')
+    reports = Report.objects.select_related('reporter', 'content_type').prefetch_related('content_object').order_by('-created_at')
     
     if status_filter:
         reports = reports.filter(status=status_filter)
