@@ -39,6 +39,6 @@ class CommunityModelTest(TestCase):
             welcome_message="<h1>Welcome</h1>"
         )
         self.assertEqual(community.title, "Support Group")
-        self.assertEqual(community.description, "alert('xss')Description")
+        self.assertEqual(community.description, "Description")
         self.assertEqual(community.rules, "Rule 1")
         self.assertEqual(community.welcome_message, "Welcome")
