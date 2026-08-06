@@ -1,4 +1,4 @@
-## 2024-05-18 - [Fix `nh3` Migration Bug]
-**Vulnerability:** The codebase recently migrated from `bleach` to `nh3` for HTML sanitization, but missed migrating the usage of `bleach` in `communities/models.py` and `memorials/models.py`. This resulted in `ModuleNotFoundError` during runtime because `bleach` was uninstalled from the environment but still imported and called in these files.
-**Learning:** When migrating core security libraries, always conduct a codebase-wide search for the old library to ensure all usages are migrated correctly. Specifically, replacing `bleach.clean(..., strip=True)` with `nh3.clean(..., tags=set())` is essential to preserve the exact stripping behavior, particularly for `script` tags, which `bleach` would strip but leave inner content like `alert("xss")`, while `nh3` strips the tag AND its content, altering expected behavior that tests might assert.
-**Prevention:** Set up CI/CD test runs whenever a dependency is updated/removed to detect broken code paths quickly. Use codebase search tools to verify there are no remaining usages of deprecated packages. Double check sanitization changes by looking closely at how tests assert specific stripping outcomes (e.g. `bleach` leaves inner contents of `script` but `nh3` does not).
+## 2025-02-14 - [Missing Rate Limiting on Contact Submit]
+**Vulnerability:** The unauthenticated `public_submit_contact` API endpoint lacked rate limiting.
+**Learning:** Any endpoint accepting unauthenticated POST data is susceptible to bot spam.
+**Prevention:** Apply `@throttle_classes([AnonRateThrottle])` to all public, unauthenticated submission endpoints.

@@ -288,6 +288,21 @@ class EternaSocialApiTests(APITestCase):
             if i >= 5:
                 # 6th request should return 429 Too Many Requests
                 self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_public_contact_rate_limit(self):
+        from django.core.cache import cache
+        cache.clear()
+
+        # AnonRateThrottle is set to 60/minute in settings.
+        # Hit public_submit_contact 61 times
+        for i in range(61):
+            response = self.client.post('/api/users/contact/', {
+                'name': f'TestUser{i}',
+                'email': f'test{i}@example.com',
+                'message': f'This is test message {i}'
+            })
+            if i >= 60:
+                self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
                 
     def test_community_ban_system(self):
         from communities.models import Community, Membership, CommunityBan
