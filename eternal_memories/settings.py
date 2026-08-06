@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 # Load environment variables from .env file
 load_dotenv()
@@ -12,8 +13,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-key-for-dev')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+_env_secret = os.environ.get('SECRET_KEY')
+if _env_secret:
+    SECRET_KEY = _env_secret
+elif DEBUG:
+    SECRET_KEY = 'django-insecure-key-for-dev'
+else:
+    raise ImproperlyConfigured("SECRET_KEY environment variable must be set in production.")
+
 ALLOWED_HOSTS = [h for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h]
 
 # Allow Render's external hostname if provided by platform
