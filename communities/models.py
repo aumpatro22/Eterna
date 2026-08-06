@@ -34,18 +34,18 @@ class Community(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        import bleach
+        import nh3
         from users.validators import validate_image_file, optimize_image
         if not self.slug:
             self.slug = slugify(self.title)[:95]
         if self.title:
-            self.title = bleach.clean(self.title, tags=[], strip=True)
+            self.title = nh3.clean(self.title, tags=set())
         if self.description:
-            self.description = bleach.clean(self.description, tags=[], strip=True)
+            self.description = nh3.clean(self.description, tags=set())
         if self.rules:
-            self.rules = bleach.clean(self.rules, tags=[], strip=True)
+            self.rules = nh3.clean(self.rules, tags=set())
         if self.welcome_message:
-            self.welcome_message = bleach.clean(self.welcome_message, tags=[], strip=True)
+            self.welcome_message = nh3.clean(self.welcome_message, tags=set())
         if self.cover_image:
             validate_image_file(self.cover_image)
             optimize_image(self.cover_image)
@@ -135,10 +135,10 @@ class CommunityMessage(models.Model):
         return f"{self.author.username} in {self.community.title}: {self.content[:30]}{deleted_status}"
 
     def save(self, *args, **kwargs):
-        import bleach
+        import nh3
         from users.validators import validate_image_file, optimize_image
         if self.content:
-            self.content = bleach.clean(self.content, tags=[], strip=True)
+            self.content = nh3.clean(self.content, tags=set())
         if self.image:
             validate_image_file(self.image)
             optimize_image(self.image)
