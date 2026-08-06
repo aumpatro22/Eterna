@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import status
 from rest_framework.test import APITestCase
 from communities.models import Community, Membership
-from users.models import Profile, Conversation, DirectMessage, CircleConnection, ProfileTimelineEvent, Report
+from users.models import Profile, DirectMessage, CircleConnection, ProfileTimelineEvent, Report
 
 
 class EternaSocialApiTests(APITestCase):
