@@ -33,16 +33,16 @@ class Memorial(models.Model):
         return f"Memorial for {self.full_name}"
         
     def save(self, *args, **kwargs):
-        import bleach
+        import nh3
         from users.validators import validate_image_file, optimize_image
         if not self.public_id:
             self.public_id = uuid.uuid4().hex[:22]
         if self.biography:
-            self.biography = bleach.clean(self.biography, tags=[], strip=True)
+            self.biography = nh3.clean(self.biography, tags=set())
         if self.tribute:
-            self.tribute = bleach.clean(self.tribute, tags=[], strip=True)
+            self.tribute = nh3.clean(self.tribute, tags=set())
         if self.full_name:
-            self.full_name = bleach.clean(self.full_name, tags=[], strip=True)
+            self.full_name = nh3.clean(self.full_name, tags=set())
         if self.profile_image:
             validate_image_file(self.profile_image)
             optimize_image(self.profile_image)
@@ -76,10 +76,10 @@ class MemorialPhoto(models.Model):
         return f"Photo for {self.memorial.full_name} ({self.id})"
 
     def save(self, *args, **kwargs):
-        import bleach
+        import nh3
         from users.validators import validate_image_file, optimize_image
         if self.caption:
-            self.caption = bleach.clean(self.caption, tags=[], strip=True)
+            self.caption = nh3.clean(self.caption, tags=set())
         if self.image:
             validate_image_file(self.image)
             optimize_image(self.image)
@@ -112,12 +112,12 @@ class TimelineEvent(models.Model):
         return f"Event '{self.title}' on {self.memorial.full_name}"
 
     def save(self, *args, **kwargs):
-        import bleach
+        import nh3
         from users.validators import validate_image_file, optimize_image
         if self.title:
-            self.title = bleach.clean(self.title, tags=[], strip=True)
+            self.title = nh3.clean(self.title, tags=set())
         if self.description:
-            self.description = bleach.clean(self.description, tags=[], strip=True)
+            self.description = nh3.clean(self.description, tags=set())
         if self.image:
             validate_image_file(self.image)
             optimize_image(self.image)
@@ -146,11 +146,11 @@ class Message(models.Model):
         return f"Message from {self.author_name} on {self.memorial.full_name}'s memorial"
 
     def save(self, *args, **kwargs):
-        import bleach
+        import nh3
         if self.content:
-            self.content = bleach.clean(self.content, tags=[], strip=True)
+            self.content = nh3.clean(self.content, tags=set())
         if self.author_name:
-            self.author_name = bleach.clean(self.author_name, tags=[], strip=True)
+            self.author_name = nh3.clean(self.author_name, tags=set())
         super().save(*args, **kwargs)
 
 class Candle(models.Model):
@@ -163,11 +163,11 @@ class Candle(models.Model):
         return f"Candle lit by {self.lit_by} on {self.memorial.full_name}'s memorial"
 
     def save(self, *args, **kwargs):
-        import bleach
+        import nh3
         if self.lit_by:
-            self.lit_by = bleach.clean(self.lit_by, tags=[], strip=True)
+            self.lit_by = nh3.clean(self.lit_by, tags=set())
         if self.message:
-            self.message = bleach.clean(self.message, tags=[], strip=True)
+            self.message = nh3.clean(self.message, tags=set())
         super().save(*args, **kwargs)
 
 class Memory(models.Model):
@@ -193,12 +193,12 @@ class Memory(models.Model):
         return f"Memory '{self.title}' on {self.memorial.full_name}"
 
     def save(self, *args, **kwargs):
-        import bleach
+        import nh3
         from users.validators import validate_image_file, validate_audio_file, optimize_image
         if self.title:
-            self.title = bleach.clean(self.title, tags=[], strip=True)
+            self.title = nh3.clean(self.title, tags=set())
         if self.story:
-            self.story = bleach.clean(self.story, tags=[], strip=True)
+            self.story = nh3.clean(self.story, tags=set())
         if self.image:
             validate_image_file(self.image)
             optimize_image(self.image)
