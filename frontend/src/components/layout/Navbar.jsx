@@ -42,6 +42,7 @@ export default function Navbar({ sketchMode, setSketchMode }) {
           {/* Sketch Mode Toggler */}
           <button
             onClick={() => setSketchMode(!sketchMode)}
+            aria-pressed={sketchMode}
             className={`wobbly-sm border-[3px] border-ink px-3 py-1 font-patrick font-bold text-lg transition-all select-none ${
               sketchMode 
                 ? 'bg-marker text-white rotate-2 animate-pulse shadow-none translate-y-0.5' 
@@ -77,6 +78,8 @@ export default function Navbar({ sketchMode, setSketchMode }) {
         <button 
           className="md:hidden border-[3px] border-ink bg-white p-2 wobbly-sm shadow-hard active:shadow-none active:translate-y-1 active:translate-x-1"
           onClick={() => setMobileOpen(!mobileOpen)}
+          aria-expanded={mobileOpen}
+          aria-label="Toggle mobile menu"
         >
           <span className="font-kalam font-bold text-xl">{mobileOpen ? 'X' : 'Menu'}</span>
         </button>
@@ -99,6 +102,7 @@ export default function Navbar({ sketchMode, setSketchMode }) {
           
           <button
             onClick={() => { setSketchMode(!sketchMode); setMobileOpen(false); }}
+            aria-pressed={sketchMode}
             className={`w-full py-2 border-[3px] border-ink font-patrick font-bold wobbly-sm text-center ${
               sketchMode ? 'bg-marker text-white' : 'bg-postit text-ink'
             }`}
