@@ -6,16 +6,20 @@ import api from '../api/client';
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) return;
+    setIsSubmitting(true);
     try {
       await api.post('/api/contact/', form);
       setSubmitted(true);
       setForm({ name: '', email: '', message: '' });
     } catch (err) {
       alert(err.message || 'Failed to send message');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -109,11 +113,15 @@ export default function Contact() {
               <h2 className="font-kalam text-3xl font-bold text-ink mb-2">Send a Message</h2>
               
               <div>
-                <label className="block font-kalam font-bold text-lg mb-1">Your Name</label>
+                <label htmlFor="contact-name" className="block font-kalam font-bold text-lg mb-1">
+                  Your Name <span className="text-marker" aria-hidden="true">*</span>
+                </label>
                 <input 
+                  id="contact-name"
                   type="text" 
                   className="input w-full bg-paper border-2" 
                   required
+                  aria-required="true"
                   placeholder="e.g. Elena Ross"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -121,11 +129,15 @@ export default function Contact() {
               </div>
 
               <div>
-                <label className="block font-kalam font-bold text-lg mb-1">Email Address</label>
+                <label htmlFor="contact-email" className="block font-kalam font-bold text-lg mb-1">
+                  Email Address <span className="text-marker" aria-hidden="true">*</span>
+                </label>
                 <input 
+                  id="contact-email"
                   type="email" 
                   className="input w-full bg-paper border-2" 
                   required
+                  aria-required="true"
                   placeholder="e.g. elena@example.com"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -133,10 +145,14 @@ export default function Contact() {
               </div>
 
               <div>
-                <label className="block font-kalam font-bold text-lg mb-1">How can we help?</label>
+                <label htmlFor="contact-message" className="block font-kalam font-bold text-lg mb-1">
+                  How can we help? <span className="text-marker" aria-hidden="true">*</span>
+                </label>
                 <textarea 
+                  id="contact-message"
                   className="input w-full bg-paper border-2 h-32" 
                   required
+                  aria-required="true"
                   placeholder="Write your thoughts or questions..."
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
@@ -144,10 +160,11 @@ export default function Contact() {
               </div>
 
               <button 
-                type="submit" 
-                className="btn btn-primary text-xl font-kalam font-bold py-3 -rotate-1 shadow-hard hover:shadow-hard-hover"
+                type="submit"
+                disabled={isSubmitting}
+                className="btn btn-primary text-xl font-kalam font-bold py-3 -rotate-1 shadow-hard hover:shadow-hard-hover disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Send Note ➜
+                {isSubmitting ? 'Sending...' : 'Send Note ➜'}
               </button>
             </form>
           )}
