@@ -1,3 +1,6 @@
 ## 2024-06-26 - Adding Accessible Form Labels and Required Indicators
 **Learning:** Explicitly linking form labels (`htmlFor`) to inputs (`id`) is a critical accessibility requirement. Visual required indicators (`<span className="text-marker">*</span>`) should be accompanied by `aria-required="true"` to ensure screen readers correctly convey the mandatory nature of fields.
 **Action:** Always ensure `id` and `htmlFor` attributes are correctly matched on forms, and that visual indicators of required fields have programmatic equivalents (`aria-required`).
+## 2026-09-07 - Add accessibility attributes to Navbar interactive elements
+**Learning:** Found multiple interactive elements in the Navbar without proper ARIA attributes to announce their state to screen readers. For example, stateful toggle buttons like the sketch mode toggle were missing `aria-pressed`, and expandable menus were missing `aria-expanded` and `aria-controls`. Also, icon-only buttons with non-descriptive text like "X" or "Menu" lacked `aria-label`s.
+**Action:** Always ensure that interactive UI elements, especially stateful ones (toggles, collapsibles), use the appropriate ARIA attributes (`aria-pressed`, `aria-expanded`, `aria-controls`, `aria-label`) to convey their state and purpose accurately to assistive technologies.
