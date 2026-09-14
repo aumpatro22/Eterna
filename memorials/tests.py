@@ -99,6 +99,25 @@ class AddMessageTest(APITestCase):
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_add_message_rate_limiting(self):
+        url = f'/api/memorials/{self.public_memorial.pk}/messages/'
+
+        # We need to clear the cache first since throttle uses cache
+        from django.core.cache import cache
+        cache.clear()
+
+        # AnonRateThrottle is set to 60/minute in settings.
+        # Hit add_message 61 times
+        for i in range(61):
+            response = self.client.post(url, {
+                'author_name': f'Guest User {i}',
+                'content': f'This is a message {i} from an unauthenticated user.'
+            })
+            if i >= 60:
+                self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_private_memorial_access_allowed_for_owner(self):
         self.client.force_authenticate(user=self.owner)
         url = f'/api/memorials/{self.private_memorial.pk}/messages/'
