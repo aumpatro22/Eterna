@@ -2,3 +2,7 @@
 **Vulnerability:** The unauthenticated `public_submit_contact` API endpoint lacked rate limiting.
 **Learning:** Any endpoint accepting unauthenticated POST data is susceptible to bot spam.
 **Prevention:** Apply `@throttle_classes([AnonRateThrottle])` to all public, unauthenticated submission endpoints.
+## 2025-02-14 - [Missing Rate Limiting on Unauthenticated Endpoints]
+**Vulnerability:** The unauthenticated `add_message` and `light_candle` API endpoints in `memorials/api_views.py` lacked rate limiting, making them vulnerable to bot spam and DoS attacks.
+**Learning:** Any endpoint accepting unauthenticated POST data is susceptible to bot spam and brute force.
+**Prevention:** Always apply `@throttle_classes([AnonRateThrottle])` to all public, unauthenticated submission endpoints, in accordance with DRF standards and the project's security rules.
