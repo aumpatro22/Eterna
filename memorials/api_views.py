@@ -6,8 +6,9 @@ from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 
 from rest_framework import generics, status, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
 from django.db.models import Q
 from rest_framework.exceptions import PermissionDenied
@@ -275,6 +276,7 @@ def check_memorial_access(memorial, user):
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
+@throttle_classes([AnonRateThrottle])
 def add_message(request, pk):
     """POST /api/memorials/<pk>/messages/ — leave a message."""
     memorial = get_object_or_404(Memorial, pk=pk)
@@ -303,6 +305,7 @@ def add_message(request, pk):
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
+@throttle_classes([AnonRateThrottle])
 def light_candle(request, pk):
     """POST /api/memorials/<pk>/candles/ — light a candle."""
     memorial = get_object_or_404(Memorial, pk=pk)
