@@ -14,7 +14,6 @@ from rest_framework.authtoken.models import Token
 from .models import Profile, Reaction, DirectMessage, Conversation, CircleConnection, ProfileTimelineEvent, Report
 from .serializers import (
     UserSerializer,
-    UserPublicSerializer,
     ProfileSerializer,
     RegisterSerializer,
     LoginSerializer,
