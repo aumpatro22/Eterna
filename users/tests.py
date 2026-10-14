@@ -498,6 +498,15 @@ class CorsSettingsTest(TestCase):
         from django.conf import settings
         self.assertFalse(hasattr(settings, 'CORS_ALLOW_ALL_ORIGINS'))
 
+    def test_cors_allow_all_origins_not_set_with_wildcard(self):
+        import os
+        from unittest import mock
+        with mock.patch.dict(os.environ, {'FRONTEND_URL': '*'}):
+            import importlib
+            import eternal_memories.settings
+            importlib.reload(eternal_memories.settings)
+            self.assertFalse(hasattr(eternal_memories.settings, 'CORS_ALLOW_ALL_ORIGINS'))
+
     def test_cors_credentials(self):
         from django.conf import settings
         self.assertTrue(settings.CORS_ALLOW_CREDENTIALS)
