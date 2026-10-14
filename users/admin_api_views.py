@@ -1,15 +1,12 @@
 import os
 import time
-from datetime import datetime
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
-from django.contrib.contenttypes.models import ContentType
-from django.db import connection, transaction
+from django.db import connection
 from django.db.models import Q, Sum, Count
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
@@ -18,8 +15,8 @@ from rest_framework.throttling import AnonRateThrottle
 
 User = get_user_model()
 from users.models import Profile, Report, PlatformStatus, AuditLog, MemorialOwnershipRequest, ContactMessage
-from memorials.models import Memorial, MemorialPhoto, TimelineEvent, Memory
-from tales.models import Tale, Chapter
+from memorials.models import Memorial, MemorialPhoto, Memory
+from tales.models import Tale
 from communities.models import Community, Membership, CommunityJoinRequest, CommunityMessage, CommunityBan
 
 # Helpers
