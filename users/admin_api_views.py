@@ -355,23 +355,34 @@ def admin_sessions_list(request):
     # GET list of active sessions
     active_sessions = []
     now = timezone.now()
-    sessions = Session.objects.filter(expire_date__gt=now)
+    sessions = list(Session.objects.filter(expire_date__gt=now))
+
+    user_ids = []
+    session_data_list = []
+
     for s in sessions:
         try:
             data = s.get_decoded()
             user_id = data.get('_auth_user_id')
             if user_id:
-                user = User.objects.get(pk=user_id)
-                active_sessions.append({
-                    'session_key': s.session_key,
-                    'username': user.username,
-                    'email': user.email,
-                    'expire_date': s.expire_date,
-                    'last_seen': user.profile.last_seen if hasattr(user, 'profile') else None
-                })
+                user_ids.append(user_id)
+                session_data_list.append((s, user_id))
         except Exception:
             pass
             
+    users = User.objects.select_related('profile').in_bulk(user_ids)
+
+    for s, user_id in session_data_list:
+        user = users.get(int(user_id) if str(user_id).isdigit() else user_id)
+        if user:
+            active_sessions.append({
+                'session_key': s.session_key,
+                'username': user.username,
+                'email': user.email,
+                'expire_date': s.expire_date,
+                'last_seen': user.profile.last_seen if hasattr(user, 'profile') else None
+            })
+
     return Response(active_sessions)
 
 # 5. Memorials Management
