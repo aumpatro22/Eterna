@@ -76,6 +76,20 @@ class AddMessageTest(APITestCase):
         self.assertEqual(message.author_email, 'custom@example.com')
         self.assertEqual(message.content, 'Message with custom name and email.')
 
+    def test_add_message_rate_limit(self):
+        from django.core.cache import cache
+        cache.clear()
+
+        url = f'/api/memorials/{self.public_memorial.pk}/messages/'
+        # Hit add_message 61 times (AnonRateThrottle is 60/minute)
+        for i in range(61):
+            response = self.client.post(url, {
+                'author_name': f'Guest User {i}',
+                'content': f'This is a message {i} from an unauthenticated user.'
+            })
+            if i >= 60:
+                self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
     def test_invalid_payload_missing_content(self):
         url = f'/api/memorials/{self.public_memorial.pk}/messages/'
         data = {
