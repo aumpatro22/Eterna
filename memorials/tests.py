@@ -42,9 +42,29 @@ class AddMessageTest(APITestCase):
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Message.objects.count(), 1)
+
         message = Message.objects.first()
         self.assertEqual(message.author_name, 'Guest User')
         self.assertEqual(message.content, 'This is a message from an unauthenticated user.')
+
+    def test_add_message_rate_limit(self):
+        from django.core.cache import cache
+        cache.clear()
+
+        url = f'/api/memorials/{self.public_memorial.pk}/messages/'
+        data = {
+            'author_name': 'Guest User',
+            'content': 'Test message'
+        }
+
+        # The anon rate limit is 60/minute
+        for i in range(60):
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # The 61st request should be throttled
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
     def test_authenticated_user_infers_name_and_email(self):
         self.client.force_authenticate(user=self.user1)
