@@ -2,7 +2,8 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
-from memorials.models import Memorial, Contributor, Message
+from django.core.cache import cache
+from memorials.models import Memorial, Contributor, Message, Candle
 
 User = get_user_model()
 
@@ -42,6 +43,33 @@ class AddMessageTest(APITestCase):
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Message.objects.count(), 1)
+
+    def test_add_message_anon_rate_limit(self):
+        cache.clear()
+        url = f'/api/memorials/{self.public_memorial.pk}/messages/'
+        data = {
+            'author_name': 'Guest User',
+            'content': 'Spam message'
+        }
+        # Rate limit is 60/minute, so 61st request should be throttled.
+        for _ in range(60):
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_light_candle_anon_rate_limit(self):
+        cache.clear()
+        url = f'/api/memorials/{self.public_memorial.pk}/candles/'
+        data = {}
+        # Rate limit is 60/minute, so 61st request should be throttled.
+        for _ in range(60):
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         message = Message.objects.first()
         self.assertEqual(message.author_name, 'Guest User')
         self.assertEqual(message.content, 'This is a message from an unauthenticated user.')
@@ -108,3 +136,61 @@ class AddMessageTest(APITestCase):
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Message.objects.count(), 1)
+
+    def test_add_message_anon_rate_limit(self):
+        from django.core.cache import cache
+        cache.clear()
+        url = f'/api/memorials/{self.public_memorial.pk}/messages/'
+        data = {
+            'author_name': 'Guest User',
+            'content': 'Spam message'
+        }
+        # Rate limit is 60/minute, so 61st request should be throttled.
+        for _ in range(60):
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_light_candle_anon_rate_limit(self):
+        from django.core.cache import cache
+        cache.clear()
+        url = f'/api/memorials/{self.public_memorial.pk}/candles/'
+        data = {}
+        # Rate limit is 60/minute, so 61st request should be throttled.
+        for _ in range(60):
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_add_message_anon_rate_limit(self):
+        from django.core.cache import cache
+        cache.clear()
+        url = f'/api/memorials/{self.public_memorial.pk}/messages/'
+        data = {
+            'author_name': 'Guest User',
+            'content': 'Spam message'
+        }
+        # Rate limit is 60/minute, so 61st request should be throttled.
+        for _ in range(60):
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_light_candle_anon_rate_limit(self):
+        from django.core.cache import cache
+        cache.clear()
+        url = f'/api/memorials/{self.public_memorial.pk}/candles/'
+        data = {}
+        # Rate limit is 60/minute, so 61st request should be throttled.
+        for _ in range(60):
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
