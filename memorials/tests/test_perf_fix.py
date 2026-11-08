@@ -19,7 +19,13 @@ class MemorialDetailNPlus1Test(TestCase):
         Memory.objects.create(memorial=self.memorial, author=self.author2, title='M2', story='S2', visibility='PUBLIC')
         Memory.objects.create(memorial=self.memorial, author=self.author3, title='M3', story='S3', visibility='PUBLIC')
 
+    def tearDown(self):
+        from django.core.cache import cache
+        cache.clear()
+
     def test_n_plus_1_queries(self):
+        from django.core.cache import cache
+        cache.clear()
         client = Client()
         # Verify that N+1 is fixed and the query count is 8 exactly.
         with self.assertNumQueries(8):
