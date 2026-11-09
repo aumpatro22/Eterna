@@ -108,3 +108,36 @@ class AddMessageTest(APITestCase):
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Message.objects.count(), 1)
+
+    def test_add_message_rate_limiting(self):
+        import django.core.cache
+        django.core.cache.cache.clear()
+        url = f'/api/memorials/{self.public_memorial.pk}/messages/'
+        data = {
+            'author_name': 'Guest User',
+            'content': 'Rate limit test message.'
+        }
+        # 60 requests should pass based on anon rate settings (60/minute)
+        for _ in range(60):
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # 61st request should be throttled
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_light_candle_rate_limiting(self):
+        import django.core.cache
+        django.core.cache.cache.clear()
+        url = f'/api/memorials/{self.public_memorial.pk}/candles/'
+        data = {
+            'name': 'Guest User',
+        }
+        # 60 requests should pass based on anon rate settings (60/minute)
+        for _ in range(60):
+            response = self.client.post(url, data)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # 61st request should be throttled
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
