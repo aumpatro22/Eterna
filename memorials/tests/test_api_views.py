@@ -39,3 +39,34 @@ class MemorialCreateTests(TestCase):
         response = self.client.post(self.url, {})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('full_name', response.data)
+
+    def test_add_message_rate_limit(self):
+        from django.core.cache import cache
+        cache.clear()
+
+        self.memorial = Memorial.objects.create(owner=self.user, full_name='Test Memorial Rate Limit')
+        url = reverse('api_memorial_message', kwargs={'pk': self.memorial.pk})
+
+        for i in range(61):
+            response = self.client.post(url, {
+                'text': f'Test message {i}',
+                'author_name': 'Test User',
+                'author_email': 'test@example.com'
+            })
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_light_candle_rate_limit(self):
+        from django.core.cache import cache
+        cache.clear()
+
+        self.memorial = Memorial.objects.create(owner=self.user, full_name='Test Memorial Rate Limit Candle')
+        url = reverse('api_memorial_candle', kwargs={'pk': self.memorial.pk})
+
+        for i in range(61):
+            response = self.client.post(url, {
+                'author_name': 'Test User',
+                'author_email': 'test@example.com'
+            })
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
